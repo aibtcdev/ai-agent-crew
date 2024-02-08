@@ -1,4 +1,4 @@
 [submodule "scripts"]
 	path = scripts
-	url = git@github.com:stacks-m2m/scripts
+	url = https://github.com/stacks-m2m/scripts.git
 	branch = main
