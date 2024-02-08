@@ -65,8 +65,8 @@ Within the `scripts/src` directory are various scripts that can be run to intera
 
 ### Agents
 
-- TODO: where they are defined
+- Agent definitions are in the `agents.py` file
 
 ### Tools
 
-- TODO: where they are defined
+- Tool definitions are in the `/tools` directory

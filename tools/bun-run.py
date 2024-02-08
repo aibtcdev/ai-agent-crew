@@ -1,4 +1,5 @@
 import subprocess
+from langhchain import tool
 
 script_dir = "scripts/src/"
 
@@ -22,3 +23,4 @@ def get_wallet_info(dummy_arg=None):
 def pay_invoice(resource_name: str):
     """Pay an invoice."""
     return bun_run("pay-invoice.ts")
+    
