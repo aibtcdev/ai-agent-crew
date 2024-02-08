@@ -36,11 +36,19 @@ Once running, access the web UI at port 7860 and:
 
 ## Setting up the Wallet
 
-This repository imports the `stacks-m2m/scripts` repository, which provides Typescript functions to interact with a Stacks wallet.
+This repository also imports the `stacks-m2m/scripts` repository as a submodule.
+
+This provides Typescript functions to interact with a Stacks wallet using Stacks.js.
+
+To clone the repository, run the following command:
+
+- ssh: `git clone --recurse-submodules git@github.com:stacks-m2m/crew.git`
+- https: `git clone --recurse-submodules https://github.com/stacks-m2m/crew.git`
+
+To update the submodule, run the following command:
+`git submodule update --remote --merge`
 
 - TODO: list of script functions (pay-invoice, send-stx, send-btc (abtc))
-- TODO: instructions on how to clone
-- TODO: instructions on how to update
 - TODO: configure .env with wallet info
 
 ## Local Development
@@ -48,6 +56,9 @@ This repository imports the `stacks-m2m/scripts` repository, which provides Type
 ### CrewAI
 
 - TODO: high level explanation of CrewAI principals
+- Agent
+- Crew
+- Task
 
 ### Agents
 
