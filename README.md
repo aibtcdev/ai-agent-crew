@@ -40,7 +40,7 @@ This repository also imports the `stacks-m2m/scripts` repository as a submodule.
 
 This provides Typescript functions to interact with a Stacks wallet using Stacks.js.
 
-To clone the repository, run the following command:
+To clone the repository and sync the submodule, run the following command:
 
 - ssh: `git clone --recurse-submodules git@github.com:stacks-m2m/crew.git`
 - https: `git clone --recurse-submodules https://github.com/stacks-m2m/crew.git`
@@ -48,17 +48,20 @@ To clone the repository, run the following command:
 To update the submodule, run the following command:
 `git submodule update --remote --merge`
 
-- TODO: list of script functions (pay-invoice, send-stx, send-btc (abtc))
-- TODO: configure .env with wallet info
+Within the `scripts` directory is a `.env.example` file that should be copied to `.env` and filled out with the wallet information.
+
+Within the `scripts/src` directory are various scripts that can be run to interact with the wallet. These should be wrapped as a langchain `@tool` for LLMs to access it.
 
 ## Local Development
 
 ### CrewAI
 
-- TODO: high level explanation of CrewAI principals
-- Agent
-- Crew
-- Task
+[CrewAI](https://crewai.io) provides an easy-to-use interface for creating and managing agents, tasks, tools, and crews. It is built on top of [Langchain](https://python.langchain.com/docs/get_started/introduction), a decentralized, open-source, and privacy-focused AI platform.
+
+- **Agents:** a team member; an autonomous unit programmed to perform tasks, make decisions, and communication with other agents
+- **Tasks:** a task; individual assignments that agents complete
+- **Tools:** a skill; single-input functions that agents can use to complete tasks (can use [any Langchain tool](https://python.langchain.com/docs/modules/agents/tools/) or define custom ones)
+- **Crew:** a collaborative group; a group of agents that work together to complete a set of tasks
 
 ### Agents
 
