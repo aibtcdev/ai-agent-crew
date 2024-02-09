@@ -48,6 +48,7 @@ To clone the repository and sync the submodule, run the following command:
 To update the submodule, run the following command:
 `git submodule update --remote --merge`
 
+Navigate to the `scripts` directory and run `bun install` to install the necessary dependencies.
 Within the `scripts` directory is a `.env.example` file that should be copied to `.env` and filled out with the wallet information.
 
 Within the `scripts/src` directory are various scripts that can be run to interact with the wallet. These should be wrapped as a langchain `@tool` for LLMs to access it.
@@ -70,3 +71,21 @@ Within the `scripts/src` directory are various scripts that can be run to intera
 ### Tools
 
 - Tool definitions are in the `/tools` directory
+
+### Python Virtual Environment
+
+Setup commands can slightly vary depending on OS and python/pip versions.
+
+```bash
+# MacOS/Linux example:
+python3 -m venv env
+source env/bin/activate
+pip3 install -r requirements.txt
+```
+
+### Running the Agent
+
+After setting up the `.env` file with `OPENAI_API_KEY` or configuring a local model, run the agent with:
+
+`python3 run_crew.py`
+
