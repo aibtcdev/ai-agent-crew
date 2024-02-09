@@ -1,6 +1,8 @@
 from crewai import Crew, Process, Task
 from agents import BitcoinCrew
+from dotenv import load_dotenv
 
+load_dotenv()
 
 def engage_crew_with_tasks():
     # define agent
