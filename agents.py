@@ -13,6 +13,7 @@ class BitcoinCrew:
             tools=[
                 BunScriptRunner.get_wallet_addresses,
                 BunScriptRunner.get_wallet_status,
+                BunScriptRunner.get_aibtc_balance,
                 # BunScriptRunner.pay_invoice,
             ],
             backstory=dedent(
