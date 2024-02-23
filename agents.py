@@ -1,19 +1,19 @@
 from crewai import Agent
 from textwrap import dedent
-from tools.bun_run import ScriptRunner
+from tools.bun_run import BunScriptRunner
 
 
 class BitcoinCrew:
     @staticmethod
     def wallet_agent():
         return Agent(
-            role="Wallet",
+            role="Wallet Manager",
             goal="Read context and execute tasks using tools to interact with a wallet.",
             memory=True,
             tools=[
-                ScriptRunner.get_wallet_addresses,
-                ScriptRunner.get_wallet_status,
-                # ScriptRunner.pay_invoice,
+                BunScriptRunner.get_wallet_addresses,
+                BunScriptRunner.get_wallet_status,
+                # BunScriptRunner.pay_invoice,
             ],
             backstory=dedent(
                 """\
