@@ -8,13 +8,6 @@ from langchain.globals import set_debug
 load_dotenv()
 set_debug(True)
 
-# create a default language model
-import os
-from langchain_openai import ChatOpenAI
-
-default_llm = ChatOpenAI(
-    model=os.environ.get("OPENAI_MODEL_NAME"),
-)
 
 def engage_crew_with_tasks():
     # define agent
@@ -36,12 +29,16 @@ def engage_crew_with_tasks():
         description="What is the aiBTC balance for your currently configured wallet?",
         agent=wallet_agent,
     )
+    task_5 = Task(
+        description="Summarize all tasks completed using a numbered list. This format is important. Each number should correspond to a summary of the task and result.",
+        agent=wallet_agent,
+    )
     # create a crew
     wallet_crew = Crew(
         agents=[wallet_agent],
         process=Process.sequential,
-        tasks=[task_1, task_2, task_3, task_4],
-        verbose=True,
+        tasks=[task_1, task_2, task_3, task_4, task_5],
+        verbose=2,
     )
     # run the crew
     wallet_result = wallet_crew.kickoff()
