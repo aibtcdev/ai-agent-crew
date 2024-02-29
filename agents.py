@@ -7,7 +7,11 @@ from tools.resources_v2 import StacksM2MTools
 
 class BitcoinCrew:
     @staticmethod
-    def account_manager():
+    def account_manager(llm=None):
+        kwargs = {}
+        if llm is not None:
+            kwargs['llm'] = llm
+
         return Agent(
             role="Account Manager",
             goal="Read context and execute tasks using tools to interact with a configured wallet.",
@@ -29,10 +33,15 @@ class BitcoinCrew:
             ),
             allow_delegation=False,
             verbose=True,
+            **kwargs,
         )
 
     @staticmethod
-    def resource_manager():
+    def resource_manager(llm=None):
+        kwargs = {}
+        if llm is not None:
+            kwargs['llm'] = llm
+
         return Agent(
             role="Resource Manager",
             goal="Read context and execute tasks using tools to interact with on-chain resources. Double check that all required arguments are included for the tools.",
@@ -55,4 +64,5 @@ class BitcoinCrew:
             ),
             allow_delegation=False,
             verbose=True,
+            **kwargs,
         )

@@ -9,6 +9,13 @@ from langchain.globals import set_debug
 load_dotenv()
 set_debug(False)
 
+from langchain_openai import ChatOpenAI
+
+default_llm = ChatOpenAI(
+    # model="gpt-4-turbo-preview"
+    model="gpt-3.5-turbo-0125"
+)
+
 
 def engage_crew_with_tasks():
     # define agents
