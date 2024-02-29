@@ -1,51 +1,57 @@
 from crewai import Crew, Process, Task
 from agents import BitcoinCrew
+from textwrap import dedent
 
 # set global vars
 from dotenv import load_dotenv
 from langchain.globals import set_debug
 
 load_dotenv()
-set_debug(True)
+set_debug(False)
 
 
 def engage_crew_with_tasks():
-    # define agent
-    wallet_agent = BitcoinCrew.wallet_agent()
+    # define agents
+    account_manager_agent = BitcoinCrew.account_manager()
+    resource_manager_agent = BitcoinCrew.resource_manager()
+
     # define the tasks
-    task_1 = Task(
-        description="What wallet addresses do you have access to?",
-        agent=wallet_agent,
-    )
-    task_2 = Task(
-        description="What is the fourth address you have access to?",
-        agent=wallet_agent,
-    )
-    task_3 = Task(
-        description="What information do you know about the currently configured wallet?",
-        agent=wallet_agent,
-    )
-    task_4 = Task(
-        description="What is the aiBTC balance for your currently configured wallet?",
-        agent=wallet_agent,
-    )
-    task_5 = Task(
-        description="Summarize all tasks completed using a numbered list. This format is important. Each number should correspond to a summary of the task and result.",
-        agent=wallet_agent,
-    )
+    summary_task_desc = dedent("""\
+        Summarize all tasks completed using a numbered list.
+        This format is important. Each numbered list item will include:
+        - the name of the agent that completed the task
+        - a summary of the task and answer
+        """)
+    account_manger_tasks = [
+        Task("What information do you know about the currently configured wallet?", agent=account_manager_agent),
+        Task("What other wallet addresses do you have access to?", agent=account_manager_agent),
+        Task("What is the aiBTC balance for your currently configured wallet?", agent=account_manager_agent),
+        Task("Get aiBTC from the faucet and confirm the transaction status", agent=account_manager_agent),
+        Task(summary_task_desc, agent=account_manager_agent)
+    ]
+    resource_manager_tasks = [
+        Task("Get our most recent payment data", agent=resource_manager_agent),
+        Task("Get the available resource data", agent=resource_manager_agent),
+        Task("Get our user data by address", agent=resource_manager_agent),
+        Task("Pay an invoice for a resource and confirm the transaction status", agent=resource_manager_agent),
+        Task(summary_task_desc, agent=resource_manager_agent)
+    ]
+
     # create a crew
-    wallet_crew = Crew(
-        agents=[wallet_agent],
+    bitcoin_crew = Crew(
+        agents=[account_manager_agent, resource_manager_agent],
         process=Process.sequential,
-        tasks=[task_1, task_2, task_3, task_4, task_5],
+        tasks=account_manger_tasks + resource_manager_tasks,
         verbose=2,
     )
-    # run the crew
-    wallet_result = wallet_crew.kickoff()
+
+    # run the crew against all tasks
+    bitcoin_crew_result = bitcoin_crew.kickoff()
+
     # print the result
     print("--------------------------------------------------")
-    print("Wallet Crew Result:")
-    print(wallet_result)
+    print("Bitcoin Crew Result:")
+    print(bitcoin_crew_result)
     print("--------------------------------------------------")
 
 
