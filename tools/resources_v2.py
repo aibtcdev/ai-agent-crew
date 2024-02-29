@@ -8,14 +8,14 @@ class StacksM2MTools:
     def get_recent_payment_data(address: str):
         """Get the recent payment data for a given address."""
         return BunScriptRunner.bun_run(
-            "stacks-m2m-v2", "get-recent-payments.ts", address
+            "stacks-m2m-v2", "get-recent-payment-data-by-address.ts", address
         )
 
     @tool("Get resource data for a resource")
     @staticmethod
     def get_resource_data(dummy_arg: None):
         """Get the resource data for the resource."""
-        return BunScriptRunner.bun_run("stacks-m2m-v2", "get-resource-data.ts")
+        return BunScriptRunner.bun_run("stacks-m2m-v2", "get-resource-by-name.ts")
 
     @tool("Get user data by address")
     @staticmethod

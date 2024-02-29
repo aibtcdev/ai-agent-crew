@@ -35,9 +35,10 @@ class BitcoinCrew:
     def resource_manager():
         return Agent(
             role="Resource Manager",
-            goal="Read context and execute tasks using tools to interact with on-chain resources.",
+            goal="Read context and execute tasks using tools to interact with on-chain resources. Double check that all required arguments are included for the tools.",
             memory=True,
             tools=[
+                WalletTools.get_wallet_status,
                 StacksM2MTools.get_recent_payment_data,
                 StacksM2MTools.get_resource_data,
                 StacksM2MTools.get_user_data_by_address,

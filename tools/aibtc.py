@@ -13,13 +13,13 @@ class aiBTCTools:
     @staticmethod
     def get_faucet_drip(dummy_arg=None):
         """Transfers 10,000 aiBTC from the faucet to your configured address and returns a transaction ID."""
-        return BunScriptRunner.bun_run("stacks-m2m-aibtc", "get-faucet-drip.ts")
+        return BunScriptRunner.bun_run("stacks-m2m-aibtc", "faucet-drip.ts")
 
     @tool("Get 1,000,000 aiBTC from the faucet")
     @staticmethod
     def get_faucet_drop(dummy_arg=None):
         """Transfers 1,000,000 aiBTC from the faucet to your configured address and returns a transaction ID."""
-        return BunScriptRunner.bun_run("stacks-m2m-aibtc", "get-faucet-drop.ts")
+        return BunScriptRunner.bun_run("stacks-m2m-aibtc", "faucet-drop.ts")
 
     @tool("Get 100,000,000 aiBTC from the faucet")
     @staticmethod
