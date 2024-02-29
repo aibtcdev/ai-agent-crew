@@ -16,25 +16,46 @@ def engage_crew_with_tasks():
     resource_manager_agent = BitcoinCrew.resource_manager()
 
     # define the tasks
-    summary_task_desc = dedent("""\
+    summary_task_desc = dedent(
+        """\
         Summarize all tasks completed using a numbered list.
         This format is important. Each numbered list item will include:
         - the name of the agent that completed the task
         - a summary of the task and answer
-        """)
+        """
+    )
     account_manger_tasks = [
-        Task("What information do you know about the currently configured wallet?", agent=account_manager_agent),
-        Task("What other wallet addresses do you have access to?", agent=account_manager_agent),
-        Task("What is the aiBTC balance for your currently configured wallet?", agent=account_manager_agent),
-        Task("Get aiBTC from the faucet and confirm the transaction status", agent=account_manager_agent),
-        Task(summary_task_desc, agent=account_manager_agent)
+        Task(
+            description="What information do you know about the currently configured wallet?",
+            agent=account_manager_agent,
+        ),
+        Task(
+            description="What other wallet addresses do you have access to?",
+            agent=account_manager_agent,
+        ),
+        Task(
+            description="What is the aiBTC balance for your currently configured wallet?",
+            agent=account_manager_agent,
+        ),
+        Task(
+            description="Get aiBTC from the faucet and confirm the transaction status",
+            agent=account_manager_agent,
+        ),
+        Task(description=summary_task_desc, agent=account_manager_agent),
     ]
     resource_manager_tasks = [
-        Task("Get our most recent payment data", agent=resource_manager_agent),
-        Task("Get the available resource data", agent=resource_manager_agent),
-        Task("Get our user data by address", agent=resource_manager_agent),
-        Task("Pay an invoice for a resource and confirm the transaction status", agent=resource_manager_agent),
-        Task(summary_task_desc, agent=resource_manager_agent)
+        Task(
+            description="Get our most recent payment data", agent=resource_manager_agent
+        ),
+        Task(
+            description="Get the available resource data", agent=resource_manager_agent
+        ),
+        Task(description="Get our user data by address", agent=resource_manager_agent),
+        Task(
+            description="Pay an invoice for a resource and confirm the transaction status",
+            agent=resource_manager_agent,
+        ),
+        Task(description=summary_task_desc, agent=resource_manager_agent),
     ]
 
     # create a crew

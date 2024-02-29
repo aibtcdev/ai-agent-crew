@@ -9,7 +9,11 @@ class BunScriptRunner:
     def bun_run(contract_name: str, script_name: str):
         """Runs a typescript script using bun"""
         # command to run
-        command = ["bun", "run", f"{BunScriptRunner.script_dir}/{contract_name}/{script_name}"]
+        command = [
+            "bun",
+            "run",
+            f"{BunScriptRunner.script_dir}/{contract_name}/{script_name}",
+        ]
         try:
             result = subprocess.run(
                 command,
