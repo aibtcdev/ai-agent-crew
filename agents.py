@@ -42,6 +42,8 @@ class BitcoinCrew:
                 StacksM2MTools.get_resource_data,
                 StacksM2MTools.get_user_data_by_address,
                 StacksM2MTools.pay_invoice_for_resource,
+                aiBTCTools.get_aibtc_balance,
+                aiBTCTools.get_faucet_drip,
             ],
             backstory=dedent(
                 """\
