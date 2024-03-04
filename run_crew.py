@@ -1,6 +1,5 @@
 from crewai import Crew, Process, Task
 from agents import BitcoinCrew
-from textwrap import dedent
 
 # set global vars
 from dotenv import load_dotenv
