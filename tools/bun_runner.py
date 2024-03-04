@@ -1,7 +1,7 @@
 import subprocess
 
 class BunScriptRunner:
-    working_dir = "./scripts/"
+    working_dir = "./agent-tools-ts/"
     script_dir = "src"
 
     @staticmethod
