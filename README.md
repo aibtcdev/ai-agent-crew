@@ -1,20 +1,38 @@
-# 🤖💳🤖 Stacks M2M
+<p align="center"><img src="https://github.com/aibtcdev/landing-page/blob/main/public/logos/aibtcdev-logo-sm-250px.png" alt="Bitcoin x AI Logo" width="150px" ></p>
 
-## Agents with Wallets
+# Bitcoin x AI: AI Agent Crew
+
+## Description
 
 > [!CAUTION]
 > This is an early experiment, agents do automatic things, here be dragons, run at your own risk.
 
-## Choosing an LLM
+This repository contains the code for the AI Agent Crew, a collection of agents that can be used to perform assigned tasks using defined tools.
 
-CrewAI allows for multiple model configurations, from using OpenAI/Microsoft Azure APIs to running local models, [see the documentation](https://docs.crewai.com/how-to/LLM-Connections/#configuration-examples) for more info on how to configure for your specific needs. An example env file (`.env.example`) is provided.
+## Development
+
+Tech stack:
+
+- Python 3.11 ([miniconda recommended](https://docs.anaconda.com/free/miniconda/index.html#latest-miniconda-installer-links) for virtual env)
+- CrewAI
+- CrewAI Tools
+
+To run this locally:
+
+1. Clone this repository
+2. Create or activate the virtual environment
+   1. Create: `conda create -n ai-agent-crew python=3.11`
+   2. Activate: `conda activate ai-agent-crew`
+3. Install dependencies: `pip install -r requirements.txt`
+4. Run locally: `python run_crew.py`
+
+### Choosing an LLM
+
+CrewAI allows for multiple model configurations, from using OpenAI/Microsoft Azure APIs to running local models, [see the documentation](https://docs.crewai.com/how-to/LLM-Connections/#configuration-examples) for more info on how to configure for your specific needs.
+
+An example env file (`.env.example`) is provided.
 
 Current testing is being done with [Text generation web UI](https://github.com/oobabooga/text-generation-webui)
-
-- temperature 0.01
-- seed 1234567890
-- miqu-70b-q5_k_m
-- 32k context length
 
 Command to run Text generation web UI:
 `python server.py --api --verbose`
@@ -34,16 +52,16 @@ Once running, access the web UI at port 7860 and:
 > [!TIP]
 > The IP address and port of the model running on Text generation web UI should be set in `.env` to use a local model.
 
-## Setting up the Wallet
+### Setting up the Wallet
 
-This repository also imports the `stacks-m2m/scripts` repository as a submodule.
+This repository also imports the `aibtcdev/agent-tools-ts` repository as a submodule.
 
 This provides Typescript functions to interact with a Stacks wallet using Stacks.js.
 
 To clone the repository and sync the submodule, run the following command:
 
-- ssh: `git clone --recurse-submodules git@github.com:stacks-m2m/crew.git`
-- https: `git clone --recurse-submodules https://github.com/stacks-m2m/crew.git`
+- ssh: `git clone --recurse-submodules git@github.com:aibtcdev/ai-agent-crew.git`
+- https: `git clone --recurse-submodules https://github.com/aibtcdev/ai-agent-crew.git`
 
 To update the submodule, run the following command:
 `git submodule update --remote --merge`
@@ -52,7 +70,7 @@ Within the `scripts` directory is a `.env.example` file that should be copied to
 
 Within the `scripts/src` directory are various scripts that can be run to interact with the wallet. These should be wrapped as a langchain `@tool` for LLMs to access it.
 
-## Local Development
+## AI Agent Framework
 
 ### CrewAI
 

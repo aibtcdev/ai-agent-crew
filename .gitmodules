@@ -1,4 +1,4 @@
 [submodule "scripts"]
 	path = scripts
-	url = https://github.com/stacks-m2m/scripts.git
+	url = https://github.com/aibtcdev/agent-tools-ts.git
 	branch = main
