@@ -22,12 +22,12 @@ importlib-metadata==6.11.0
 instructor==0.5.2
 jsonpatch==1.33
 jsonpointer==2.4
-langchain==0.1.10
+langchain==0.1.11
 langchain-community==0.0.25
-langchain-core==0.1.28
+langchain-core==0.1.30
 langchain-openai==0.0.5
 langchain-text-splitters==0.0.1
-langsmith==0.1.14
+langsmith==0.1.23
 markdown-it-py==3.0.0
 marshmallow==3.21.0
 mdurl==0.1.2
