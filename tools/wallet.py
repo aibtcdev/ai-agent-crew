@@ -28,3 +28,9 @@ class WalletTools:
         return BunScriptRunner.bun_run(
             "wallet", "get-transaction-status.ts", transaction_id
         )
+
+    @tool("Sign Message")
+    @staticmethod
+    def sign_message(dummy_arg=None):
+        """Sign a message with the configured wallet address."""
+        return BunScriptRunner.bun_run("wallet", "sign-message.ts")
