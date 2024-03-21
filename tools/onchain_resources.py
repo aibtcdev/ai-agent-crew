@@ -2,7 +2,7 @@ from .bun_runner import BunScriptRunner
 from langchain.tools import tool
 
 
-class StacksM2MTools:
+class OnchainResourcesTools:
     @tool("Get recent payment data for an address")
     @staticmethod
     def get_recent_payment_data(address: str):

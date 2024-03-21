@@ -1,8 +1,8 @@
 from crewai import Agent
 from textwrap import dedent
 from tools.wallet import WalletTools
-from tools.aibtc import aiBTCTools
-from tools.resources_v2 import StacksM2MTools
+from tools.aibtc_token import AIBTCTokenTools
+from tools.onchain_resources import OnchainResourcesTools
 
 
 class BitcoinCrew:
@@ -10,7 +10,7 @@ class BitcoinCrew:
     def account_manager(llm=None):
         kwargs = {}
         if llm is not None:
-            kwargs['llm'] = llm
+            kwargs["llm"] = llm
 
         return Agent(
             role="Account Manager",
@@ -21,8 +21,8 @@ class BitcoinCrew:
                 WalletTools.get_wallet_status,
                 WalletTools.get_transaction_data,
                 WalletTools.get_transaction_status,
-                aiBTCTools.get_aibtc_balance,
-                aiBTCTools.get_faucet_drip,
+                AIBTCTokenTools.get_aibtc_balance,
+                AIBTCTokenTools.get_faucet_drip,
             ],
             backstory=dedent(
                 """\
@@ -40,7 +40,7 @@ class BitcoinCrew:
     def resource_manager(llm=None):
         kwargs = {}
         if llm is not None:
-            kwargs['llm'] = llm
+            kwargs["llm"] = llm
 
         return Agent(
             role="Resource Manager",
@@ -48,12 +48,12 @@ class BitcoinCrew:
             memory=True,
             tools=[
                 WalletTools.get_wallet_status,
-                StacksM2MTools.get_recent_payment_data,
-                StacksM2MTools.get_resource_data,
-                StacksM2MTools.get_user_data_by_address,
-                StacksM2MTools.pay_invoice_for_resource,
-                aiBTCTools.get_aibtc_balance,
-                aiBTCTools.get_faucet_drip,
+                OnchainResourcesTools.get_recent_payment_data,
+                OnchainResourcesTools.get_resource_data,
+                OnchainResourcesTools.get_user_data_by_address,
+                OnchainResourcesTools.pay_invoice_for_resource,
+                AIBTCTokenTools.get_aibtc_balance,
+                AIBTCTokenTools.get_faucet_drip,
             ],
             backstory=dedent(
                 """\

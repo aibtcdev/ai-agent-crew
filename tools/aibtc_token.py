@@ -1,8 +1,8 @@
 from .bun_runner import BunScriptRunner
-from langchain.tools import tool
+from crewai.tools import tool
 
 
-class aiBTCTools:
+class AIBTCTokenTools:
     @tool("Get current aiBTC balance")
     @staticmethod
     def get_aibtc_balance(dummy_arg=None):
