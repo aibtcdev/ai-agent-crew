@@ -1,5 +1,5 @@
 from .bun_runner import BunScriptRunner
-from crewai.tools import tool
+from langchain.tools import tool
 
 
 class AIBTCTokenTools:
