@@ -1,3 +1,7 @@
+import io
+import contextlib
+import re
+import time
 import streamlit as st
 from crewai import Crew, Process, Task
 from agents import BitcoinCrew
@@ -11,18 +15,39 @@ set_debug(False)
 
 from langchain_openai import ChatOpenAI
 
+
+@contextlib.contextmanager
+def capture_stdout():
+    buffer = io.StringIO()
+    with contextlib.redirect_stdout(buffer):
+        yield buffer
+
+
 default_llm = ChatOpenAI(
     # model="gpt-4-turbo-preview"
     model="gpt-3.5-turbo-0125"
 )
 
 
+# Define a function to format chat messages
+def format_chat_message(agent_name, message):
+    return f"**{agent_name}:** {message}"
+
+
+# Initialize chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+
 def engage_crew_with_tasks(selected_tasks):
+    # Clear the session state before engaging the crew
+    st.session_state.messages = []
+
     # define agents
     account_manager_agent = BitcoinCrew.account_manager()
     resource_manager_agent = BitcoinCrew.resource_manager()
 
-    # create a crew
+    # Create a crew
     bitcoin_crew = Crew(
         agents=[account_manager_agent, resource_manager_agent],
         process=Process.sequential,
@@ -30,10 +55,41 @@ def engage_crew_with_tasks(selected_tasks):
         verbose=1,
     )
 
-    # run the crew against all tasks
-    bitcoin_crew_result = bitcoin_crew.kickoff()
+    current_agent = None
+    agent_messages = {}
+    # Define the avatar URLs or file paths for each agent
+    agent_avatars = {
+        "Account Manager": "https://bitcoinfaces.xyz/api/get-image?name=account-manager",
+        "Resource Manager": "https://bitcoinfaces.xyz/api/get-image?name=resource-manager",
+    }
 
-    return bitcoin_crew_result
+    # Run the crew and capture the stdout line by line
+    with capture_stdout() as buffer:
+        bitcoin_crew.kickoff()
+        for line in buffer.getvalue().splitlines():
+            # Remove ANSI escape codes from the line
+            ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+            formatted_line = ansi_escape.sub("", line)
+
+            if "DEBUG" in formatted_line:
+                if "Working Agent" in formatted_line:
+                    current_agent = formatted_line.split(":")[-1].strip()
+                    if current_agent not in agent_messages:
+                        agent_messages[current_agent] = []
+            else:
+                if current_agent:
+                    agent_messages[current_agent].append(formatted_line)
+
+    for agent, messages in agent_messages.items():
+        avatar_url = agent_avatars.get(agent)
+        with st.container():
+            with st.chat_message(agent, avatar=avatar_url):
+                for message in messages:
+                    st.write(message)
+                    time.sleep(0.1)  # Add a small delay for better visibility
+        st.session_state.messages.append(
+            {"role": agent, "content": "\n".join(messages)}
+        )
 
 
 def run_bitcoin_crew_app():
@@ -136,54 +192,8 @@ def run_bitcoin_crew_app():
 
     with tab3:
         if st.button("Engage Crew"):
-            with st.expander("Running automated crew of AI agents!"):
-                import sys
-                import re
-                import json
-
-                class StreamToExpander:
-                    def __init__(self, expander):
-                        self.expander = expander
-                        self.buffer = []
-                        self.current_agent = None
-
-                    def write(self, data):
-                        cleaned_data = re.sub(r"\x1B\[[0-9;]*[mK]", "", data)
-                        lines = cleaned_data.split("\n")
-                        for line in lines:
-                            if line.strip():
-                                if "Working Agent:" in line:
-                                    self.flush()
-                                    agent_name = line.split("Working Agent:")[
-                                        -1
-                                    ].strip()
-                                    if agent_name != self.current_agent:
-                                        self.current_agent = agent_name
-                                        self.expander.markdown(
-                                            f"### {self.current_agent}"
-                                        )
-                                else:
-                                    self.buffer.append(line)
-                            else:
-                                self.buffer.append(line)
-
-                    def flush(self):
-                        if self.buffer:
-                            json_string = "\n".join(self.buffer)
-                            try:
-                                json_data = json.loads(json_string)
-                                self.expander.json(json_data)
-                            except json.JSONDecodeError:
-                                self.expander.text(json_string)
-                            self.buffer = []
-
-                sys.stdout = StreamToExpander(st)
-                with st.spinner("Engaging Crew..."):
-                    crew_result = engage_crew_with_tasks(selected_tasks)
-                    sys.stdout.flush()  # Flush any remaining output
-
-            st.header("Results:")
-            st.markdown("```json\n" + crew_result + "\n```")
+            with st.spinner("Engaging Crew..."):
+                engage_crew_with_tasks(selected_tasks)
 
 
 if __name__ == "__main__":

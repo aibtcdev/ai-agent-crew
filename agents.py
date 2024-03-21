@@ -1,3 +1,4 @@
+import streamlit as st
 from crewai import Agent
 from textwrap import dedent
 from tools.wallet import WalletTools
@@ -6,6 +7,7 @@ from tools.onchain_resources import OnchainResourcesTools
 
 
 class BitcoinCrew:
+
     @staticmethod
     def account_manager(llm=None):
         kwargs = {}
