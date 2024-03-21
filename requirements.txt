@@ -22,7 +22,7 @@ click==8.1.7
 coloredlogs==15.0.1
 contextlib2==21.6.0
 crewai==0.22.5
-crewai-tools==0.0.15
+crewai-tools==0.1.0
 cryptography==42.0.5
 dataclasses-json==0.6.4
 decorator==5.1.1
@@ -30,7 +30,7 @@ Deprecated==1.2.14
 deprecation==2.1.0
 distro==1.9.0
 docstring-parser==0.15
-embedchain==0.1.97
+embedchain==0.1.98
 fastapi==0.110.0
 filelock==3.13.1
 flatbuffers==24.3.7
