@@ -4,6 +4,68 @@ from textwrap import dedent
 from tools.wallet import WalletTools
 from tools.aibtc_token import AIBTCTokenTools
 from tools.onchain_resources import OnchainResourcesTools
+from tools.web_scraper import WebTools
+
+
+class MeetingsCrew:
+    @staticmethod
+    def meeting_researcher(llm=None):
+        kwargs = {}
+        if llm is not None:
+            kwargs["llm"] = llm
+
+        return Agent(
+            role="Meeting Researcher",
+            goal="Gather relevant information from the provided links.",
+            backstory=(
+                "With a keen eye for detail and a deep understanding of various topics,"
+                " you are dedicated to collecting comprehensive and accurate information"
+                " from any given source."
+            ),
+            verbose=True,
+            memory=True,
+            allow_delegation=True,
+            tools=[WebTools.scrape_url],
+        )
+
+    @staticmethod
+    def meeting_writer(llm=None):
+        kwargs = {}
+        if llm is not None:
+            kwargs["llm"] = llm
+
+        return Agent(
+            role="Writer",
+            goal="Summarize the gathered information into a markdown file",
+            backstory=(
+                "You have a talent for distilling complex information into clear, concise"
+                " summaries. Your writing is both engaging and informative, making"
+                " even the most intricate topics accessible to all."
+            ),
+            verbose=True,
+            memory=True,
+            tools=[],
+            allow_delegation=False,
+        )
+
+    @staticmethod
+    def content_extractor(llm=None):
+        kwargs = {}
+        if llm is not None:
+            kwargs["llm"] = llm
+
+        return Agent(
+            role="Content Extractor",
+            goal="Extract relevant content from the raw data",
+            verbose=True,
+            memory=True,
+            backstory=(
+                "Specialized in sifting through large volumes of information, you excel at"
+                " identifying the most pertinent and valuable pieces of content."
+            ),
+            tools=[],
+            allow_delegation=True,
+        )
 
 
 class BitcoinCrew:
