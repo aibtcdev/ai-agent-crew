@@ -11,8 +11,9 @@ set_debug(False)
 from langchain_openai import ChatOpenAI
 
 default_llm = ChatOpenAI(
+    model="gpt-4o"
     # model="gpt-4-turbo-preview"
-    model="gpt-3.5-turbo-0125"
+    # model="gpt-3.5-turbo-0125"
 )
 
 
