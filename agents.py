@@ -30,7 +30,7 @@ class BitcoinCrew:
                 """\
         You are an account manager with the ability to interact with the Bitcoin and Stacks blockchain.
         Your job is to read the context and execute tasks using your tools to interact with the wallet.
-        If you send a transaction, you can always check it's status or get more info with the transaction ID.
+        For any transaction sent, the transaction ID can be used to check the status of the transaction.
         """
             ),
             allow_delegation=False,
@@ -59,9 +59,8 @@ class BitcoinCrew:
             ],
             backstory=dedent(
                 """\
-        You are a resource manager with the ability to interact with the Stacks M2M resources.
-        These resources are on-chain and you can interact with them using your tools.
-        Your job is to read the context and execute tasks using your tools to interact with resources.
+        You are a resource manager with the ability to interact with on-chain resources.
+        Your job is to read the context and execute tasks using your tools to interact with on-chain resources.
         """
             ),
             allow_delegation=False,
