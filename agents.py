@@ -25,7 +25,11 @@ class MeetingsCrew:
             verbose=True,
             memory=True,
             allow_delegation=True,
-            tools=[WebTools.scrape_url],
+            tools=[
+                WebTools.scrape_reddit_url,
+                WebTools.scrape_x_or_twitter_url,
+                WebTools.scrape_generic_url,
+            ],
         )
 
     @staticmethod
