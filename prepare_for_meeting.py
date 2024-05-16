@@ -25,9 +25,7 @@ news_list = []
 
 
 def build_news_list(output):
-    news_list.append(
-        {"description": output.description, "raw_output": output.raw_output}
-    )
+    news_list.append({"news_list_item": output.raw_output})
 
 
 # define the tasks
@@ -103,7 +101,7 @@ def engage_crew_with_tasks(urls_with_contexts):
         ],
         process=Process.sequential,
         tasks=all_tasks,
-        verbose=2,
+        verbose=0,
     )
 
     # Run the crew against all tasks
@@ -122,23 +120,33 @@ def engage_crew_with_tasks(urls_with_contexts):
         tasks=[
             Task(
                 description=(
-                    f"Review the content from the news list. "
+                    f"Review the content from the news list: {news_list}. "
                     "Summarize the key points and create a markdown file with all the information."
                 ),
                 expected_output="A markdown file with a summary of all the information",
+                agent=MeetingsCrew.meeting_writer(),
             )
         ],
         verbose=2,
     )
 
     # Run the crew against all tasks
-    crew_result = agenda_preparation_crew.kickoff(news_list)
+    crew_result = agenda_preparation_crew.kickoff()
 
     # Print the result
     print("--------------------------------------------------")
     print("Information Gathering Crew Final Result:")
     print(crew_result)
     print("--------------------------------------------------")
+
+    # Create a YYYY-MM-DD-HH-MM timestamp
+    import datetime
+
+    file_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
+
+    # create generated-meeting-agenda.md file with the result
+    with open(f"{file_timestamp}-generated-meeting-agenda.md", "w") as file:
+        file.write(crew_result)
 
 
 if __name__ == "__main__":
