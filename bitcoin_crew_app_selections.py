@@ -34,9 +34,49 @@ def format_chat_message(agent_name, message):
     return f"**{agent_name}:** {message}"
 
 
-# Initialize chat history
+# initialize agent messages and avatars
+agent_messages = {}
+agent_avatars = {
+    "Account Manager": "https://bitcoinfaces.xyz/api/get-image?name=account-manager",
+    "Resource Manager": "https://bitcoinfaces.xyz/api/get-image?name=resource-manager",
+}
+
+# initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
+
+def format_chat_message(agent_name, message):
+    return f"**{agent_name}:** {message}"
+
+
+def display_agent_output(agent, messages, avatar_url):
+    with st.container():
+        with st.chat_message(agent, avatar=avatar_url):
+            for message in messages:
+                st.write(message)
+                time.sleep(0.1)  # Add a small delay for better visibility
+        st.session_state.messages.append(
+            {"role": agent, "content": "\n".join(messages)}
+        )
+
+
+def streamlit_callback(output):  # agent_name, message
+    print("callback full output: ", output)
+    message = output.raw_output
+    agent_name = "Account Manager"  # temporary
+    # Remove ANSI escape codes from the message
+    ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+    formatted_message = ansi_escape.sub("", message)
+
+    if agent_name not in agent_messages:
+        agent_messages[agent_name] = []
+
+    agent_messages[agent_name].append(formatted_message)
+
+    # Update Streamlit UI in real-time
+    avatar_url = agent_avatars.get(agent_name)
+    display_agent_output(agent_name, agent_messages[agent_name], avatar_url)
 
 
 def engage_crew_with_tasks(selected_tasks):
@@ -53,43 +93,10 @@ def engage_crew_with_tasks(selected_tasks):
         process=Process.sequential,
         tasks=selected_tasks,
         verbose=1,
+        step_callback=streamlit_callback,
     )
 
-    current_agent = None
-    agent_messages = {}
-    # Define the avatar URLs or file paths for each agent
-    agent_avatars = {
-        "Account Manager": "https://bitcoinfaces.xyz/api/get-image?name=account-manager",
-        "Resource Manager": "https://bitcoinfaces.xyz/api/get-image?name=resource-manager",
-    }
-
-    # Run the crew and capture the stdout line by line
-    with capture_stdout() as buffer:
-        bitcoin_crew.kickoff()
-        for line in buffer.getvalue().splitlines():
-            # Remove ANSI escape codes from the line
-            ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
-            formatted_line = ansi_escape.sub("", line)
-
-            if "DEBUG" in formatted_line:
-                if "Working Agent" in formatted_line:
-                    current_agent = formatted_line.split(":")[-1].strip()
-                    if current_agent not in agent_messages:
-                        agent_messages[current_agent] = []
-            else:
-                if current_agent:
-                    agent_messages[current_agent].append(formatted_line)
-
-    for agent, messages in agent_messages.items():
-        avatar_url = agent_avatars.get(agent)
-        with st.container():
-            with st.chat_message(agent, avatar=avatar_url):
-                for message in messages:
-                    st.write(message)
-                    time.sleep(0.1)  # Add a small delay for better visibility
-        st.session_state.messages.append(
-            {"role": agent, "content": "\n".join(messages)}
-        )
+    bitcoin_crew.kickoff()
 
 
 def run_bitcoin_crew_app():
