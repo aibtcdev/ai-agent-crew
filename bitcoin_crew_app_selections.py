@@ -47,39 +47,49 @@ if "messages" not in st.session_state:
 
 
 def format_chat_message(agent_name, message):
+    print("-----formatting chat message")
     return f"**{agent_name}:** {message}"
 
 
-def display_agent_output(agent, messages, avatar_url):
-    with st.container():
-        with st.chat_message(agent, avatar=avatar_url):
-            for message in messages:
-                st.write(message)
+def display_agent_output(agent, messages, avatar_url, placeholder):
+    print("-----displaying agent output")
+    with placeholder.container():
+        for message in messages:
+            with st.chat_message(agent, avatar=avatar_url):
+                st.write(format_chat_message(agent, message))
                 time.sleep(0.1)  # Add a small delay for better visibility
         st.session_state.messages.append(
             {"role": agent, "content": "\n".join(messages)}
         )
 
 
-def streamlit_callback(output):  # agent_name, message
-    print("callback full output: ", output)
-    message = output.raw_output
-    agent_name = "Account Manager"  # temporary
-    # Remove ANSI escape codes from the message
-    ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
-    formatted_message = ansi_escape.sub("", message)
+def streamlit_callback(output, debug_container):
+    debug_container.write(f"Callback received output: {output}")
+    if output and hasattr(output, "raw_output"):
+        message = output.raw_output
+        agent_name = "Account Manager"  # temporary
+        # Remove ANSI escape codes from the message
+        ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+        formatted_message = ansi_escape.sub("", message)
+        debug_container.write(f"Step Output: {formatted_message}")
 
-    if agent_name not in agent_messages:
-        agent_messages[agent_name] = []
+        if agent_name not in agent_messages:
+            agent_messages[agent_name] = []
 
-    agent_messages[agent_name].append(formatted_message)
+        agent_messages[agent_name].append(formatted_message)
 
-    # Update Streamlit UI in real-time
-    avatar_url = agent_avatars.get(agent_name)
-    display_agent_output(agent_name, agent_messages[agent_name], avatar_url)
+        # Update Streamlit UI in real-time
+        avatar_url = agent_avatars.get(agent_name)
+        placeholder = st.empty()  # Create a placeholder for dynamic content
+        display_agent_output(
+            agent_name, agent_messages[agent_name], avatar_url, placeholder
+        )
+    else:
+        print("Callback received invalid output:", output)
 
 
-def engage_crew_with_tasks(selected_tasks):
+def engage_crew_with_tasks(selected_tasks, debug_container):
+    print("Engaging crew with tasks:", selected_tasks)
     # Clear the session state before engaging the crew
     st.session_state.messages = []
 
@@ -93,10 +103,12 @@ def engage_crew_with_tasks(selected_tasks):
         process=Process.sequential,
         tasks=selected_tasks,
         verbose=1,
-        step_callback=streamlit_callback,
+        step_callback=lambda output: streamlit_callback(output, debug_container),
     )
 
+    print("Kicking off the crew")
     bitcoin_crew.kickoff()
+    print("Crew execution completed")
 
 
 def run_bitcoin_crew_app():
@@ -198,9 +210,20 @@ def run_bitcoin_crew_app():
         )
 
     with tab3:
-        if st.button("Engage Crew"):
+        st.subheader("Selected Tasks")
+        if selected_tasks:
+            for task in selected_tasks:
+                st.write(f"- {task.description}")
+        else:
+            st.write("No tasks selected.")
+
+        debug_container = st.empty()
+
+        if st.button("Engage Crew", use_container_width=True):
+            print("Engage Crew button clicked")
             with st.spinner("Engaging Crew..."):
-                engage_crew_with_tasks(selected_tasks)
+                engage_crew_with_tasks(selected_tasks, debug_container)
+            print("Crew execution completed")
 
 
 if __name__ == "__main__":
