@@ -31,11 +31,6 @@ def build_news_list(output):
 # define the tasks
 
 
-# 2. extract website content
-# 3. write markdown list of bullet points
-# 4. summarize all bullet points into a markdown file
-
-
 # 1. scrape website, get as much useful content as possible
 def create_research_task(url):
     return Task(
@@ -60,9 +55,11 @@ def create_extraction_task(raw_content):
         ),
         expected_output="Relevant content extracted from the raw data in bullet points",
         agent=MeetingsCrew.meeting_writer(),
+        callback=build_news_list,  # used by 2nd crew
     )
 
 
+# unused for now, will revisit
 def create_writing_task(extracted_content, url):
     return Task(
         description=(
@@ -74,7 +71,6 @@ def create_writing_task(extracted_content, url):
         ),
         expected_output="A markdown file with a summary of all the information",
         agent=MeetingsCrew.meeting_writer(),
-        callback=build_news_list,
     )
 
 
@@ -85,6 +81,7 @@ def create_all_tasks(url_list):
     tasks = []
     for url in url_list:
         research_task = create_research_task(url)
+        # need to chain the outputs here, not the expected output
         extraction_task = create_extraction_task(research_task.expected_output)
         tasks.extend([research_task, extraction_task])
     return tasks
@@ -144,12 +141,16 @@ def engage_crew_with_tasks(url_list):
     print("--------------------------------------------------")
 
     # Create a YYYY-MM-DD-HH-MM timestamp
-    import datetime
+    from datetime import datetime
 
     file_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
 
     # create generated-meeting-agenda.md file with the result
-    with open(f"{file_timestamp}-generated-meeting-agenda.md", "w") as file:
+    with open(f"agendas/{file_timestamp}-generated-meeting-agenda.md", "w") as file:
+        file.write("# News List\n")
+        for item in news_list:
+            file.write(f"- {item['news_list_item']}\n")
+        file.write("## Latest AI News\n")
         file.write(crew_result)
 
 
