@@ -124,7 +124,7 @@ def engage_crew_with_tasks(url_list):
                     f"Review the content from the news list: {news_list}. "
                     "Summarize the key points and create a markdown file with all the information."
                 ),
-                expected_output="A markdown file with a summary of all the information",
+                expected_output="A markdown file with each news item on it's own line and a bullet point summary of all the related information. The first line should summarize the news content and link to the original source.",
                 agent=MeetingsCrew.meeting_writer(),
             )
         ],
@@ -156,10 +156,10 @@ def engage_crew_with_tasks(url_list):
 
 if __name__ == "__main__":
     url_list = [
-        "https://x.com/chiefaioffice/status/1793407809847275864"
-        "https://x.com/ritakozlov_/status/1793267209441042917"
-        "https://x.com/ilblackdragon/status/1793265661839339873"
-        "https://x.com/ksaitor/status/1793594843559854536"
-        "https://x.com/petergyang/status/1793480607198323196"
+        "https://x.com/chiefaioffice/status/1793407809847275864",
+        "https://x.com/ritakozlov_/status/1793267209441042917",
+        "https://x.com/ilblackdragon/status/1793265661839339873",
+        "https://x.com/ksaitor/status/1793594843559854536",
+        "https://x.com/petergyang/status/1793480607198323196",
     ]
     engage_crew_with_tasks(url_list)

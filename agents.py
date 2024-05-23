@@ -19,6 +19,7 @@ class MeetingsCrew:
             backstory=(
                 "You are a skilled website scraper, capable of extracting valuable information from the website code of any given source."
                 " Your expertise in web scraping allows you to gather data efficiently and accurately, providing valuable information for further analysis."
+                " You always use the correct tool for the job based on the URL provided."
             ),
             verbose=True,
             memory=True,
