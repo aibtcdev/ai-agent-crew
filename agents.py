@@ -1,4 +1,3 @@
-import streamlit as st
 from crewai import Agent
 from textwrap import dedent
 from tools.wallet import WalletTools
@@ -9,18 +8,17 @@ from tools.web_scraper import WebTools
 
 class MeetingsCrew:
     @staticmethod
-    def meeting_researcher(llm=None):
+    def website_scraper(llm=None):
         kwargs = {}
         if llm is not None:
             kwargs["llm"] = llm
 
         return Agent(
-            role="Meeting Researcher",
-            goal="Gather relevant information from the provided links.",
+            role="Website Scraper",
+            goal="Gather relevant information from the provided links. Be verbose, provide as much of the content and necessary context as possible.",
             backstory=(
-                "With a keen eye for detail and a deep understanding of various topics,"
-                " you are dedicated to collecting comprehensive and accurate information"
-                " from any given source."
+                "You are a skilled website scraper, capable of extracting valuable information from the website code of any given source."
+                " Your expertise in web scraping allows you to gather data efficiently and accurately, providing valuable information for further analysis."
             ),
             verbose=True,
             memory=True,
@@ -40,33 +38,14 @@ class MeetingsCrew:
 
         return Agent(
             role="Writer",
-            goal="Summarize the gathered information into a markdown file",
+            goal="Summarize the gathered information and always return results in markdown format.",
             backstory=(
                 "You have a talent for distilling complex information into clear, concise"
-                " summaries. Your writing is both engaging and informative, making"
-                " even the most intricate topics accessible to all."
+                " summaries based on your belief in the future of Bitcoin and AI working together."
+                " Your writing is both engaging and informative, making even the most intricate topics accessible to all."
             ),
             verbose=True,
             memory=True,
-            tools=[],
-            allow_delegation=False,
-        )
-
-    @staticmethod
-    def content_extractor(llm=None):
-        kwargs = {}
-        if llm is not None:
-            kwargs["llm"] = llm
-
-        return Agent(
-            role="Content Extractor",
-            goal="Extract relevant content from the raw data",
-            verbose=True,
-            memory=True,
-            backstory=(
-                "Specialized in sifting through large volumes of information, you excel at"
-                " identifying the most pertinent and valuable pieces of content."
-            ),
             tools=[],
             allow_delegation=True,
         )

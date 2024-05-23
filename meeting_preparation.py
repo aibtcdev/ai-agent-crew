@@ -31,36 +31,42 @@ def build_news_list(output):
 # define the tasks
 
 
-def create_research_task(url, context):
+# 2. extract website content
+# 3. write markdown list of bullet points
+# 4. summarize all bullet points into a markdown file
+
+
+# 1. scrape website, get as much useful content as possible
+def create_research_task(url):
     return Task(
         description=(
-            f"Fetch information from the URL: {url}. "
-            f"Context: {context}. "
-            "Open the link and summarize key points in the article, especially focusing on crypto and AI if mentioned. "
-            "Create a short sentence that represents the content."
+            f"Fetch information from the URL: {url}."
+            "Fetch all the raw content from the URL, including any relevant information that can be used to create a summary."
         ),
-        expected_output="Raw content from the URL, including a short sentence summary",
-        agent=MeetingsCrew.meeting_researcher(),
+        expected_output="Raw content from the URL excluding any HTML code.",
+        agent=MeetingsCrew.website_scraper(),
     )
 
 
+# 2. extract website content into bullet point list
 def create_extraction_task(raw_content):
     return Task(
         description=(
             "Extract relevant content from the provided raw data. "
             "Focus on identifying the key points and important information. "
-            "Create 4-5 bullet points that represent the key points."
+            "Create 5 bullet points that represent the key points. "
+            "Ensure the extracted content is concise and informative. "
             f"Raw data: {raw_content}"
         ),
         expected_output="Relevant content extracted from the raw data in bullet points",
-        agent=MeetingsCrew.content_extractor(),
+        agent=MeetingsCrew.meeting_writer(),
     )
 
 
 def create_writing_task(extracted_content, url):
     return Task(
         description=(
-            "Summarize the extracted information into bullet points and format it as a markdown file. "
+            "Create a markdown file with a summary of all extracted content. "
             "Include relevant links and context. "
             "Ensure the summary is concise and informative."
             f"URL: {url}"
@@ -75,28 +81,26 @@ def create_writing_task(extracted_content, url):
 # aggregate the tasks into a list
 
 
-def create_all_tasks(urls_with_contexts):
+def create_all_tasks(url_list):
     tasks = []
-    for url, context in urls_with_contexts:
-        research_task = create_research_task(url, context)
+    for url in url_list:
+        research_task = create_research_task(url)
         extraction_task = create_extraction_task(research_task.expected_output)
-        writing_task = create_writing_task(extraction_task.expected_output, url)
-        tasks.extend([research_task, extraction_task, writing_task])
+        tasks.extend([research_task, extraction_task])
     return tasks
 
 
 # define the crew and run the tasks
 
 
-def engage_crew_with_tasks(urls_with_contexts):
+def engage_crew_with_tasks(url_list):
     # Define the tasks
-    all_tasks = create_all_tasks(urls_with_contexts)
+    all_tasks = create_all_tasks(url_list)
 
     # Create a crew
     info_gathering_crew = Crew(
         agents=[
-            MeetingsCrew.meeting_researcher(),
-            MeetingsCrew.content_extractor(),
+            MeetingsCrew.website_scraper(),
             MeetingsCrew.meeting_writer(),
         ],
         process=Process.sequential,
@@ -150,15 +154,11 @@ def engage_crew_with_tasks(urls_with_contexts):
 
 
 if __name__ == "__main__":
-    urls_with_contexts = [
-        ("https://www.reddit.com/r/LocalLLaMA/", "Local LLAMA community"),
-        (
-            "https://x.com/_philschmid/status/1789999841579315705?t=iutbHiG30u8Xj6zBkTqmkQ&s=09",
-            "new model release",
-        ),
-        (
-            "https://x.com/AlphaSignalAI/status/1790070779813433589?t=m5TY8PEfbKqCyY4nPoI6yA&s=09",
-            "new model release",
-        ),
+    url_list = [
+        "https://x.com/chiefaioffice/status/1793407809847275864"
+        "https://x.com/ritakozlov_/status/1793267209441042917"
+        "https://x.com/ilblackdragon/status/1793265661839339873"
+        "https://x.com/ksaitor/status/1793594843559854536"
+        "https://x.com/petergyang/status/1793480607198323196"
     ]
-    engage_crew_with_tasks(urls_with_contexts)
+    engage_crew_with_tasks(url_list)
