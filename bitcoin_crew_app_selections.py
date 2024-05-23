@@ -31,11 +31,6 @@ default_llm = ChatOpenAI(
 )
 
 
-# Define a function to format chat messages
-def format_chat_message(agent_name, message):
-    return f"**{agent_name}:** {message}"
-
-
 # initialize agent messages and avatars
 agent_messages = {}
 agent_avatars = {
@@ -50,6 +45,14 @@ if "messages" not in st.session_state:
 
 def task_output_to_string(output: TaskOutput) -> str:
     return f"Description: {output.description}\nSummary: {output.summary}\nResult: {output.result}"
+
+
+def get_task_description(output: TaskOutput) -> str:
+    return f"{output.description}"
+
+
+def get_task_result(output: TaskOutput) -> str:
+    return f"{output.raw_output}"
 
 
 def format_chat_message(agent_name, message):
@@ -67,6 +70,9 @@ def display_agent_output(agent, messages, avatar_url, placeholder):
         )
 
 
+file_output = []
+
+
 def streamlit_callback(output: TaskOutput):
     agent_name = "Account Manager"  # temporary
 
@@ -74,7 +80,10 @@ def streamlit_callback(output: TaskOutput):
         agent_messages[agent_name] = []
 
     output_str = task_output_to_string(output)
-    agent_messages[agent_name].append(output_str)
+    task_description = get_task_description(output)
+    task_result = get_task_result(output)
+    file_output.append(f"\n**{task_description}**\n\n{task_result}")
+    agent_messages[agent_name].append(f"{task_description}\n\n{task_result}")
 
     # Update Streamlit UI in real-time
     avatar_url = agent_avatars.get(agent_name)
@@ -103,7 +112,19 @@ def engage_crew_with_tasks(selected_tasks):
     )
 
     print("Kicking off the crew")
-    bitcoin_crew.kickoff()
+    crew_result = bitcoin_crew.kickoff()
+
+    # Create a YYYY-MM-DD-HH-MM timestamp
+    from datetime import datetime
+
+    file_timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
+
+    # create generated-meeting-agenda.md file with the result
+    with open(f"wallet/{file_timestamp}-completed-tasks.md", "w") as file:
+        file.write("# Wallet Crew\n\n")
+        file.write("\n".join(file_output))
+        file.write("## Final Result\n\n")
+        file.write(crew_result)
 
 
 def run_bitcoin_crew_app():
@@ -118,27 +139,27 @@ def run_bitcoin_crew_app():
         Task(
             description="What information do you know about the currently configured wallet?",
             agent=account_manager_agent,
-            expected_output="The wallet address index, address, and nonce.",
+            expected_output="A markdown list including the wallet address index, address, and nonce.",
         ),
         Task(
             description="What other wallet addresses do you have access to?",
             agent=account_manager_agent,
-            expected_output="A list of wallet addresses organized by index.",
+            expected_output="A markdown list of wallet addresses organized by index.",
         ),
         Task(
             description="What is the aiBTC balance for your currently configured wallet?",
             agent=account_manager_agent,
-            expected_output="The balance of aiBTC for the configured wallet.",
+            expected_output="The balance of aiBTC for the configured wallet in human readable form.",
         ),
         Task(
             description="Get aiBTC from the faucet",
             agent=account_manager_agent,
-            expected_output="The transaction ID for the aiBTC faucet drip.",
+            expected_output="The transaction ID for the aiBTC faucet drip in human readable form.",
         ),
         Task(
             description="Get the transaction status for the aiBTC faucet drip",
             agent=account_manager_agent,
-            expected_output="The status of the transaction for the aiBTC faucet drip.",
+            expected_output="The status of the transaction for the aiBTC faucet drip in human readable form.",
         ),
     ]
     resource_manager_tasks = [
