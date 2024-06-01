@@ -23,11 +23,9 @@ class MeetingsCrew:
             ),
             verbose=True,
             memory=True,
-            allow_delegation=True,
+            allow_delegation=False,
             tools=[
-                WebTools.scrape_reddit_url,
                 WebTools.scrape_x_or_twitter_url,
-                WebTools.scrape_generic_url,
             ],
         )
 
@@ -48,7 +46,7 @@ class MeetingsCrew:
             verbose=True,
             memory=True,
             tools=[],
-            allow_delegation=True,
+            allow_delegation=False,
         )
 
 
