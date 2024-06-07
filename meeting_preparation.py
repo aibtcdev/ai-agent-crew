@@ -210,22 +210,9 @@ def engage_crew_with_tasks(url_list):
 
 if __name__ == "__main__":
     url_list = [
-        "https://x.com/JamesAlcorn94/status/1794897317503631394",
-        "https://x.com/myfear/status/1795549367580950814",
-        "https://x.com/emollick/status/1795515457228935658",
-        # "https://x.com/victormustar/status/1795778241744998614",
-        # "https://x.com/rohanpaul_ai/status/1795196332166070289",
-        # "https://x.com/dchaplot/status/1795823340533469560",
-        # "https://x.com/jihoontack/status/1795350959482400890",
-        # "https://x.com/janframework/status/1795328213478215999",
-        # "https://x.com/huybery/status/1795432194460340708",
-        # "https://x.com/IntuitMachine/status/1795570166706720909",
-        # "https://x.com/llm360/status/1795833911580438807",
-        # "https://x.com/_philschmid/status/1795853856628199619",
-        # "https://x.com/kashyap7x/status/1795354164874408363",
-        # "https://x.com/cartesia_ai/status/1795856778456084596",
-        # "https://x.com/Xianbao_QIAN/status/1795490474461118804",
-        # "https://x.com/AISafetyMemes/status/1795309403824165184",
-        # "https://x.com/BEBischof/status/1795497494757216259",
+        "https://x.com/hirosystems/status/1796579639982440751",
+        "https://x.com/LangChainAI/status/1796942281821585864",
+        "https://x.com/rohanpaul_ai/status/1798457077037469962",
+        "https://x.com/Steve8708/status/1798720674875560220",
     ]
     engage_crew_with_tasks(url_list)
