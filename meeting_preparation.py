@@ -1,6 +1,7 @@
 from crewai import Crew, Process, Task
 from crewai.tasks import TaskOutput
 from agents import MeetingsCrew
+from news_examples import good_example, bad_example
 
 # set global vars
 
@@ -54,7 +55,7 @@ def create_scrape_website_task(url):
             f"Provided URL: {url}."
             "Fetch the contents of this tweet and return the raw content for use in a later step."
         ),
-        expected_output="The contents of the tweet, excluding any HTML code.",
+        expected_output="The entire contents of the tweet excluding any HTML code.",
         agent=MeetingsCrew.website_scraper(),
         callback=build_scraped_content_list,
     )
@@ -165,16 +166,18 @@ def engage_crew_with_tasks(url_list):
                 description=(
                     "The provided news list contains a url, scraped content, and generated summary for each news item."
                     "Your job is to review all of the news items and create a markdown file with a summary of the key points extracted from the tweet."
-                    "The summary must include a short title for each news item, linked to the original tweet."
-                    "The summary must also include a bullet point list of the key points extracted from the tweet underneath the title."
-                    "Any addiotional links in the content should be included as their own bullet point with a short description of what the link is."
-                    f"News List:\n\n{news_list}"
+                    "[START GOOD EXAMPLE]"
+                    f"{good_example}"
+                    "[END GOOD EXAMPLE]"
+                    "[START BAD EXAMPLE]"
+                    f"{bad_example}"
+                    "[END BAD EXAMPLE]"
+                    "[START NEWS LIST]"
+                    f"{news_list}"
+                    "[END NEWS LIST]"
                 ),
                 expected_output=(
-                    "A markdown file with the heading 'Latest AI News' and a bullet point summary of all the related information from each tweet."
-                    "The first line for each list item should summarize the news content and link to the original source."
-                    "The following lines should include the key points extracted from the tweet."
-                    "Any additional links in the content should be included as their own bullet point with a short description of what the link is."
+                    "A markdown file with the L3 heading 'Latest AI News' and a bullet point summary of all the related information from each tweet."
                 ),
                 agent=MeetingsCrew.meeting_writer(),
             )
