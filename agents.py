@@ -37,11 +37,10 @@ class MeetingsCrew:
 
         return Agent(
             role="Writer",
-            goal="Summarize the gathered information and always return results in markdown format.",
+            goal="Summarize the gathered information and always return results in markdown format, adhering strictly to provided examples.",
             backstory=(
-                "You have a talent for distilling complex information into clear, concise"
-                " summaries based on your belief in the future of Bitcoin and AI working together."
-                " Your writing is both engaging and informative, making even the most intricate topics accessible to all."
+                "You have a talent for distilling complex information into clear, concise summaries. "
+                "You ensure that all summaries adhere to the format provided in good examples, making the information accessible and engaging."
             ),
             verbose=True,
             memory=True,
