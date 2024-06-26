@@ -1,5 +1,6 @@
 import os
 import streamlit as st
+import yaml
 from dotenv import load_dotenv
 from crewai import Crew, Agent, Task, Process
 from tools.wallet import WalletTools
@@ -8,18 +9,29 @@ from tools.onchain_resources import OnchainResourcesTools
 from langchain_openai import ChatOpenAI
 import anthropic
 
-# Configuration
+# Load environment variables
 load_dotenv()
-MODEL_SETTINGS = {
-    "OpenAi": {
-        "OPENAI_MODEL_NAME": "gpt-4",
-        "OPENAI_API_BASE": "https://api.openai.com/v1",
-    },
-    "Anthropic": {
-        "OPENAI_MODEL_NAME": "claude-3-sonnet-20240229",
-        "OPENAI_API_BASE": "https://api.anthropic.com/v1",
-    },
-}
+
+
+# Load model settings from YAML file
+def load_model_settings():
+    with open("model_settings.yaml", "r") as file:
+        return yaml.safe_load(file)
+
+
+def save_model_settings(settings):
+    with open("model_settings.yaml", "w") as file:
+        yaml.dump(settings, file)
+
+
+MODEL_SETTINGS = load_model_settings()
+
+# Override settings with environment variables
+for provider, settings in MODEL_SETTINGS.items():
+    for key, value in settings.items():
+        env_var = f"{provider.upper()}_{key}"
+        if env_var in os.environ:
+            MODEL_SETTINGS[provider][key] = os.environ[env_var]
 
 # Set up Streamlit page
 st.set_page_config(page_title="AIBTCdev Interactive Wallet Manager", layout="wide")
@@ -64,10 +76,10 @@ def get_llm():
 
 # Sidebar Configuration
 with st.sidebar:
-    st.title("AIBTCdev Chatbot")
+    st.title("AIBTCdev Settings")
 
     with st.expander("LLM Settings", expanded=True):
-        llm_options = ["OpenAi", "Anthropic"]
+        llm_options = list(MODEL_SETTINGS.keys())
 
         st.selectbox(
             "Select LLM Provider",
@@ -82,8 +94,37 @@ with st.sidebar:
             "API Key", value=st.session_state.api_key, key="api_key", type="password"
         )
 
+        st.divider()
+
         if st.button("Clear Chat"):
             st.session_state.messages = []
+
+    with st.expander("Manage Model Settings", expanded=False):
+        new_provider = st.text_input("New Provider Name")
+        new_model_name = st.text_input("New Model Name")
+        new_api_base = st.text_input("New API Base")
+
+        if st.button("Add/Update Provider"):
+            if new_provider and new_model_name and new_api_base:
+                MODEL_SETTINGS[new_provider] = {
+                    "OPENAI_MODEL_NAME": new_model_name,
+                    "OPENAI_API_BASE": new_api_base,
+                }
+                save_model_settings(MODEL_SETTINGS)
+                st.success(f"Provider {new_provider} added/updated successfully!")
+            else:
+                st.error("Please fill in all fields to add/update a provider.")
+
+        provider_to_remove = st.selectbox(
+            "Select Provider to Remove", options=list(MODEL_SETTINGS.keys())
+        )
+        if st.button("Remove Provider"):
+            if provider_to_remove in MODEL_SETTINGS:
+                del MODEL_SETTINGS[provider_to_remove]
+                save_model_settings(MODEL_SETTINGS)
+                st.success(f"Provider {provider_to_remove} removed successfully!")
+            else:
+                st.error("Selected provider not found.")
 
 # Define agents
 try:
@@ -253,7 +294,6 @@ resource_crew = Crew(
 
 st.session_state.crews["Wallet Crew"] = wallet_crew
 st.session_state.crews["Resource Crew"] = resource_crew
-
 
 # Main layout with tabs
 tab1, tab2, tab3, tab4 = st.tabs(["Agents", "Tasks", "Crews", "Execution"])
