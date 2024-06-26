@@ -1,41 +1,22 @@
 import os
+import anthropic
 import streamlit as st
-import yaml
 from dotenv import load_dotenv
 from crewai import Crew, Agent, Task, Process
+from langchain_openai import ChatOpenAI
 from tools.wallet import WalletTools
 from tools.aibtc_token import AIBTCTokenTools
 from tools.onchain_resources import OnchainResourcesTools
-from langchain_openai import ChatOpenAI
-import anthropic
+from aibtcdev_utils import get_model_settings, save_model_settings
 
-# Load environment variables
-load_dotenv()
-
-
-# Load model settings from YAML file
-def load_model_settings():
-    with open("model_settings.yaml", "r") as file:
-        return yaml.safe_load(file)
-
-
-def save_model_settings(settings):
-    with open("model_settings.yaml", "w") as file:
-        yaml.dump(settings, file)
-
-
-MODEL_SETTINGS = load_model_settings()
-
-# Override settings with environment variables
-for provider, settings in MODEL_SETTINGS.items():
-    for key, value in settings.items():
-        env_var = f"{provider.upper()}_{key}"
-        if env_var in os.environ:
-            MODEL_SETTINGS[provider][key] = os.environ[env_var]
 
 # Set up Streamlit page
-st.set_page_config(page_title="AIBTCdev Interactive Wallet Manager", layout="wide")
-st.title("AIBTCdev Interactive Wallet Manager")
+st.set_page_config(page_title="AIBTCdev Crews", layout="wide")
+st.title("AIBTCdev Crews")
+
+# Get model settings
+MODEL_SETTINGS = get_model_settings()
+
 
 # Initialize session state
 if "messages" not in st.session_state:
