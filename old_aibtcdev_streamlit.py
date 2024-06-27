@@ -7,7 +7,7 @@ from langchain_openai import ChatOpenAI
 from tools.wallet import WalletTools
 from tools.aibtc_token import AIBTCTokenTools
 from tools.onchain_resources import OnchainResourcesTools
-from aibtcdev_utils import get_model_settings, save_model_settings
+from aibtcdev_utils import get_model_settings, save_model_settings, init_session_state
 
 
 # Set up Streamlit page
@@ -17,24 +17,8 @@ st.title("AIBTCdev Crews")
 # Get model settings
 MODEL_SETTINGS = get_model_settings()
 
-
 # Initialize session state
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-if "llm_model" not in st.session_state:
-    st.session_state.llm_model = "OpenAi"
-if "api_key" not in st.session_state:
-    st.session_state.api_key = os.getenv("OPENAI_API_KEY", "")
-if "api_base" not in st.session_state:
-    st.session_state.api_base = MODEL_SETTINGS["OpenAi"]["OPENAI_API_BASE"]
-if "model_name" not in st.session_state:
-    st.session_state.model_name = MODEL_SETTINGS["OpenAi"]["OPENAI_MODEL_NAME"]
-if "agents" not in st.session_state:
-    st.session_state.agents = {}
-if "tasks" not in st.session_state:
-    st.session_state.tasks = {}
-if "crews" not in st.session_state:
-    st.session_state.crews = {}
+init_session_state(MODEL_SETTINGS)
 
 
 def update_model():

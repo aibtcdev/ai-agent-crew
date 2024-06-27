@@ -1,0 +1,14 @@
+app_settings:
+  page_title: AIBTCdev Crews
+  layout: wide
+
+model_settings:
+  OpenAI:
+    OPENAI_MODEL_NAME: gpt-4
+    OPENAI_API_BASE: https://api.openai.com/v1
+  ClaudeOpus:
+    OPENAI_MODEL_NAME: claude-3-opus-20240229
+    OPENAI_API_BASE: https://api.anthropic.com/v1
+  ClaudeSonnet:
+    OPENAI_MODEL_NAME: claude-3-sonnet
+    OPENAI_API_BASE: https://api.anthropic.com/v1
