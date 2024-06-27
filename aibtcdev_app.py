@@ -16,17 +16,19 @@ from aibtcdev_utils import (
     get_llm,
 )
 
-# Load configuration
+# load saved settings with .env overrides
 config = load_config()
 
-# Set up Streamlit page
+# set up Streamlit page
+page_title = config["app_settings"]["page_title"]
+layout = config["app_settings"]["layout"]
 st.set_page_config(
-    page_title=config["app_settings"]["page_title"],
-    layout=config["app_settings"]["layout"],
+    page_title=page_title,
+    layout=layout,
 )
-st.title(config["app_settings"]["page_title"])
+st.title(page_title)
 
-# Initialize session state
+# initialize session state
 init_session_state(config)
 
 
@@ -37,45 +39,57 @@ def update_model():
     )
     st.session_state.api_base = model_settings["OPENAI_API_BASE"]
     st.session_state.model_name = model_settings["OPENAI_MODEL_NAME"]
+    # should this load from .env? changes between Anthropic and OpenAI
+    # st.session_state.api_key = model_settings["OPENAI_API_KEY"]
 
 
-# Sidebar Configuration
+# setup sidebar for settings
 with st.sidebar:
     st.title("AIBTCdev Settings")
 
-    with st.expander("LLM Settings", expanded=True):
+    with st.expander("Current LLM Settings", expanded=True):
         llm_options = list(config["model_settings"].keys())
 
         st.selectbox(
-            "Select LLM Provider",
+            "Select LLM:",
             options=llm_options,
             key="llm_model",
             on_change=update_model,
         )
-
-        st.text_input("API Base", value=st.session_state.api_base, key="api_base")
-        st.text_input("Model", value=st.session_state.model_name, key="model_name")
+        st.text_input("API Base URL:", value=st.session_state.api_base, key="api_base")
         st.text_input(
-            "API Key", value=st.session_state.api_key, key="api_key", type="password"
+            "Model Name:", value=st.session_state.model_name, key="model_name"
+        )
+        st.text_input(
+            "API Key:", value=st.session_state.api_key, key="api_key", type="password"
         )
 
-        if st.button("Clear Chat"):
-            st.session_state.messages = []
+        if st.button("Update LLM Provider"):
+            update_model_settings(
+                config,
+                st.session_state.llm_model,
+                st.session_state.model_name,
+                st.session_state.api_base,
+            )
+            st.success("LLM settings updated successfully!")
 
-    with st.expander("Manage Model Settings", expanded=False):
-        new_provider = st.text_input("New Provider Name")
-        new_model_name = st.text_input("New Model Name")
-        new_api_base = st.text_input("New API Base")
+    with st.expander("Add LLM Provider", expanded=False):
+        new_provider = st.text_input("New Provider Name", placeholder="GroqCloud")
+        new_model_name = st.text_input("New Model Name", placeholder="Llama3-70B")
+        new_api_base = st.text_input(
+            "New API Base URL", placeholder="https://api.groq.com/openai/v1"
+        )
 
-        if st.button("Add/Update Provider"):
+        if st.button("Add Provider"):
             if new_provider and new_model_name and new_api_base:
                 update_model_settings(
                     config, new_provider, new_model_name, new_api_base
                 )
-                st.success(f"Provider {new_provider} added/updated successfully!")
+                st.success(f"Provider {new_provider} added successfully!")
             else:
-                st.error("Please fill in all fields to add/update a provider.")
+                st.error("Please fill in all fields to add a provider.")
 
+    with st.expander("Remove LLM Provider", expanded=False):
         provider_to_remove = st.selectbox(
             "Select Provider to Remove", options=list(config["model_settings"].keys())
         )
@@ -84,6 +98,11 @@ with st.sidebar:
                 st.success(f"Provider {provider_to_remove} removed successfully!")
             else:
                 st.error("Selected provider not found.")
+
+    with st.expander("Chat Settings", expanded=False):
+        if st.button("Clear Chat History", key="clear_chat_history"):
+            st.session_state.messages = []
+            st.success("Chat history cleared!")
 
 # Initialize agents, tasks, and crews
 try:
