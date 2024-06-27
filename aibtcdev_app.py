@@ -133,6 +133,9 @@ except Exception as e:
 
 
 # Tab functions
+import pandas as pd
+
+
 def agents_tab():
     st.header("Configured Agents")
 
@@ -144,7 +147,7 @@ def agents_tab():
         with col1 if i % 2 == 0 else col2:
             with st.container():
                 # Create a card-like container
-                # st.subheader(agent_name)
+                st.subheader(agent_name)
 
                 # Two-column layout for image and basic info
                 img_col, info_col = st.columns([1, 2])
@@ -154,19 +157,57 @@ def agents_tab():
                         f"https://bitcoinfaces.xyz/api/get-image?name={agent.role}",
                         use_column_width=True,
                         output_format="auto",
-                        caption=agent_name,
+                        caption=agent.role,
                         clamp=True,
                     )
 
                 with info_col:
-                    st.markdown(f"**Role:** {agent.role}")
                     st.markdown(f"**Goal:** {agent.goal}")
                     st.markdown(f"**Backstory:** {agent.backstory}")
 
-                # Expandable sections for tools
-                with st.expander("Tools"):
+                # Expandable section for tools with styled dataframe
+                with st.expander("Tools and Capabilities"):
+                    tool_data = []
                     for tool in agent.tools:
-                        st.markdown(f"- {tool.name}")
+                        tool_name = (
+                            tool.name if hasattr(tool, "name") else tool.__name__
+                        )
+                        # Extract only the description part after the hyphen
+                        full_description = (
+                            tool.description
+                            if hasattr(tool, "description")
+                            else "No description available"
+                        )
+                        description = (
+                            full_description.split(" - ")[-1]
+                            if " - " in full_description
+                            else full_description
+                        )
+                        tool_data.append(
+                            {"Tool": tool_name, "Description": description}
+                        )
+
+                    if tool_data:
+                        df = pd.DataFrame(tool_data)
+                        st.dataframe(
+                            df,
+                            column_config={
+                                "Tool": st.column_config.TextColumn(
+                                    "Tool",
+                                    width="medium",
+                                    help="Name of the tool",
+                                ),
+                                "Description": st.column_config.TextColumn(
+                                    "Description",
+                                    width="large",
+                                    help="What the tool does",
+                                ),
+                            },
+                            hide_index=True,
+                            use_container_width=True,
+                        )
+                    else:
+                        st.write("No tools available for this agent.")
 
 
 def tools_tab():
