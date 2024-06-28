@@ -47,6 +47,11 @@ def update_model():
 with st.sidebar:
     st.title("AIBTCdev Settings")
 
+    with st.expander("Chat Settings", expanded=False):
+        if st.button("Clear Chat History", key="clear_chat_history"):
+            st.session_state.messages = []
+            st.success("Chat history cleared!")
+
     with st.expander("Current LLM Settings", expanded=True):
         llm_options = list(config["model_settings"].keys())
 
@@ -98,11 +103,6 @@ with st.sidebar:
                 st.success(f"Provider {provider_to_remove} removed successfully!")
             else:
                 st.error("Selected provider not found.")
-
-    with st.expander("Chat Settings", expanded=False):
-        if st.button("Clear Chat History", key="clear_chat_history"):
-            st.session_state.messages = []
-            st.success("Chat history cleared!")
 
 # Initialize agents, tasks, and crews
 try:
@@ -236,7 +236,13 @@ def crews_tab():
         with st.expander(crew_name):
             st.write("Agents:")
             for agent in crew.agents:
-                st.write(f"- {agent.role}")
+                st.image(
+                    f"https://bitcoinfaces.xyz/api/get-image?name={agent.role}",
+                    use_column_width=False,
+                    output_format="auto",
+                    caption=agent.role,
+                    clamp=True,
+                )
             st.write("Tasks:")
             for task in crew.tasks:
                 st.write(f"- {task.description}")
