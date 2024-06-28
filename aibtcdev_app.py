@@ -138,15 +138,24 @@ except Exception as e:
 # Tab functions
 import pandas as pd
 
+
 # Assume all_tools is a list of all available tools
+def is_tool(name, obj):
+    return callable(obj) and not name.startswith("__") and hasattr(obj, "description")
+
+
 all_tools = (
-    [tool for tool in dir(AIBTCTokenTools) if callable(getattr(AIBTCTokenTools, tool))]
+    [
+        tool
+        for tool in dir(AIBTCTokenTools)
+        if is_tool(tool, getattr(AIBTCTokenTools, tool))
+    ]
     + [
         tool
         for tool in dir(OnchainResourcesTools)
-        if callable(getattr(OnchainResourcesTools, tool))
+        if is_tool(tool, getattr(OnchainResourcesTools, tool))
     ]
-    + [tool for tool in dir(WalletTools) if callable(getattr(WalletTools, tool))]
+    + [tool for tool in dir(WalletTools) if is_tool(tool, getattr(WalletTools, tool))]
 )
 
 
