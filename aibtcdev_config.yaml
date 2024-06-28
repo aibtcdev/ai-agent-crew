@@ -1,3 +1,7 @@
+agents:
+- get_resource_manager
+- get_transaction_manager
+- get_wallet_manager
 app_settings:
   layout: wide
   page_title: AIBTCdev Crews

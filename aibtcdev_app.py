@@ -1,3 +1,5 @@
+import importlib
+import importlib.util
 import streamlit as st
 from aibtcdev_agents import get_wallet_manager, get_resource_manager
 from aibtcdev_tools import AIBTCTokenTools, OnchainResourcesTools, WalletTools
@@ -10,6 +12,7 @@ from aibtcdev_tasks import (
 from aibtcdev_crews import get_wallet_crew, get_resource_crew
 from aibtcdev_utils import (
     load_config,
+    save_config,
     init_session_state,
     update_model_settings,
     remove_model_settings,
@@ -135,9 +138,109 @@ except Exception as e:
 # Tab functions
 import pandas as pd
 
+# Assume all_tools is a list of all available tools
+all_tools = (
+    [tool for tool in dir(AIBTCTokenTools) if callable(getattr(AIBTCTokenTools, tool))]
+    + [
+        tool
+        for tool in dir(OnchainResourcesTools)
+        if callable(getattr(OnchainResourcesTools, tool))
+    ]
+    + [tool for tool in dir(WalletTools) if callable(getattr(WalletTools, tool))]
+)
+
+
+def add_agent():
+    st.subheader("Add New Agent")
+
+    config = load_config()
+    existing_agents = config.get("agents", [])
+
+    with st.form("add_agent_form"):
+        role = st.text_input("Role")
+        goal = st.text_input("Goal")
+        backstory = st.text_area("Backstory")
+        selected_tools = st.multiselect("Tools", options=all_tools)
+
+        submitted = st.form_submit_button("Add Agent")
+        if submitted:
+            function_name = f"get_{role.lower().replace(' ', '_')}"
+            new_agent = f"""
+def {function_name}(llm):
+    return Agent(
+        role="{role}",
+        goal="{goal}",
+        backstory="{backstory}",
+        tools=[{', '.join(selected_tools)}],
+        verbose=True,
+        llm=llm,
+    )
+"""
+            with open("aibtcdev_agents.py", "a") as file:
+                file.write(new_agent)
+
+            if function_name not in existing_agents:
+                existing_agents.append(function_name)
+                config["agents"] = existing_agents
+                save_config(config)
+
+            st.success(f"Agent '{role}' added successfully!")
+            st.experimental_rerun()
+
+
+def sync_agents():
+    config = load_config()
+    spec = importlib.util.spec_from_file_location(
+        "aibtcdev_agents", "aibtcdev_agents.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    defined_agents = [
+        name
+        for name in dir(module)
+        if name.startswith("get_") and callable(getattr(module, name))
+    ]
+    config_agents = config.get("agents", [])
+
+    new_agents = [agent for agent in defined_agents if agent not in config_agents]
+    if new_agents:
+        config["agents"] = config_agents + new_agents
+        save_config(config)
+        st.success(f"Synced {len(new_agents)} new agents: {', '.join(new_agents)}")
+    else:
+        st.info("No new agents to sync.")
+
 
 def agents_tab():
     st.header("Configured Agents")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Add Agent", use_container_width=True):
+            add_agent()
+    with col2:
+        if st.button("Sync Agents", use_container_width=True):
+            sync_agents()
+            st.experimental_rerun()
+
+    # Reload agents after potential changes
+    global agents
+    config = load_config()
+    llm = get_llm(
+        st.session_state.llm_model, st.session_state.api_key, st.session_state.api_base
+    )
+
+    # Dynamically import all agent functions
+    import aibtcdev_agents
+
+    importlib.reload(aibtcdev_agents)
+
+    agents = {}
+    for agent_func_name in config.get("agents", []):
+        if hasattr(aibtcdev_agents, agent_func_name):
+            agent_func = getattr(aibtcdev_agents, agent_func_name)
+            agents[agent_func_name] = agent_func(llm)
 
     # Use columns to create a grid layout
     col1, col2 = st.columns(2)
@@ -147,14 +250,14 @@ def agents_tab():
         with col1 if i % 2 == 0 else col2:
             with st.container():
                 # Create a card-like container
-                st.subheader(agent_name)
+                st.subheader(agent.role)
 
                 # Two-column layout for image and basic info
                 img_col, info_col = st.columns([1, 2])
 
                 with img_col:
                     st.image(
-                        f"https://bitcoinfaces.xyz/api/get-image?name={agent.role}",
+                        f"https://bitcoinfaces.xyz/api/get-image?name={agent_name}",
                         use_column_width=True,
                         output_format="auto",
                         caption=agent.role,
