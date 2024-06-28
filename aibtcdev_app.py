@@ -266,22 +266,33 @@ def execution_tab():
         st.write(result)
 
 
+# Tab styling
+tab_style = """
+<style>
+button[data-baseweb="tab"] {
+    margin: 0;
+    width: 100%;
+}
+</style>
+"""
+st.write(tab_style, unsafe_allow_html=True)
+
 # Main layout with tabs
 tab1, tab2, tab3, tab4, tab5 = st.tabs(
-    ["Agents", "Tools", "Tasks", "Crews", "Execution"]
+    ["Crews", "Agents", "Tools", "Tasks", "Execution"]
 )
 
 with tab1:
-    agents_tab()
+    crews_tab()
 
 with tab2:
-    tools_tab()
+    agents_tab()
 
 with tab3:
-    tasks_tab()
+    tools_tab()
 
 with tab4:
-    crews_tab()
+    tasks_tab()
 
 with tab5:
     execution_tab()
