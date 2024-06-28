@@ -273,6 +273,9 @@ button[data-baseweb="tab"] {
     margin: 0;
     width: 100%;
 }
+button[data-baseweb="tab"] > div[data-testid="stMarkdownContainer"] > p {
+  font-size: 18px !important;
+}
 </style>
 """
 st.write(tab_style, unsafe_allow_html=True)
