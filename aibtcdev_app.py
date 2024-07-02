@@ -55,7 +55,7 @@ with st.sidebar:
             st.session_state.messages = []
             st.success("Chat history cleared!")
 
-    with st.expander("Current LLM Settings", expanded=True):
+    with st.expander("Current LLM Settings", expanded=False):
         llm_options = list(config["model_settings"].keys())
 
         st.selectbox(
@@ -64,7 +64,9 @@ with st.sidebar:
             key="llm_model",
             on_change=update_model,
         )
-        st.text_input("API Base URL:", value=st.session_state.api_base, key="api_base")
+        st.text_input(
+            "API Base URL:", value=st.session_state.get("api_base", ""), key="api_base"
+        )
         st.text_input(
             "Model Name:", value=st.session_state.model_name, key="model_name"
         )
