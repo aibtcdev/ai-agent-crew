@@ -223,8 +223,47 @@ def sync_agents():
         st.info("No new agents to sync.")
 
 
+def crews_tab():
+    # st.header("Configured Crews")
+
+    for crew_name, crew in crews.items():
+        st.subheader(crew_name)
+
+        # Create a card-like container for the crew
+        with st.container():
+            st.markdown(
+                f"**{len(crew.agents)} Agent{'s' if len(crew.agents) > 1 else ''}**"
+            )
+
+            # Determine the number of columns and image width
+            num_agents = len(crew.agents)
+            num_columns = min(num_agents, 4)  # Up to 4 columns
+            image_width = (
+                150 if num_agents == 1 else None
+            )  # Fixed width for single agent, auto for multiple
+
+            # Use columns to create a grid layout for agents
+            cols = st.columns(num_columns)
+
+            for i, agent in enumerate(crew.agents):
+                with cols[i % num_columns]:
+                    st.image(
+                        f"https://bitcoinfaces.xyz/api/get-image?name={agent.role}",
+                        width=image_width,
+                        use_column_width=image_width is None,
+                        output_format="auto",
+                        caption=agent.role,
+                        clamp=True,
+                    )
+
+            # Add a brief description or purpose of the crew
+            st.markdown(f"*{crew_name} is ready for action!*")
+
+        st.markdown("---")  # Add a separator between crews
+
+
 def agents_tab():
-    st.header("Configured Agents")
+    # st.header("Configured Agents")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -325,7 +364,7 @@ def agents_tab():
 
 
 def tools_tab():
-    st.header("Available Tools")
+    # st.header("Available Tools")
 
     tool_classes = [AIBTCTokenTools, OnchainResourcesTools, WalletTools]
 
@@ -337,54 +376,15 @@ def tools_tab():
 
 
 def tasks_tab():
-    st.header("Configured Tasks")
+    # st.header("Configured Tasks")
     for task_name, task in tasks.items():
         with st.expander(task_name):
             st.write(f"Description: {task.description}")
             st.write(f"Assigned Agent: {task.agent.role}")
 
 
-def crews_tab():
-    st.header("Configured Crews")
-
-    for crew_name, crew in crews.items():
-        st.subheader(crew_name)
-
-        # Create a card-like container for the crew
-        with st.container():
-            st.markdown(
-                f"**{len(crew.agents)} Agent{'s' if len(crew.agents) > 1 else ''}**"
-            )
-
-            # Determine the number of columns and image width
-            num_agents = len(crew.agents)
-            num_columns = min(num_agents, 4)  # Up to 4 columns
-            image_width = (
-                150 if num_agents == 1 else None
-            )  # Fixed width for single agent, auto for multiple
-
-            # Use columns to create a grid layout for agents
-            cols = st.columns(num_columns)
-
-            for i, agent in enumerate(crew.agents):
-                with cols[i % num_columns]:
-                    st.image(
-                        f"https://bitcoinfaces.xyz/api/get-image?name={agent.role}",
-                        width=image_width,
-                        use_column_width=image_width is None,
-                        output_format="auto",
-                        caption=agent.role,
-                        clamp=True,
-                    )
-
-            # Add a brief description or purpose of the crew
-            st.markdown(f"*{crew_name} is ready for action!*")
-
-        st.markdown("---")  # Add a separator between crews
-
-
 def execution_tab():
-    st.header("Execution")
+    # st.header("Execution")
     user_input = st.text_area(
         "Initial Input", "Enter your instructions or query here..."
     )
