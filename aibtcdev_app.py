@@ -1,7 +1,7 @@
 import importlib
 import importlib.util
 import streamlit as st
-from aibtcdev_agents import get_wallet_manager, get_resource_manager
+from aibtcdev_agents import BitcoinCrew
 from aibtcdev_tools import AIBTCTokenTools, OnchainResourcesTools, WalletTools
 from aibtcdev_tasks import (
     get_wallet_status_task,
@@ -116,8 +116,9 @@ try:
     )
 
     agents = {
-        "Wallet Manager": get_wallet_manager(llm),
-        "Resource Manager": get_resource_manager(llm),
+        "Wallet Manager": BitcoinCrew.get_account_manager(llm),
+        "Resource Manager": BitcoinCrew.get_resource_manager(llm),
+        "Transaction Manager": BitcoinCrew.get_transaction_manager(llm),
     }
 
     tasks = {
@@ -161,6 +162,7 @@ all_tools = (
 )
 
 
+# Form to add a new agent
 def add_agent():
     st.subheader("Add New Agent")
 
@@ -199,6 +201,7 @@ def {function_name}(llm):
             st.experimental_rerun()
 
 
+# Sync agents with the latest file definitions
 def sync_agents():
     config = load_config()
     spec = importlib.util.spec_from_file_location(
@@ -221,6 +224,27 @@ def sync_agents():
         st.success(f"Synced {len(new_agents)} new agents: {', '.join(new_agents)}")
     else:
         st.info("No new agents to sync.")
+
+
+def get_agent_classes():
+    import aibtcdev_agents
+
+    importlib.reload(aibtcdev_agents)
+
+    # Get all attributes of the aibtcdev_agents module
+    all_attributes = dir(aibtcdev_agents)
+
+    # Filter classes that are defined in aibtcdev_agents (not imported)
+    # and end with 'Crew' to ensure we're only getting crew classes
+    crew_classes = [
+        getattr(aibtcdev_agents, attr)
+        for attr in all_attributes
+        if isinstance(getattr(aibtcdev_agents, attr), type)
+        and getattr(aibtcdev_agents, attr).__module__ == "aibtcdev_agents"
+        and attr.endswith("Crew")
+    ]
+
+    return crew_classes
 
 
 def crews_tab():
@@ -263,7 +287,7 @@ def crews_tab():
 
 
 def agents_tab():
-    # st.header("Configured Agents")
+    st.header("Configured Agents")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -274,93 +298,87 @@ def agents_tab():
             sync_agents()
             st.experimental_rerun()
 
-    # Reload agents after potential changes
-    global agents
-    config = load_config()
     llm = get_llm(
         st.session_state.llm_model, st.session_state.api_key, st.session_state.api_base
     )
 
-    # Dynamically import all agent functions
-    import aibtcdev_agents
+    agent_classes = get_agent_classes()
 
-    importlib.reload(aibtcdev_agents)
-
-    agents = {}
-    for agent_func_name in config.get("agents", []):
-        if hasattr(aibtcdev_agents, agent_func_name):
-            agent_func = getattr(aibtcdev_agents, agent_func_name)
-            agents[agent_func_name] = agent_func(llm)
-
-    # Use columns to create a grid layout
     col1, col2 = st.columns(2)
 
-    for i, (agent_name, agent) in enumerate(agents.items()):
-        # Alternate between columns
-        with col1 if i % 2 == 0 else col2:
-            with st.container():
-                # Create a card-like container
-                st.subheader(agent.role)
+    for i, agent_class in enumerate(agent_classes):
 
-                # Two-column layout for image and basic info
-                img_col, info_col = st.columns([1, 2])
+        methods = [method for method in dir(agent_class) if method.startswith("get_")]
+        for j, method_name in enumerate(methods):
+            method = getattr(agent_class, method_name)
+            try:
+                agent = method(llm)
+            except Exception as e:
+                st.error(f"Error creating agent {method_name}: {str(e)}")
+                continue
 
-                with img_col:
-                    st.image(
-                        f"https://bitcoinfaces.xyz/api/get-image?name={agent_name}",
-                        use_column_width=True,
-                        output_format="auto",
-                        caption=agent.role,
-                        clamp=True,
-                    )
+            with col1 if j % 2 == 0 else col2:
+                with st.container():
+                    st.subheader(agent.role)
 
-                with info_col:
-                    st.markdown(f"**Goal:** {agent.goal}")
-                    st.markdown(f"**Backstory:** {agent.backstory}")
+                    # Two-column layout for image and basic info
+                    img_col, info_col = st.columns([1, 2])
 
-                # Expandable section for tools with styled dataframe
-                with st.expander("Tools and Capabilities"):
-                    tool_data = []
-                    for tool in agent.tools:
-                        tool_name = (
-                            tool.name if hasattr(tool, "name") else tool.__name__
-                        )
-                        # Extract only the description part after the hyphen
-                        full_description = (
-                            tool.description
-                            if hasattr(tool, "description")
-                            else "No description available"
-                        )
-                        description = (
-                            full_description.split(" - ")[-1]
-                            if " - " in full_description
-                            else full_description
-                        )
-                        tool_data.append(
-                            {"Tool": tool_name, "Description": description}
+                    with img_col:
+                        st.image(
+                            f"https://bitcoinfaces.xyz/api/get-image?name={agent.role.replace(' ', '-')}",
+                            use_column_width=True,
+                            output_format="auto",
+                            caption=agent.role,
+                            clamp=True,
                         )
 
-                    if tool_data:
-                        df = pd.DataFrame(tool_data)
-                        st.dataframe(
-                            df,
-                            column_config={
-                                "Tool": st.column_config.TextColumn(
-                                    "Tool",
-                                    width="medium",
-                                    help="Name of the tool",
-                                ),
-                                "Description": st.column_config.TextColumn(
-                                    "Description",
-                                    width="large",
-                                    help="What the tool does",
-                                ),
-                            },
-                            hide_index=True,
-                            use_container_width=True,
-                        )
-                    else:
-                        st.write("No tools available for this agent.")
+                    with info_col:
+                        st.markdown(f"**Goal:** {agent.goal}")
+                        st.markdown(f"**Backstory:** {agent.backstory}")
+
+                    # Expandable section for tools with styled dataframe
+                    with st.expander("Tools and Capabilities"):
+                        tool_data = []
+                        for tool in agent.tools:
+                            tool_name = (
+                                tool.name if hasattr(tool, "name") else tool.__name__
+                            )
+                            full_description = (
+                                tool.description
+                                if hasattr(tool, "description")
+                                else "No description available"
+                            )
+                            description = (
+                                full_description.split(" - ")[-1]
+                                if " - " in full_description
+                                else full_description
+                            )
+                            tool_data.append(
+                                {"Tool": tool_name, "Description": description}
+                            )
+
+                        if tool_data:
+                            df = pd.DataFrame(tool_data)
+                            st.dataframe(
+                                df,
+                                column_config={
+                                    "Tool": st.column_config.TextColumn(
+                                        "Tool",
+                                        width="medium",
+                                        help="Name of the tool",
+                                    ),
+                                    "Description": st.column_config.TextColumn(
+                                        "Description",
+                                        width="large",
+                                        help="What the tool does",
+                                    ),
+                                },
+                                hide_index=True,
+                                use_container_width=True,
+                            )
+                        else:
+                            st.write("No tools available for this agent.")
 
 
 def tools_tab():
