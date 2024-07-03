@@ -316,7 +316,7 @@ def crews_tab():
 
 
 def agents_tab():
-    st.header("Configured Agents")
+    # st.header("Configured Agents")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -411,7 +411,7 @@ def agents_tab():
 
 
 def tools_tab():
-    st.header("Available Tools")
+    # st.header("Available Tools")
 
     tool_classes = get_tool_classes()
 
