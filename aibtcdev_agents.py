@@ -1,5 +1,45 @@
 from crewai import Agent
+from typing import Optional
+from pydantic import Field
 from aibtcdev_tools import AIBTCTokenTools, OnchainResourcesTools, WalletTools, WebTools
+
+
+class WalletAgent(Agent):
+    wallet_account_index: int = Field(..., description="Index of the wallet account")
+    bitcoin_address: str = Field(..., description="Bitcoin address of the agent")
+    stacks_address: str = Field(..., description="Stacks address of the agent")
+    bns_name: Optional[str] = Field(
+        None, description="BNS name of the agent (optional)"
+    )
+
+    class Config:
+        arbitrary_types_allowed = True
+
+    def __init__(self, **data):
+        super().__init__(**data)
+
+    @classmethod
+    def from_agent(
+        cls,
+        agent: Agent,
+        wallet_account_index: int,
+        bitcoin_address: str,
+        stacks_address: str,
+        bns_name: Optional[str] = None,
+    ):
+        """
+        Create a WalletAgent instance from an existing Agent instance.
+        """
+        wallet_agent_data = agent.model_dump()
+        wallet_agent_data.update(
+            {
+                "wallet_account_index": wallet_account_index,
+                "bitcoin_address": bitcoin_address,
+                "stacks_address": stacks_address,
+                "bns_name": bns_name,
+            }
+        )
+        return cls(**wallet_agent_data)
 
 
 class MeetingsCrew:
@@ -33,7 +73,7 @@ class MeetingsCrew:
             kwargs["llm"] = llm
 
         return Agent(
-            role="Writer",
+            role="Professional Writer",
             goal="Summarize the gathered information and always return results in markdown format, adhering strictly to provided examples.",
             backstory=(
                 "You have a talent for distilling complex information into clear, concise summaries."
