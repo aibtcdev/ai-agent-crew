@@ -16,7 +16,7 @@ def load_config():
     # Override with environment variables
     for section, settings in config.items():
         if isinstance(settings, dict):
-            for key in settings.items():
+            for key, value in settings.items():
                 env_var = f"{section.upper()}_{key.upper()}"
                 if env_var in os.environ:
                     settings[key] = os.environ[env_var]
