@@ -2,7 +2,6 @@ import importlib
 import importlib.util
 import inspect
 import streamlit as st
-import textwrap
 from aibtcdev_agents import BitcoinCrew
 from aibtcdev_tools import AIBTCTokenTools, OnchainResourcesTools, WalletTools
 from aibtcdev_tasks import (
@@ -22,11 +21,11 @@ from aibtcdev_utils import (
 )
 
 # load saved settings with .env overrides
-config = load_config()
+app_config = load_config()
 
 # set up Streamlit page
-page_title = config["app_settings"]["page_title"]
-layout = config["app_settings"]["layout"]
+page_title = app_config["app_settings"]["page_title"]
+layout = app_config["app_settings"]["layout"]
 st.set_page_config(
     page_title=page_title,
     layout=layout,
@@ -34,13 +33,13 @@ st.set_page_config(
 st.title(page_title)
 
 # initialize session state
-init_session_state(config)
+init_session_state(app_config)
 
 
 def update_model():
     model_name = st.session_state.llm_model
-    model_settings = config["model_settings"].get(
-        model_name, config["model_settings"]["OpenAI"]
+    model_settings = app_config["model_settings"].get(
+        model_name, app_config["model_settings"]["OpenAI"]
     )
     st.session_state.api_base = model_settings["OPENAI_API_BASE"]
     st.session_state.model_name = model_settings["OPENAI_MODEL_NAME"]
@@ -58,7 +57,7 @@ with st.sidebar:
             st.success("Chat history cleared!")
 
     with st.expander("Current LLM Settings", expanded=False):
-        llm_options = list(config["model_settings"].keys())
+        llm_options = list(app_config["model_settings"].keys())
 
         st.selectbox(
             "Select LLM:",
@@ -78,7 +77,7 @@ with st.sidebar:
 
         if st.button("Update LLM Provider"):
             update_model_settings(
-                config,
+                app_config,
                 st.session_state.llm_model,
                 st.session_state.model_name,
                 st.session_state.api_base,
@@ -95,7 +94,7 @@ with st.sidebar:
         if st.button("Add Provider"):
             if new_provider and new_model_name and new_api_base:
                 update_model_settings(
-                    config, new_provider, new_model_name, new_api_base
+                    app_config, new_provider, new_model_name, new_api_base
                 )
                 st.success(f"Provider {new_provider} added successfully!")
             else:
@@ -103,10 +102,11 @@ with st.sidebar:
 
     with st.expander("Remove LLM Provider", expanded=False):
         provider_to_remove = st.selectbox(
-            "Select Provider to Remove", options=list(config["model_settings"].keys())
+            "Select Provider to Remove",
+            options=list(app_config["model_settings"].keys()),
         )
         if st.button("Remove Provider"):
-            if remove_model_settings(config, provider_to_remove):
+            if remove_model_settings(app_config, provider_to_remove):
                 st.success(f"Provider {provider_to_remove} removed successfully!")
             else:
                 st.error("Selected provider not found.")
@@ -168,8 +168,8 @@ all_tools = (
 def add_agent():
     st.subheader("Add New Agent")
 
-    config = load_config()
-    existing_agents = config.get("agents", [])
+    app_config = load_config()
+    existing_agents = app_config.get("agents", [])
 
     with st.form("add_agent_form"):
         role = st.text_input("Role")
@@ -196,8 +196,8 @@ def {function_name}(llm):
 
             if function_name not in existing_agents:
                 existing_agents.append(function_name)
-                config["agents"] = existing_agents
-                save_config(config)
+                app_config["agents"] = existing_agents
+                save_config(app_config)
 
             st.success(f"Agent '{role}' added successfully!")
             st.experimental_rerun()
@@ -205,7 +205,7 @@ def {function_name}(llm):
 
 # Sync agents with the latest file definitions
 def sync_agents():
-    config = load_config()
+    app_config = load_config()
     spec = importlib.util.spec_from_file_location(
         "aibtcdev_agents", "aibtcdev_agents.py"
     )
@@ -217,12 +217,12 @@ def sync_agents():
         for name in dir(module)
         if name.startswith("get_") and callable(getattr(module, name))
     ]
-    config_agents = config.get("agents", [])
+    config_agents = app_config.get("agents", [])
 
     new_agents = [agent for agent in defined_agents if agent not in config_agents]
     if new_agents:
-        config["agents"] = config_agents + new_agents
-        save_config(config)
+        app_config["agents"] = config_agents + new_agents
+        save_config(app_config)
         st.success(f"Synced {len(new_agents)} new agents: {', '.join(new_agents)}")
     else:
         st.info("No new agents to sync.")

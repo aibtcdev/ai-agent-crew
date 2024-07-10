@@ -43,6 +43,10 @@ def ui_tool_group(friendly_name):
 
 @ui_tool_group("aiBTC Token Operations")
 class AIBTCTokenTools:
+    # can we just add a name to the class
+    # instead of using a decorator
+    # then use that object in our UI?
+
     @staticmethod
     @tool("Get current aiBTC balance")
     def get_aibtc_balance(dummy_arg=None):
