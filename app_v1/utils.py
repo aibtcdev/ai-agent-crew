@@ -5,13 +5,18 @@ import streamlit as st
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 
+CONFIG_FILENAME = "aibtcdev_config.yaml"
+CURRENT_APP_DIR = os.path.dirname(os.path.realpath(__file__))
+CONFIG_FILEPATH = os.path.join(CURRENT_APP_DIR, CONFIG_FILENAME)
+
 
 # loads saved settings from config file
 # then injects environment variables into the config
-# CAN WE DO THIS WITH JUST THE ENV FILE?
+# CAN WE DO THIS WITH JUST THE ENV FILE AND SESSION STATE?
 def load_config():
     load_dotenv()
-    with open(CONFIG_FILENAME, "r") as file:
+    # get current directory
+    with open(CONFIG_FILEPATH, "r") as file:
         config = yaml.safe_load(file)
 
     # Override with environment variables
@@ -26,7 +31,7 @@ def load_config():
 
 
 def save_config(config):
-    with open(CONFIG_FILENAME, "w") as file:
+    with open(CONFIG_FILEPATH, "w") as file:
         yaml.dump(config, file)
 
 
