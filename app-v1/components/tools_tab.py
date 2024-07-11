@@ -31,6 +31,12 @@ def get_type_name(field_type):
 
 
 def render_tools_tab():
+    col1, col2 = st.columns(2)
+    with col1:
+        st.button("Add Tool", use_container_width=True)
+    with col2:
+        st.button("Sync Tools", use_container_width=True)
+
     tool_classes = get_tool_classes()
 
     for tool_class in tool_classes:

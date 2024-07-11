@@ -2,6 +2,12 @@ import streamlit as st
 
 
 def render_crews_tab(crews):
+    col1, col2 = st.columns(2)
+    with col1:
+        st.button("Add Crew", use_container_width=True)
+    with col2:
+        st.button("Sync Crews", use_container_width=True)
+
     for crew_name, crew in crews.items():
         st.subheader(crew_name)
 
