@@ -2,6 +2,7 @@ from crewai import Agent
 from typing import Optional
 from pydantic import Field
 from crew_ai.tools import AIBTCTokenTools, OnchainResourcesTools, WalletTools, WebTools
+from crew_ai.decorators import ui_class, ui_method
 
 
 class WalletAgent(Agent):
@@ -27,9 +28,6 @@ class WalletAgent(Agent):
         stacks_address: str,
         bns_name: Optional[str] = None,
     ):
-        """
-        Create a WalletAgent instance from an existing Agent instance.
-        """
         wallet_agent_data = agent.model_dump()
         wallet_agent_data.update(
             {
@@ -42,8 +40,10 @@ class WalletAgent(Agent):
         return cls(**wallet_agent_data)
 
 
+@ui_class("Meetings Crew")
 class MeetingsCrew:
     @staticmethod
+    @ui_method("Website Scraper")
     def get_website_scraper(llm=None):
         kwargs = {}
         if llm is not None:
@@ -52,21 +52,16 @@ class MeetingsCrew:
         return Agent(
             role="Website Scraper",
             goal="Gather relevant information from the provided links. Be verbose, provide as much of the content and necessary context as possible.",
-            backstory=(
-                "You are a skilled website scraper, capable of extracting valuable information from the website code of any given source."
-                " Your expertise in web scraping allows you to gather data efficiently and accurately, providing valuable information for further analysis."
-                " You always use the correct tool for the job based on the URL provided."
-            ),
+            backstory="You are a skilled website scraper, capable of extracting valuable information from the website code of any given source. Your expertise in web scraping allows you to gather data efficiently and accurately, providing valuable information for further analysis. You always use the correct tool for the job based on the URL provided.",
             verbose=True,
             memory=True,
             allow_delegation=False,
-            tools=[
-                WebTools.scrape_x_or_twitter_url,
-            ],
+            tools=[WebTools.scrape_x_or_twitter_url],
             **kwargs
         )
 
     @staticmethod
+    @ui_method("Meeting Writer")
     def get_meeting_writer(llm=None):
         kwargs = {}
         if llm is not None:
@@ -75,10 +70,7 @@ class MeetingsCrew:
         return Agent(
             role="Professional Writer",
             goal="Summarize the gathered information and always return results in markdown format, adhering strictly to provided examples.",
-            backstory=(
-                "You have a talent for distilling complex information into clear, concise summaries."
-                " You ensure that all summaries adhere to the format provided in good examples, making the information accessible and engaging."
-            ),
+            backstory="You have a talent for distilling complex information into clear, concise summaries. You ensure that all summaries adhere to the format provided in good examples, making the information accessible and engaging.",
             verbose=True,
             memory=True,
             tools=[],
@@ -87,8 +79,10 @@ class MeetingsCrew:
         )
 
 
+@ui_class("Bitcoin Crew")
 class BitcoinCrew:
     @staticmethod
+    @ui_method("Account Manager")
     def get_account_manager(llm=None):
         kwargs = {}
         if llm is not None:
@@ -106,17 +100,14 @@ class BitcoinCrew:
                 AIBTCTokenTools.get_aibtc_balance,
                 AIBTCTokenTools.get_faucet_drip,
             ],
-            backstory=(
-                "You are an account manager with the ability to interact with the Bitcoin and Stacks blockchain."
-                " Your job is to read the context and execute tasks using your tools to interact with the wallet."
-                "For any transaction sent, the transaction ID can be used to check the status of the transaction."
-            ),
+            backstory="You are an account manager with the ability to interact with the Bitcoin and Stacks blockchain. Your job is to read the context and execute tasks using your tools to interact with the wallet. For any transaction sent, the transaction ID can be used to check the status of the transaction.",
             allow_delegation=False,
             verbose=True,
             **kwargs
         )
 
     @staticmethod
+    @ui_method("Resource Manager")
     def get_resource_manager(llm=None):
         kwargs = {}
         if llm is not None:
@@ -135,16 +126,14 @@ class BitcoinCrew:
                 AIBTCTokenTools.get_aibtc_balance,
                 AIBTCTokenTools.get_faucet_drip,
             ],
-            backstory=(
-                "You are a resource manager with the ability to interact with on-chain resources."
-                " Your job is to read the context and execute tasks using your tools to interact with on-chain resources."
-            ),
+            backstory="You are a resource manager with the ability to interact with on-chain resources. Your job is to read the context and execute tasks using your tools to interact with on-chain resources.",
             allow_delegation=False,
             verbose=True,
             **kwargs
         )
 
     @staticmethod
+    @ui_method("Transaction Manager")
     def get_transaction_manager(llm=None):
         kwargs = {}
         if llm is not None:

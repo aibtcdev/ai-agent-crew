@@ -1,8 +1,8 @@
 import streamlit as st
-import ast
 import inspect
 from crew_ai import crews
 import importlib
+from utils import update_session_state
 
 
 def add_crew():
@@ -19,7 +19,7 @@ class {name.replace(" ", "")}:
     def get_{name.lower().replace(" ", "_")}(agents, tasks):
         return Crew(
             agents=[agents["{agent}"] for agent in {agents}],
-            tasks=[],  # You might want to add a way to specify tasks
+            tasks=[],
             process=Process.sequential,
             verbose=2,
         )
@@ -31,17 +31,58 @@ class {name.replace(" ", "")}:
 
 def sync_crews():
     importlib.reload(crews)
-    st.session_state.crews = {}
+    if "crews" not in st.session_state:
+        st.session_state.crews = {}
+    if "agents" not in st.session_state:
+        st.session_state.agents = {}
+    if "tasks" not in st.session_state:
+        st.session_state.tasks = {}
+
+    new_crews = {}
     for name, obj in inspect.getmembers(crews):
         if inspect.isclass(obj) and hasattr(obj, "ui_name"):
             for method_name, method in inspect.getmembers(obj):
                 if inspect.isfunction(method) and hasattr(method, "ui_name"):
-                    crew = method(
-                        st.session_state.get("agents", {}),
-                        st.session_state.get("tasks", {}),
-                    )
-                    st.session_state.crews[obj.ui_name] = crew
-    st.success("Crews synced successfully!")
+                    try:
+                        crew = method(
+                            st.session_state.agents,
+                            st.session_state.tasks,
+                        )
+                        new_crews[obj.ui_name] = crew
+                    except ValueError as e:
+                        st.warning(f"Failed to create crew '{obj.ui_name}': {str(e)}")
+                    except Exception as e:
+                        st.error(
+                            f"An unexpected error occurred while creating crew '{obj.ui_name}': {str(e)}"
+                        )
+
+    update_session_state("crews", new_crews)
+
+    if new_crews:
+        st.success(f"Successfully synced {len(new_crews)} crews.")
+    else:
+        st.info(
+            "No crews were synced. Please check if all required agents and tasks are created."
+        )
+
+    # Display the current state of agents and tasks
+    st.subheader("Current Agents")
+    for agent_name in st.session_state.agents.keys():
+        st.write(f"- {agent_name}")
+
+    st.subheader("Current Tasks")
+    for task_name in st.session_state.tasks.keys():
+        st.write(f"- {task_name}")
+
+
+def assign_tasks_to_crew(crew_name, task_list):
+    if crew_name in st.session_state.crews:
+        crew = st.session_state.crews[crew_name]
+        crew.tasks.extend(task_list)
+        update_session_state("crews", st.session_state.crews)
+        st.success(f"Tasks assigned to {crew_name} successfully!")
+    else:
+        st.error(f"Crew '{crew_name}' not found.")
 
 
 def render_crews_tab():
@@ -92,4 +133,26 @@ def render_crews_tab():
 
             st.markdown(f"*{crew_name} is ready for action!*")
 
+            # Display current tasks
+            if crew.tasks:
+                st.markdown("**Current Tasks:**")
+                for task in crew.tasks:
+                    st.markdown(f"- {task}")
+            else:
+                st.markdown("*No tasks assigned yet.*")
+
+            # Placeholder for future task assignment UI
+            st.markdown("### Assign Tasks")
+            st.markdown(
+                "*Task assignment functionality will be added in a future iteration.*"
+            )
+
         st.markdown("---")
+
+    # Demonstration of task assignment (for testing purposes)
+    st.subheader("Assign Tasks to Crew (Demo)")
+    demo_crew = st.selectbox("Select Crew", options=list(st.session_state.crews.keys()))
+    demo_tasks = st.text_area("Enter tasks (one per line)")
+    if st.button("Assign Tasks"):
+        task_list = [task.strip() for task in demo_tasks.split("\n") if task.strip()]
+        assign_tasks_to_crew(demo_crew, task_list)

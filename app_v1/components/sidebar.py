@@ -1,12 +1,8 @@
 import streamlit as st
-from utils import (
-    load_config,
-    update_model_settings,
-    remove_model_settings,
-)
+from utils import update_session_state
 
 
-def render_sidebar(app_config):
+def render_sidebar():
     with st.sidebar:
         st.title("AIBTCdev Settings")
 
@@ -16,7 +12,7 @@ def render_sidebar(app_config):
                 st.success("Chat history cleared!")
 
         with st.expander("Current LLM Settings", expanded=False):
-            llm_options = list(app_config["model_settings"].keys())
+            llm_options = ["OpenAI", "Anthropic"]  # extend this list as needed
 
             st.selectbox(
                 "Select LLM:",
@@ -26,26 +22,35 @@ def render_sidebar(app_config):
             )
             st.text_input(
                 "API Base URL:",
-                value=st.session_state.get("api_base", ""),
+                value=st.session_state.api_base,
                 key="api_base",
+                on_change=lambda: update_session_state(
+                    "api_base", st.session_state.api_base
+                ),
             )
             st.text_input(
-                "Model Name:", value=st.session_state.model_name, key="model_name"
+                "Model Name:",
+                value=st.session_state.model_name,
+                key="model_name",
+                on_change=lambda: update_session_state(
+                    "model_name", st.session_state.model_name
+                ),
             )
             st.text_input(
                 "API Key:",
                 value=st.session_state.api_key,
                 key="api_key",
                 type="password",
+                on_change=lambda: update_session_state(
+                    "api_key", st.session_state.api_key
+                ),
             )
 
             if st.button("Update LLM Provider"):
-                update_model_settings(
-                    app_config,
-                    st.session_state.llm_model,
-                    st.session_state.model_name,
-                    st.session_state.api_base,
-                )
+                update_session_state("llm_model", st.session_state.llm_model)
+                update_session_state("api_base", st.session_state.api_base)
+                update_session_state("model_name", st.session_state.model_name)
+                update_session_state("api_key", st.session_state.api_key)
                 st.success("LLM settings updated successfully!")
 
         with st.expander("Add LLM Provider", expanded=False):
@@ -57,32 +62,48 @@ def render_sidebar(app_config):
 
             if st.button("Add Provider"):
                 if new_provider and new_model_name and new_api_base:
-                    update_model_settings(
-                        app_config, new_provider, new_model_name, new_api_base
-                    )
+                    if "custom_providers" not in st.session_state:
+                        st.session_state.custom_providers = {}
+                    st.session_state.custom_providers[new_provider] = {
+                        "model_name": new_model_name,
+                        "api_base": new_api_base,
+                    }
                     st.success(f"Provider {new_provider} added successfully!")
                 else:
                     st.error("Please fill in all fields to add a provider.")
 
         with st.expander("Remove LLM Provider", expanded=False):
-            provider_to_remove = st.selectbox(
-                "Select Provider to Remove",
-                options=list(app_config["model_settings"].keys()),
-            )
-            if st.button("Remove Provider"):
-                if remove_model_settings(app_config, provider_to_remove):
-                    st.success(f"Provider {provider_to_remove} removed successfully!")
-                else:
-                    st.error("Selected provider not found.")
+            if (
+                "custom_providers" in st.session_state
+                and st.session_state.custom_providers
+            ):
+                provider_to_remove = st.selectbox(
+                    "Select Provider to Remove",
+                    options=list(st.session_state.custom_providers.keys()),
+                )
+                if st.button("Remove Provider"):
+                    if provider_to_remove in st.session_state.custom_providers:
+                        del st.session_state.custom_providers[provider_to_remove]
+                        st.success(
+                            f"Provider {provider_to_remove} removed successfully!"
+                        )
+                    else:
+                        st.error("Selected provider not found.")
+            else:
+                st.write("No custom providers to remove.")
 
 
 def update_model():
     model_name = st.session_state.llm_model
-    app_config = load_config()
-    model_settings = app_config["model_settings"].get(
-        model_name, app_config["model_settings"]["OpenAI"]
-    )
-    st.session_state.api_base = model_settings["OPENAI_API_BASE"]
-    st.session_state.model_name = model_settings["OPENAI_MODEL_NAME"]
-    # should this load from .env? changes between Anthropic and OpenAI
-    # st.session_state.api_key = model_settings["OPENAI_API_KEY"]
+    if model_name == "OpenAI":
+        update_session_state("api_base", "https://api.openai.com/v1")
+        update_session_state("model_name", "gpt-3.5-turbo")
+    elif model_name == "Anthropic":
+        update_session_state("api_base", "https://api.anthropic.com")
+        update_session_state("model_name", "claude-2")
+    elif model_name in st.session_state.get("custom_providers", {}):
+        provider_settings = st.session_state.custom_providers[model_name]
+        update_session_state("api_base", provider_settings["api_base"])
+        update_session_state("model_name", provider_settings["model_name"])
+    # The API key is not updated here for security reasons
+    # Users should input the API key manually when changing providers

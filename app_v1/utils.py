@@ -1,71 +1,63 @@
-import anthropic
 import os
-import yaml
 import streamlit as st
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
-
-CONFIG_FILENAME = "aibtcdev_config.yaml"
-CURRENT_APP_DIR = os.path.dirname(os.path.realpath(__file__))
-CONFIG_FILEPATH = os.path.join(CURRENT_APP_DIR, CONFIG_FILENAME)
+import anthropic
+from components.agents_tab import sync_agents
 
 
-# loads saved settings from config file
-# then injects environment variables into the config
-# CAN WE DO THIS WITH JUST THE ENV FILE AND SESSION STATE?
-def load_config():
+def load_env_vars():
     load_dotenv()
-    # get current directory
-    with open(CONFIG_FILEPATH, "r") as file:
-        config = yaml.safe_load(file)
-
-    # Override with environment variables
-    for section, settings in config.items():
-        if isinstance(settings, dict):
-            for key, value in settings.items():
-                env_var = f"{section.upper()}_{key.upper()}"
-                if env_var in os.environ:
-                    settings[key] = os.environ[env_var]
-
-    return config
+    env_vars = {}
+    for key, value in os.environ.items():
+        env_vars[key] = value
+    return env_vars
 
 
-def save_config(config):
-    with open(CONFIG_FILEPATH, "w") as file:
-        yaml.dump(config, file)
+def init_session_state():
+    env_vars = load_env_vars()
 
-
-def init_session_state(config):
     if "messages" not in st.session_state:
         st.session_state.messages = []
-    if "llm_model" not in st.session_state:
-        st.session_state.llm_model = "OpenAI"
-    if "api_key" not in st.session_state:
-        st.session_state.api_key = os.getenv("OPENAI_API_KEY", "")
-    if "api_base" not in st.session_state:
-        st.session_state.api_base = config["model_settings"]["OpenAI"][
-            "OPENAI_API_BASE"
-        ]
-    if "model_name" not in st.session_state:
-        st.session_state.model_name = config["model_settings"]["OpenAI"][
-            "OPENAI_MODEL_NAME"
-        ]
 
+    if "delete_confirmation" not in st.session_state:
+        st.session_state.delete_confirmation = {}
 
-def update_model_settings(config, provider, model_name, api_base):
-    config["model_settings"][provider] = {
-        "OPENAI_MODEL_NAME": model_name,
-        "OPENAI_API_BASE": api_base,
+    if "crews" not in st.session_state:
+        st.session_state.crews = {}
+
+    if "agents" not in st.session_state:
+        st.session_state.agents = []
+
+    if "tasks" not in st.session_state:
+        st.session_state.tasks = []
+
+    # Initialize other session state variables
+    defaults = {
+        "llm_model": "OpenAI",
+        "api_key": env_vars.get("OPENAI_API_KEY", ""),
+        "api_base": env_vars.get("OPENAI_API_BASE", "https://api.openai.com/v1"),
+        "model_name": env_vars.get("OPENAI_MODEL_NAME", "gpt-3.5-turbo"),
     }
-    save_config(config)
+
+    for key, value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
+
+    # Initialize the LLM
+    if "llm" not in st.session_state:
+        st.session_state.llm = get_llm(
+            st.session_state.llm_model,
+            st.session_state.api_key,
+            st.session_state.api_base,
+        )
+
+    # Sync agents
+    sync_agents()
 
 
-def remove_model_settings(config, provider):
-    if provider in config["model_settings"]:
-        del config["model_settings"][provider]
-        save_config(config)
-        return True
-    return False
+def update_session_state(key, value):
+    st.session_state[key] = value
 
 
 def get_llm(model, api_key, api_base):
