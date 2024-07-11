@@ -1,5 +1,5 @@
 import streamlit as st
-from aibtcdev_utils import (
+from utils import (
     load_config,
     update_model_settings,
     remove_model_settings,

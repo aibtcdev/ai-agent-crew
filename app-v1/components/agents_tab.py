@@ -1,13 +1,12 @@
 import importlib
 import pandas as pd
 import streamlit as st
+from utils import load_config, save_config
 
 
 def sync_agents():
     app_config = load_config()
-    spec = importlib.util.spec_from_file_location(
-        "aibtcdev_agents", "aibtcdev_agents.py"
-    )
+    spec = importlib.util.spec_from_file_location("agents", "agents.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
 
@@ -28,20 +27,20 @@ def sync_agents():
 
 
 def get_agent_classes():
-    import aibtcdev_agents
+    import crew_ai.agents
 
-    importlib.reload(aibtcdev_agents)
+    importlib.reload(crew_ai.agents)
 
     # Get all attributes of the aibtcdev_agents module
-    all_attributes = dir(aibtcdev_agents)
+    all_attributes = dir(crew_ai.agents)
 
     # Filter classes that are defined in aibtcdev_agents (not imported)
     # and end with 'Crew' to ensure we're only getting crew classes
     crew_classes = [
-        getattr(aibtcdev_agents, attr)
+        getattr(crew_ai.agents, attr)
         for attr in all_attributes
-        if isinstance(getattr(aibtcdev_agents, attr), type)
-        and getattr(aibtcdev_agents, attr).__module__ == "aibtcdev_agents"
+        if isinstance(getattr(crew_ai.agents, attr), type)
+        and getattr(crew_ai.agents, attr).__module__ == "agents"
         and attr.endswith("Crew")
     ]
 
@@ -74,7 +73,7 @@ def {function_name}(llm):
         llm=llm,
     )
 """
-            with open("aibtcdev_agents.py", "a") as file:
+            with open("crew_ai/agents.py", "a") as file:
                 file.write(new_agent)
 
             if function_name not in existing_agents:

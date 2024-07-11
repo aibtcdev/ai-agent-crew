@@ -1,4 +1,3 @@
-import importlib.util
 import streamlit as st
 from components.sidebar import render_sidebar
 from components.agents_tab import render_agents_tab
@@ -6,23 +5,22 @@ from components.crews_tab import render_crews_tab
 from components.execution_tab import render_execution_tab
 from components.tasks_tab import render_tasks_tab
 from components.tools_tab import render_tools_tab
-from aibtcdev_agents import BitcoinCrew
-from aibtcdev_tools import AIBTCTokenTools, OnchainResourcesTools, WalletTools
-from aibtcdev_tasks import (
+from crew_ai.agents import BitcoinCrew
+from crew_ai.crews import get_wallet_crew, get_resource_crew
+from crew_ai.tasks import (
     get_wallet_status_task,
     get_aibtc_balance_task,
     get_faucet_drip_task,
     get_resource_data_task,
 )
-from aibtcdev_crews import get_wallet_crew, get_resource_crew
-from aibtcdev_utils import (
+from crew_ai.tools import AIBTCTokenTools, OnchainResourcesTools, WalletTools
+from utils import (
     load_config,
-    save_config,
     init_session_state,
     get_llm,
 )
 
-# load saved settings with .env overrides
+# load configuration
 app_config = load_config()
 
 # set up Streamlit page

@@ -1,7 +1,7 @@
 from crewai import Agent
 from typing import Optional
 from pydantic import Field
-from aibtcdev_tools import AIBTCTokenTools, OnchainResourcesTools, WalletTools, WebTools
+from crew_ai.tools import AIBTCTokenTools, OnchainResourcesTools, WalletTools, WebTools
 
 
 class WalletAgent(Agent):

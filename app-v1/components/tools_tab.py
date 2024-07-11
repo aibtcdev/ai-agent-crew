@@ -4,18 +4,18 @@ import streamlit as st
 
 
 def get_tool_classes():
-    import aibtcdev_tools
+    import crew_ai.tools
 
-    importlib.reload(aibtcdev_tools)
+    importlib.reload(crew_ai.tools)
 
-    all_attributes = dir(aibtcdev_tools)
+    all_attributes = dir(crew_ai.tools)
 
     tool_classes = [
-        getattr(aibtcdev_tools, attr)
+        getattr(crew_ai.tools, attr)
         for attr in all_attributes
-        if isinstance(getattr(aibtcdev_tools, attr), type)
-        and getattr(aibtcdev_tools, attr).__module__ == "aibtcdev_tools"
-        and hasattr(getattr(aibtcdev_tools, attr), "ui_friendly_name")
+        if isinstance(getattr(crew_ai.tools, attr), type)
+        and getattr(crew_ai.tools, attr).__module__ == "tools"
+        and hasattr(getattr(crew_ai.tools, attr), "ui_friendly_name")
     ]
 
     return tool_classes
