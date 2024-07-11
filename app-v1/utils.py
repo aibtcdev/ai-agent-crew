@@ -5,12 +5,10 @@ import streamlit as st
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 
-CONFIG_FILENAME = "aibtcdev_config.yaml"
-
 
 # loads saved settings from config file
 # then injects environment variables into the config
-# if config file not found, generate by walking expected files
+# CAN WE DO THIS WITH JUST THE ENV FILE?
 def load_config():
     load_dotenv()
     with open(CONFIG_FILENAME, "r") as file:

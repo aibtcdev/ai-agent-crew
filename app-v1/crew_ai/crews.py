@@ -1,4 +1,18 @@
 from crewai import Crew, Process
+from .decorators import ui_class, ui_method
+
+
+@ui_class("Analysis Crew")
+class AnalysisCrew:
+    @staticmethod
+    @ui_method("Get Analysis Crew")
+    def get_analysis_crew(agents, tasks):
+        return Crew(
+            agents=[agents["Data Analyst"], agents["Report Writer"]],
+            tasks=[],  # Tasks would need to be added separately
+            process=Process.sequential,
+            verbose=2,
+        )
 
 
 def get_wallet_crew(agents, tasks):
