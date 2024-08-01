@@ -1,6 +1,6 @@
-<p align="center"><img src="https://github.com/aibtcdev/landing-page/blob/main/public/logos/aibtcdev-logo-sm-250px.png" alt="Bitcoin x AI Logo" width="150px" ></p>
+<img src="https://aibtc.dev/logos/aibtcdev-primary-logo-black-wide-1000px.png" alt="AIBTC Working Group Logo" style="width: 100%; max-width: 1000px; display: block; margin: 1rem auto;" />
 
-# Bitcoin x AI: AI Agent Crew
+# AIBTC AI Agent Crew
 
 ## Description
 
@@ -56,7 +56,7 @@ Once running, access the web UI at port 7860 and:
 
 This repository also imports the `aibtcdev/agent-tools-ts` repository as a submodule.
 
-This provides Typescript functions to interact with a Stacks wallet using Stacks.js.
+This provides TypeScript functions to interact with a Stacks wallet using Stacks.js.
 
 To clone the repository and sync the submodule, run the following command:
 
@@ -66,7 +66,7 @@ To clone the repository and sync the submodule, run the following command:
 To update the submodule, run the following command:
 `git submodule update --remote --merge`
 
-Within the `scripts` directory is a `.env.example` file that should be copied to `.env` and filled out with the wallet information.
+Within the `scripts` directory is a `.env.example` file, you can disregard it as the top-level `.env.example` file for this repository covers all the needed values.
 
 Within the `scripts/src` directory are various scripts that can be run to interact with the wallet. These should be wrapped as a langchain `@tool` for LLMs to access it.
 
@@ -74,16 +74,14 @@ Within the `scripts/src` directory are various scripts that can be run to intera
 
 ### CrewAI
 
-[CrewAI](https://crewai.io) provides an easy-to-use interface for creating and managing agents, tasks, tools, and crews. It is built on top of [Langchain](https://python.langchain.com/docs/get_started/introduction), a decentralized, open-source, and privacy-focused AI platform.
+[CrewAI](https://crewai.com) provides an easy-to-use interface for creating and managing agents, tasks, tools, and crews. It is built on top of [Langchain](https://python.langchain.com/docs/get_started/introduction), a decentralized, open-source, and privacy-focused AI platform.
 
 - **Agents:** a team member; an autonomous unit programmed to perform tasks, make decisions, and communication with other agents
 - **Tasks:** a task; individual assignments that agents complete
 - **Tools:** a skill; single-input functions that agents can use to complete tasks (can use [any Langchain tool](https://python.langchain.com/docs/modules/agents/tools/) or define custom ones)
 - **Crew:** a collaborative group; a group of agents that work together to complete a set of tasks
 
-### Agents
-
-- Agent definitions are in the `agents.py` file
+View the [CrewAI Documentation](https://docs.crewai.com/) or [chat with the docs](https://chatg.pt/DWjSBZn) to learn more!
 
 ### Tools
 
