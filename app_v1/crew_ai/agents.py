@@ -1,7 +1,7 @@
 from crewai import Agent
 from typing import Optional
 from pydantic import Field
-from crew_ai.tools import AIBTCTokenTools, OnchainResourcesTools, WalletTools, WebTools
+from crew_ai.tools import AIBTCTokenTools, AIBTCResourceTools, StacksWalletTools, WebTools
 from crew_ai.decorators import ui_class, ui_method
 
 
@@ -93,10 +93,10 @@ class BitcoinCrew:
             goal="Read context and execute tasks using tools to interact with a configured wallet.",
             memory=True,
             tools=[
-                WalletTools.get_wallet_addresses,
-                WalletTools.get_wallet_status,
-                WalletTools.get_transaction_data,
-                WalletTools.get_transaction_status,
+                StacksWalletTools.get_wallet_addresses,
+                StacksWalletTools.get_wallet_status,
+                StacksWalletTools.get_transaction_data,
+                StacksWalletTools.get_transaction_status,
                 AIBTCTokenTools.get_aibtc_balance,
                 AIBTCTokenTools.get_faucet_drip,
             ],
@@ -118,11 +118,11 @@ class BitcoinCrew:
             goal="Read context and execute tasks using tools to interact with on-chain resources. Double check that all required arguments are included for the tools.",
             memory=True,
             tools=[
-                WalletTools.get_wallet_status,
-                OnchainResourcesTools.get_recent_payment_data,
-                OnchainResourcesTools.get_resource_data,
-                OnchainResourcesTools.get_user_data_by_address,
-                OnchainResourcesTools.pay_invoice_for_resource,
+                StacksWalletTools.get_wallet_status,
+                AIBTCResourceTools.get_recent_payment_data,
+                AIBTCResourceTools.get_resource_data,
+                AIBTCResourceTools.get_user_data_by_address,
+                AIBTCResourceTools.pay_invoice_for_resource,
                 AIBTCTokenTools.get_aibtc_balance,
                 AIBTCTokenTools.get_faucet_drip,
             ],
@@ -144,8 +144,8 @@ class BitcoinCrew:
             goal="Manage Bitcoin and Stacks transactions and provide information.",
             backstory="You are an expert in managing transactions and understanding complex on-chain data.",
             tools=[
-                WalletTools.get_transaction_data,
-                WalletTools.get_transaction_status,
+                StacksWalletTools.get_transaction_data,
+                StacksWalletTools.get_transaction_status,
             ],
             verbose=True,
             allow_delegation=False,
