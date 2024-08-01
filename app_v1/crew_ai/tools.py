@@ -33,20 +33,7 @@ class BunScriptRunner:
             return {"output": None, "error": e.stderr, "success": False}
 
 
-def ui_tool_group(friendly_name):
-    def decorator(cls):
-        cls.ui_friendly_name = friendly_name
-        return cls
-
-    return decorator
-
-
-@ui_tool_group("aiBTC Token Operations")
 class AIBTCTokenTools:
-    # can we just add a name to the class
-    # instead of using a decorator
-    # then use that object in our UI?
-
     @staticmethod
     @tool("Get current aiBTC balance")
     def get_aibtc_balance(dummy_arg=None):
@@ -72,7 +59,6 @@ class AIBTCTokenTools:
         return BunScriptRunner.bun_run("stacks-m2m-aibtc", "get-faucet-flood.ts")
 
 
-@ui_tool_group("On-chain Resource Management")
 class OnchainResourcesTools:
     @staticmethod
     @tool("Get recent payment data for an address")
@@ -103,7 +89,6 @@ class OnchainResourcesTools:
         return BunScriptRunner.bun_run("stacks-m2m-v2", "pay-invoice.ts")
 
 
-@ui_tool_group("Wallet Operations")
 class WalletTools:
     @staticmethod
     @tool("Get Wallet Addresses")
@@ -138,7 +123,6 @@ class WalletTools:
         return BunScriptRunner.bun_run("wallet", "sign-message.ts")
 
 
-@ui_tool_group("Web Scraping Operations")
 class WebTools:
     @staticmethod
     @tool("Scrape Reddit URL")
@@ -162,3 +146,11 @@ class WebTools:
         """Scrape the provided URL using Selenium if the URL is unrecognized and it does not match any other tool."""
         scraping_tool = SeleniumScrapingTool(website_url=website_url)
         return scraping_tool._run()
+
+def get_tool_groups():
+    return {
+        "aiBTC Token Operations": AIBTCTokenTools,
+        "On-chain Resource Management": OnchainResourcesTools,
+        "Wallet Operations": WalletTools,
+        "Web Scraping Operations": WebTools,
+    }
