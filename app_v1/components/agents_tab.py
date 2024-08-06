@@ -38,7 +38,7 @@ def render_agents_tab():
                             use_column_width=False,
                             output_format="auto",
                             caption=agent.role,
-                            width=150,
+                            width=100,
                         )
 
                     with info_col:

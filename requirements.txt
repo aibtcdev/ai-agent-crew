@@ -4,6 +4,7 @@ crewai_tools
 langchain
 langchain_openai
 pandas
+pydantic
 python-dotenv
 PyYAML
 streamlit
