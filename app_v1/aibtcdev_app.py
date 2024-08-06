@@ -1,5 +1,4 @@
 import streamlit as st
-from components.sidebar import render_sidebar
 from components.agents_tab import render_agents_tab
 from components.execution_tab import render_execution_tab
 from components.tasks_tab import render_tasks_tab
@@ -17,9 +16,20 @@ st.set_page_config(
 # initialize session state
 init_session_state()
 
-
-# show sidebar for settings
-render_sidebar()
+# set max page width
+page_width = """
+<style>
+.main .block-container {
+    max-width: 800px;
+    padding-top: 2rem;
+    padding-right: 1rem;
+    padding-left: 1rem;
+    padding-bottom: 3rem;
+    margin: 0 auto;
+}
+</style>
+"""
+st.write(page_width, unsafe_allow_html=True)
 
 # custom tab styling
 tab_style = """

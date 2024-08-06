@@ -38,11 +38,10 @@ def render_agents_tab():
                     with img_col:
                         st.image(
                             f"https://bitcoinfaces.xyz/api/get-image?name={agent.role.replace(' ', '-')}",
-                            use_column_width=True,
+                            use_column_width=False,
                             output_format="auto",
                             caption=agent.role,
-                            width=50,
-                            clamp=True,
+                            width=150,
                         )
 
                     with info_col:
