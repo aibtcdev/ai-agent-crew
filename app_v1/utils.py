@@ -1,9 +1,10 @@
+import anthropic
 import os
 import streamlit as st
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
-import anthropic
 from components.agents_tab import sync_agents
+from components.tasks_tab import sync_tasks
 
 
 def load_env_vars():
@@ -19,12 +20,6 @@ def init_session_state():
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
-
-    if "delete_confirmation" not in st.session_state:
-        st.session_state.delete_confirmation = {}
-
-    if "crews" not in st.session_state:
-        st.session_state.crews = {}
 
     if "agents" not in st.session_state:
         st.session_state.agents = {}
@@ -54,6 +49,9 @@ def init_session_state():
 
     # Sync agents
     sync_agents()
+
+    # Sync tasks
+    sync_tasks()
 
 
 def update_session_state(key, value):

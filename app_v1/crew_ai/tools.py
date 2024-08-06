@@ -1,5 +1,4 @@
 import subprocess
-
 from crewai_tools import SeleniumScrapingTool, tool
 
 

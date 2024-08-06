@@ -32,7 +32,7 @@ def extract_bun_run_command(source: str) -> str:
 
     joined_command = " ".join(bun_run_lines)
 
-    # Normalize spacing
+    # normalize spacing
     normalized_command = re.sub(r"\s*([(),])\s*", r"\1 ", joined_command)
     normalized_command = re.sub(r"\s+", " ", normalized_command)
     normalized_command = normalized_command.replace("( ", "(").replace(" )", ")")
@@ -54,7 +54,7 @@ def render_tools_tab():
                     with st.expander(f"{tool.name}"):
                         st.write(f"**Description:** {tool.description}")
 
-                        # Get the function signature
+                        # get the function signature
                         sig = inspect.signature(tool.func)
                         params = sig.parameters
 
@@ -70,7 +70,7 @@ def render_tools_tab():
                         else:
                             st.write("**Arguments:** No arguments")
 
-                        # Extract and display the BunScriptRunner command
+                        # extract and display the BunScriptRunner command
                         source = inspect.getsource(tool.func)
                         bun_run_command = extract_bun_run_command(source)
                         if bun_run_command:

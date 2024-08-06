@@ -1,8 +1,8 @@
 import inspect
 import importlib
-from crew_ai import agents
 import streamlit as st
 import pandas as pd
+from crew_ai import agents
 
 
 def sync_agents():
@@ -23,14 +23,11 @@ def render_agents_tab():
             "No agents found. Please check your crew_ai/agents.py file and ensure agents are defined correctly."
         )
     else:
-        # st.markdown("## Configured Agents")
-
         for agent_name, agent_func in st.session_state.agents.items():
             with st.container():
-                # st.subheader(agent_name)
 
                 try:
-                    # Create an instance of the agent
+                    # create an instance of the agent
                     agent = agent_func()
 
                     img_col, info_col = st.columns([1, 3])
@@ -75,4 +72,4 @@ def render_agents_tab():
                 except Exception as e:
                     st.error(f"Error displaying agent {agent_name}: {str(e)}")
 
-                st.markdown("---")  # Add a horizontal line between agents
+                st.markdown("---")

@@ -7,9 +7,8 @@ from utils import init_session_state
 
 
 # set up streamlit page
-page_title = "AIBTCdev Interactive Crews"
 st.set_page_config(
-    page_title=page_title,
+    page_title="AIBTC Crews",
     layout="wide",
 )
 
@@ -59,5 +58,4 @@ with tab3:
     render_tasks_tab()
 
 with tab4:
-    st.write("Execution")
-    # render_execution_tab()
+    render_execution_tab()
