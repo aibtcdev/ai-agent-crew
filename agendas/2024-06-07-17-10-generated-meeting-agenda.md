@@ -1,6 +1,0 @@
-## Latest AI News
-### Latest AI News
-- Whether you're preparing for a hackathon or building an app, you'll eventually need on-chain data. We're hosting a workshop next Tues to show you an easy way to build lightweight databases of on-chain events for Stacks. RSVP in the link below.
-- An open-source project called LangChain is working on replicating the ChatGPT desktop app. The project allows users to easily install the app via pip and then send text and screenshots to receive a voice response. The speed of the open-source community in developing this project is impressive. You can find more information and access the project on GitHub at https://github.com/onuratakan/gpt-computer-assistant.
-- Mesop is an open-source Python UI framework that was used at Google to build AI/ML apps. It has been open-sourced by Google.
-- @Steve8708 would love your feedback on a customizable micro-agent tool that is more useful than just asking ChatGPT for code. It can be customized to specific test criteria like vitest, jest, lint, tsc, etc. You can find more information at https://github.com/BuilderIO/micro-agent.
