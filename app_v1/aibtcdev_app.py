@@ -45,6 +45,12 @@ button[data-baseweb="tab"] > div[data-testid="stMarkdownContainer"] > p {
 """
 st.write(tab_style, unsafe_allow_html=True)
 
+# Display logo full width
+st.image(
+    "https://feat-rebrand-website.aibtcdev-landing-page.pages.dev/logos/aibtcdev-primary-logo-white-wide-1000px.png",
+    use_column_width=True,
+)
+
 # Main layout with tabs
 tab1, tab2, tab3, tab4 = st.tabs(["Agents", "Tools", "Tasks", "Execution"])
 
