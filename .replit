@@ -1,0 +1,12 @@
+modules = ["python-3.11"]
+run = "streamlit run app_v1/aibtcdev_app.py"
+
+[nix]
+channel = "stable-24_05"
+
+[deployment]
+run = ["sh", "-c", "streamlit run app_v1/aibtcdev_app.py"]
+
+[[ports]]
+localPort = 8501
+externalPort = 80
