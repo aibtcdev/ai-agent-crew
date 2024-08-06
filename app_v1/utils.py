@@ -27,10 +27,10 @@ def init_session_state():
         st.session_state.crews = {}
 
     if "agents" not in st.session_state:
-        st.session_state.agents = []
+        st.session_state.agents = {}
 
     if "tasks" not in st.session_state:
-        st.session_state.tasks = []
+        st.session_state.tasks = {}
 
     # Initialize other session state variables
     defaults = {
