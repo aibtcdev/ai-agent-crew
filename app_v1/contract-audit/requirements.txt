@@ -1,0 +1,8 @@
+crewai
+crewai_tools
+python-dotenv
+streamlit
+pysqlite3-binary
+chromadb
+streamlit-mermaid
+
