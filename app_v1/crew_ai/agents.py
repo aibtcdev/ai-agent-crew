@@ -93,11 +93,11 @@ def get_transaction_manager(llm=None):
         role="Transaction Manager",
         goal="Manage Bitcoin and Stacks transactions and provide information.",
         backstory="You are an expert in managing transactions and understanding complex on-chain data.",
+        memory=True,
         tools=[
             StacksWalletTools.get_transaction_data,
             StacksWalletTools.get_transaction_status,
         ],
         verbose=True,
         allow_delegation=False,
-        memory=True,
     )
