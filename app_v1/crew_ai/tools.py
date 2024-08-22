@@ -1,4 +1,6 @@
+import requests
 import subprocess
+from bs4 import BeautifulSoup
 from crewai_tools import SeleniumScrapingTool, tool
 
 
@@ -166,7 +168,30 @@ class StacksWalletTools:
         return BunScriptRunner.bun_run("wallet", "sign-message.ts")
 
 
-class WebTools:
+class WebsiteTools:
+    @staticmethod
+    @tool("Fetch and parse URL content")
+    def fetch_and_parse_url_content(website_url: str):
+        """Fetch and parse the content of the provided URL using Beautiful Soup. Targets the main article content."""
+        response = requests.get(website_url)
+        soup = BeautifulSoup(response.content, "html.parser")
+
+        article = soup.select_one("section#article article")
+        if not article:
+            return ""
+
+        title = article.find("h2")
+        title_text = title.text if title else ""
+
+        for element in article.select(".code, .buttons"):
+            element.decompose()
+
+        content = article.get_text(separator="\n", strip=True)
+
+        full_content = f"{title_text}\n\n{content}"
+
+        return full_content
+
     @staticmethod
     @tool("Scrape Reddit URL")
     def scrape_reddit_url(website_url: str):
@@ -197,5 +222,5 @@ def get_tool_groups():
         "AIBTC Token": AIBTCTokenTools,
         "Stacks BNS": StacksBNSTools,
         "Stacks Wallet": StacksWalletTools,
-        "Web Scraping": WebTools,
+        "Website Tools": WebsiteTools,
     }

@@ -3,7 +3,7 @@ from crew_ai.tools import (
     AIBTCTokenTools,
     AIBTCResourceTools,
     StacksWalletTools,
-    WebTools,
+    WebsiteTools,
 )
 
 
@@ -19,7 +19,7 @@ def get_website_scraper(llm=None):
         verbose=True,
         memory=True,
         allow_delegation=False,
-        tools=[WebTools.scrape_x_or_twitter_url],
+        tools=[WebsiteTools.scrape_x_or_twitter_url],
         **kwargs
     )
 
