@@ -57,7 +57,7 @@ st.write(text_input_style, unsafe_allow_html=True)
 
 # Display logo full width
 st.image(
-    "https://feat-rebrand-website.aibtcdev-landing-page.pages.dev/logos/aibtcdev-primary-logo-white-wide-1000px.png",
+    "https://aibtc.dev/logos/aibtcdev-primary-logo-white-wide-1000px.png",
     use_column_width=True,
 )
 
