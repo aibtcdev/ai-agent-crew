@@ -1,9 +1,13 @@
-import requests
 import subprocess
-from bs4 import BeautifulSoup
 from crewai_tools import SeleniumScrapingTool, tool
+from vector_utils import (
+    create_vector_search_tool,
+    clarity_book_code_vector_store,
+    clarity_book_function_vector_store,
+)
 
 
+# generic runner for Bun.js scripts
 class BunScriptRunner:
     working_dir = "./agent-tools-ts/"
     script_dir = "src"
@@ -32,6 +36,9 @@ class BunScriptRunner:
             return {"output": result.stdout, "error": None, "success": True}
         except subprocess.CalledProcessError as e:
             return {"output": None, "error": e.stderr, "success": False}
+
+
+### ALL CLASSES AND FUNCTIONS BELOW ARE AGENT TOOLS ###
 
 
 class AIBTCResourceTools:
@@ -133,6 +140,26 @@ class StacksContracts:
             "stacks-contracts", "get-contract-source-code.ts", contract_name
         )
 
+    @staticmethod
+    @tool("Get Clarity Code Search Tool")
+    def get_code_search_tool():
+        """Get the code search tool for the Clarity book with information about Clarity language syntax, types, and general concepts."""
+        return create_vector_search_tool(
+            clarity_book_code_vector_store,
+            "Code Search",
+            "Search for code snippets in the Clarity book.",
+        )
+
+    @staticmethod
+    @tool("Get Clarity Function Search Tool")
+    def get_function_search_tool():
+        """Get the function search tool for the Clarity book with specific information about functions in Clarity language."""
+        return create_vector_search_tool(
+            clarity_book_function_vector_store,
+            "Function Search",
+            "Search for function documentation in the Clarity book.",
+        )
+
 
 class StacksWalletTools:
     @staticmethod
@@ -170,29 +197,6 @@ class StacksWalletTools:
 
 class WebsiteTools:
     @staticmethod
-    @tool("Fetch and parse URL content")
-    def fetch_and_parse_url_content(website_url: str):
-        """Fetch and parse the content of the provided URL using Beautiful Soup. Targets the main article content."""
-        response = requests.get(website_url)
-        soup = BeautifulSoup(response.content, "html.parser")
-
-        article = soup.select_one("section#article article")
-        if not article:
-            return ""
-
-        title = article.find("h2")
-        title_text = title.text if title else ""
-
-        for element in article.select(".code, .buttons"):
-            element.decompose()
-
-        content = article.get_text(separator="\n", strip=True)
-
-        full_content = f"{title_text}\n\n{content}"
-
-        return full_content
-
-    @staticmethod
     @tool("Scrape Reddit URL")
     def scrape_reddit_url(website_url: str):
         """Targeted tool to scrape the provided Reddit URL using Selenium."""
@@ -216,6 +220,8 @@ class WebsiteTools:
         return scraping_tool._run()
 
 
+# for the UI, returns dict of tool groups for display
+# automatically includes any function in the class
 def get_tool_groups():
     return {
         "AIBTC Resources": AIBTCResourceTools,

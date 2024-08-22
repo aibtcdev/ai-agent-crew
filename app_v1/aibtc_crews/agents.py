@@ -1,5 +1,5 @@
 from crewai import Agent
-from crew_ai.tools import (
+from aibtc_crews.tools import (
     AIBTCTokenTools,
     AIBTCResourceTools,
     StacksWalletTools,
