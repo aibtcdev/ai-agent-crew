@@ -45,6 +45,16 @@ button[data-baseweb="tab"] > div[data-testid="stMarkdownContainer"] > p {
 """
 st.write(tab_style, unsafe_allow_html=True)
 
+# custom text input styling
+text_input_style = """
+<style>
+.stTextInput > div > div > input {
+    background-color: #000000;
+}
+</style>
+"""
+st.write(text_input_style, unsafe_allow_html=True)
+
 # Display logo full width
 st.image(
     "https://feat-rebrand-website.aibtcdev-landing-page.pages.dev/logos/aibtcdev-primary-logo-white-wide-1000px.png",
