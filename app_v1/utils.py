@@ -27,6 +27,9 @@ def init_session_state():
     if "tasks" not in st.session_state:
         st.session_state.tasks = {}
 
+    if "tasks_search_term" not in st.session_state:
+        st.session_state.tasks_search_term = ""
+
     # Initialize other session state variables
     defaults = {
         "llm_model": "OpenAI",
