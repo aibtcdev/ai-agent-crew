@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "wallet-summarizer"
+version = "0.1.0"
+description = ""
+authors = ["hashhavoccat <162091348+hashhavoccat@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.12,<=3.13"
+crewai = "^0.51.1"
+crewai-tools = "^0.4.26"
+python-dotenv = "^1.0.1"
+streamlit = "^1.37.1"
+langchain-ollama = "^0.1.1"
+streamlit-mermaid = "^0.2.0"
+langchain-huggingface = "^0.0.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

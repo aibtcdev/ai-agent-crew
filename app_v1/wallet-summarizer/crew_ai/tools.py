@@ -3,7 +3,7 @@ from crewai_tools import SeleniumScrapingTool, tool
 
 
 class BunScriptRunner:
-    working_dir = "./agent-tools-ts/"
+    working_dir = "../../agent-tools-ts/"
     script_dir = "src"
 
     @staticmethod
@@ -168,7 +168,7 @@ class StacksWalletTools:
     @staticmethod
     @tool("Get Address Balance Detailed")
     def get_address_balance_detailed(address: str):
-        """Get detailed balance information for a given address."""
+        """Get detailed balance information for a given address. Just pass in address."""
         return BunScriptRunner.bun_run(
             "stacks-wallet", "get-address-balance-detailed.ts", address
         )
