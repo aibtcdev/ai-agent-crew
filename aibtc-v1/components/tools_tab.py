@@ -7,10 +7,10 @@ from crewai_tools import Tool
 
 
 def get_tool_groups() -> Dict[str, Type]:
-    import crew_ai.tools
+    import crews.tools
 
-    importlib.reload(crew_ai.tools)
-    return crew_ai.tools.get_tool_groups()
+    importlib.reload(crews.tools)
+    return crews.tools.get_tool_groups()
 
 
 def extract_bun_run_command(source: str) -> str:

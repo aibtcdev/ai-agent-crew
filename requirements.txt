@@ -1,10 +1,13 @@
 anthropic
+chromadb
 crewai
 crewai_tools
 langchain
 langchain_openai
 pandas
 pydantic
+pysqlite3-binary
 python-dotenv
 PyYAML
 streamlit
+streamlit-mermaid

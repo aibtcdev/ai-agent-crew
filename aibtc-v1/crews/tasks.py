@@ -1,7 +1,7 @@
 from crewai import Task
 
 
-def get_wallet_status_task(agent):
+def get_wallet_status(agent):
     return Task(
         description="Get the current wallet status and display the information.",
         expected_output="A detailed report of the current wallet status including balance and recent transactions.",
@@ -9,7 +9,7 @@ def get_wallet_status_task(agent):
     )
 
 
-def get_aibtc_balance_task(agent):
+def get_aibtc_balance(agent):
     return Task(
         description="Retrieve and display the current aiBTC balance.",
         expected_output="The current aiBTC balance as a numerical value with appropriate units.",
@@ -17,7 +17,7 @@ def get_aibtc_balance_task(agent):
     )
 
 
-def get_faucet_drip_task(agent):
+def get_aibtc_faucet_drip(agent):
     return Task(
         description="Request aiBTC from the faucet and display the transaction ID.",
         expected_output="The transaction ID of the aiBTC faucet drip request.",
@@ -25,7 +25,7 @@ def get_faucet_drip_task(agent):
     )
 
 
-def get_resource_data_task(agent):
+def get_aibtc_resource_data(agent):
     return Task(
         description="Retrieve and display resource data for a given address",
         expected_output="A detailed report of the resource data associated with the provided address.",

@@ -1,35 +1,7 @@
-import subprocess
 from crewai_tools import SeleniumScrapingTool, tool
+from utils.scripts import BunScriptRunner
 
-
-class BunScriptRunner:
-    working_dir = "./agent-tools-ts/"
-    script_dir = "src"
-
-    @staticmethod
-    def bun_run(contract_name: str, script_name: str, arg: str = None):
-        """Runs a TypeScript script using bun with an optional positional argument."""
-        command = [
-            "bun",
-            "run",
-            f"{BunScriptRunner.script_dir}/{contract_name}/{script_name}",
-        ]
-
-        # Append the optional argument if provided
-        if arg is not None:
-            command.append(arg)
-
-        try:
-            result = subprocess.run(
-                command,
-                check=True,
-                text=True,
-                capture_output=True,
-                cwd=BunScriptRunner.working_dir,
-            )
-            return {"output": result.stdout, "error": None, "success": True}
-        except subprocess.CalledProcessError as e:
-            return {"output": None, "error": e.stderr, "success": False}
+### ALL CLASSES AND FUNCTIONS BELOW ARE AGENT TOOLS ###
 
 
 class AIBTCResourceTools:
@@ -122,16 +94,6 @@ class StacksBNSTools:
         return BunScriptRunner.bun_run("stacks-bns", "register.ts", bns_name)
 
 
-class StacksContracts:
-    @staticmethod
-    @tool("Get contract source code")
-    def get_contract_source_code(contract_name: str):
-        """Get the source code for a given contract. It must be the fully qualified name with ADDRESS.CONTRACT_NAME"""
-        return BunScriptRunner.bun_run(
-            "stacks-contracts", "get-contract-source-code.ts", contract_name
-        )
-
-
 class StacksWalletTools:
     @staticmethod
     @tool("Get Wallet Addresses")
@@ -182,7 +144,7 @@ class StacksWalletTools:
         )
 
 
-class WebTools:
+class WebsiteTools:
     @staticmethod
     @tool("Scrape Reddit URL")
     def scrape_reddit_url(website_url: str):
@@ -207,11 +169,13 @@ class WebTools:
         return scraping_tool._run()
 
 
+# for the UI, returns dict of tool groups for display
+# automatically includes any function in the class
 def get_tool_groups():
     return {
         "AIBTC Resources": AIBTCResourceTools,
         "AIBTC Token": AIBTCTokenTools,
         "Stacks BNS": StacksBNSTools,
         "Stacks Wallet": StacksWalletTools,
-        "Web Scraping": WebTools,
+        "Website Tools": WebsiteTools,
     }
