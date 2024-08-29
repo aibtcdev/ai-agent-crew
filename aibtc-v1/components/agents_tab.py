@@ -13,7 +13,7 @@ def render_agents_tab():
 
                 try:
                     # create an instance of the agent
-                    agent = agent_func()
+                    agent = agent_func(st.session_state.llm)
 
                     img_col, info_col = st.columns([1, 3])
 

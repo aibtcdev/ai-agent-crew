@@ -37,6 +37,7 @@ def get_meeting_writer(llm=None):
         memory=True,
         allow_delegation=False,
         tools=[],
+        **kwargs
     )
 
 
@@ -60,6 +61,7 @@ def get_wallet_account_manager(llm=None):
         ],
         allow_delegation=False,
         verbose=True,
+        **kwargs
     )
 
 
@@ -81,6 +83,7 @@ def get_onchain_resource_manager(llm=None):
         ],
         verbose=True,
         allow_delegation=False,
+        **kwargs
     )
 
 
@@ -100,4 +103,5 @@ def get_transaction_manager(llm=None):
         ],
         verbose=True,
         allow_delegation=False,
+        **kwargs
     )

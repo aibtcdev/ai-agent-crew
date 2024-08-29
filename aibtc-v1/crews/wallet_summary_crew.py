@@ -30,8 +30,8 @@ class AIBTC_Agents:
                 """
                 You are a blockchain data analyst specializing in wallet activity on the Stacks blockchain."""
             ),
-            llm=llm,
             verbose=True,
+            **kwargs,
         )
 
     @staticmethod
@@ -48,8 +48,8 @@ class AIBTC_Agents:
                 """
                You are an expert in blockchain transaction analysis, capable of efficiently querying and filtering large data sets. Your are an expert in JSON parsing."""
             ),
-            llm=llm,
             verbose=True,
+            **kwargs,
         )
 
     @staticmethod
@@ -66,9 +66,9 @@ class AIBTC_Agents:
                 """
                You are a blockchain activity analyst with expertise in behavioral analysis on the Stacks blockchain. """
             ),
-            llm=llm,
             verbose=True,
             allow_delegation=False,
+            **kwargs,
         )
 
     @staticmethod
@@ -85,9 +85,9 @@ class AIBTC_Agents:
                 """
                You are a technical writer with expertise in creating clear and concise reports on complex blockchain topics in the Clarity language on the Stacks blockchain."""
             ),
-            llm=llm,
             verbose=True,
             allow_delegation=False,
+            **kwargs,
         )
 
 
