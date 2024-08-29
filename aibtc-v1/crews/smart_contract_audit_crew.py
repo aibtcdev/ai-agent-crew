@@ -19,6 +19,13 @@ from utils.vector import (
 ####################
 
 
+def parse_contract_identifier(identifier):
+    parts = identifier.split(".")
+    if len(parts) == 2:
+        return parts[0], parts[1]
+    return None, None
+
+
 def fetch_contract_source(contract_address, contract_name):
     url = f"https://api.hiro.so/v2/contracts/source/{contract_address}/{contract_name}"
     response = requests.get(url)
@@ -335,17 +342,38 @@ class AIBTC_Crew:
         )
 
         with st.form("analysis_form"):
-            contract_address = st.text_input(
+            contract_identifier = st.text_input(
                 "Contract Address",
-                help="Enter the unique identifier for the contract",
-                placeholder="e.g. SP000000000000000000002Q6VF78.pox",
+                help="Enter the full contract identifier or just the address",
+                placeholder="e.g. SP000000000000000000002Q6VF78.pox or SP000000000000000000002Q6VF78",
             )
             contract_name = st.text_input(
-                "Contract Name", help="Enter the name of the contract"
+                "Contract Name",
+                help="Enter the name of the deployed contract",
+                placeholder="e.g. pox in SP000000000000000000002Q6VF78.pox",
             )
             submitted = st.form_submit_button("Analyze Contract")
 
-        if submitted and contract_address and contract_name:
+        if submitted:
+            parsed_address, parsed_name = parse_contract_identifier(contract_identifier)
+
+            if parsed_address and parsed_name:
+                contract_address = parsed_address
+                contract_name = parsed_name
+            elif "." not in contract_identifier:
+                contract_address = contract_identifier
+            else:
+                st.error(
+                    "Invalid contract identifier format. Please use 'address.name' or provide both fields separately."
+                )
+                st.stop()
+
+            if not contract_address or not contract_name:
+                st.error(
+                    "Both contract address and name are required. Please provide both."
+                )
+                st.stop()
+
             with st.spinner("Fetching contract data..."):
                 contract_code = fetch_contract_source(contract_address, contract_name)
                 contract_functions = fetch_function(contract_address, contract_name)
@@ -358,6 +386,13 @@ class AIBTC_Crew:
                 st.error(f"Failed to fetch contract functions: {contract_functions}")
             else:
                 with st.expander("View Contract Code"):
+                    st.download_button(
+                        label="Download Smart Contract Code",
+                        data=contract_code,
+                        file_name=f"{contract_address}.{contract_name}.clar",
+                        mime="text/plain",
+                    )
+                    st.write("Source code:")
                     st.code(contract_code)
 
                 st.header("Analysis Results")
