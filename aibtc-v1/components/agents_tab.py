@@ -1,26 +1,11 @@
-import inspect
-import importlib
-import streamlit as st
 import pandas as pd
-from crew_ai import agents
-
-
-def sync_agents():
-    importlib.reload(agents)
-    st.session_state.agents = {}
-    for name, func in inspect.getmembers(agents, inspect.isfunction):
-        if name.startswith("get_"):
-            agent_name = name[4:].replace("_", " ").title()
-            st.session_state.agents[agent_name] = func
+import streamlit as st
 
 
 def render_agents_tab():
-    if "agents" not in st.session_state:
-        sync_agents()
-
     if not st.session_state.agents:
         st.warning(
-            "No agents found. Please check your crew_ai/agents.py file and ensure agents are defined correctly."
+            "No agents found. Please check your aibtc_crews/agents.py file and ensure agents are defined correctly."
         )
     else:
         for agent_name, agent_func in st.session_state.agents.items():
