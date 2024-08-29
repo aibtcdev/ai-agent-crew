@@ -218,7 +218,7 @@ class AIBTC_Crew:
             "This tool will analyze a wallet's activity and holdings on the Stacks blockchain."
         )
 
-        with st.form("analysis_form"):
+        with st.form("wallet_summary_form"):
             address = st.text_input("Address", help="Enter the wallet address")
             submitted = st.form_submit_button("Analyze Wallet")
 
