@@ -6,6 +6,7 @@ import streamlit as st
 from crews import agents, tasks
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
 
 
 def load_env_vars():
@@ -51,7 +52,7 @@ def init_session_state():
 
     # Initialize other session state variables
     defaults = {
-        "llm_model": "OpenAI",
+        "llm_model": "Ollama",
         "api_key": env_vars.get("OPENAI_API_KEY", ""),
         "api_base": env_vars.get("OPENAI_API_BASE", "https://api.openai.com/v1"),
         "model_name": env_vars.get("OPENAI_MODEL_NAME", "gpt-3.5-turbo"),
@@ -81,12 +82,14 @@ def update_session_state(key, value):
 def get_llm(model, api_key, api_base):
     if model == "Anthropic":
         return anthropic.Anthropic(api_key=api_key)
-    else:
+    elif model == "OpenAI":
         return ChatOpenAI(
             model=model,
             openai_api_key=api_key,
             openai_api_base=api_base,
         )
+    else:
+        return ChatOllama(model="gemma2", base_url="http://localhost:11434")
 
 
 def crew_step_callback(output):

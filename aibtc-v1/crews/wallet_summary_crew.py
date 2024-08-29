@@ -3,18 +3,9 @@ import streamlit as st
 import time
 from crewai import Agent, Crew, Process, Task
 from crewai_tools import tool
-from langchain_openai import ChatOpenAI
 from langchain_ollama import ChatOllama
-from langchain.prompts import ChatPromptTemplate
-from streamlit_mermaid import st_mermaid
 from textwrap import dedent
-from utils.scripts import BunScriptRunner
 from utils.session import crew_step_callback, crew_task_callback
-from utils.vector import (
-    create_vector_search_tool,
-    clarity_book_code_vector_store,
-    clarity_book_function_vector_store,
-)
 from .tools import StacksWalletTools
 
 

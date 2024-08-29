@@ -1,3 +1,6 @@
+import subprocess
+
+
 # generic runner for Bun.js scripts
 class BunScriptRunner:
     working_dir = "./agent-tools-ts/"
