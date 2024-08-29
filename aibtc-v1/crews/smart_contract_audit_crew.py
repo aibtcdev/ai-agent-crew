@@ -8,6 +8,7 @@ from langchain.prompts import ChatPromptTemplate
 from streamlit_mermaid import st_mermaid
 from textwrap import dedent
 from utils.scripts import BunScriptRunner
+from utils.session import crew_step_callback, crew_task_callback
 from utils.vector import (
     create_vector_search_tool,
     clarity_book_code_vector_store,
@@ -332,6 +333,8 @@ class AIBTC_Crew:
             tasks=assigned_tasks,
             process=Process.sequential,
             memory=True,
+            step_callback=crew_step_callback,
+            task_callback=crew_task_callback,
         )
 
     @staticmethod
@@ -397,17 +400,22 @@ class AIBTC_Crew:
 
                 st.header("Analysis Results")
                 try:
+                    # create containers for real-time updates
+                    st.write("Step Progress:")
+                    st.session_state.crew_step_container = st.empty()
+                    st.write("Task Progress:")
+                    st.session_state.crew_task_container = st.empty()
+
+                    # reset callback lists
+                    st.session_state.crew_step_callback = []
+                    st.session_state.crew_task_callback = []
+
                     crew = AIBTC_Crew.create_smart_contract_analysis_crew(
                         contract_code, contract_functions
                     )
 
-                    progress_bar = st.progress(0)
-
                     with st.spinner("Analyzing..."):
                         result = crew.kickoff()
-                        for i in range(100):
-                            time.sleep(0.05)
-                            progress_bar.progress(i + 1)
 
                     st.success("Analysis complete!")
 
