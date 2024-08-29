@@ -1,42 +1,5 @@
-import subprocess
 from crewai_tools import SeleniumScrapingTool, tool
-from vector_utils import (
-    create_vector_search_tool,
-    clarity_book_code_vector_store,
-    clarity_book_function_vector_store,
-)
-
-
-# generic runner for Bun.js scripts
-class BunScriptRunner:
-    working_dir = "./agent-tools-ts/"
-    script_dir = "src"
-
-    @staticmethod
-    def bun_run(contract_name: str, script_name: str, arg: str = None):
-        """Runs a TypeScript script using bun with an optional positional argument."""
-        command = [
-            "bun",
-            "run",
-            f"{BunScriptRunner.script_dir}/{contract_name}/{script_name}",
-        ]
-
-        # Append the optional argument if provided
-        if arg is not None:
-            command.append(arg)
-
-        try:
-            result = subprocess.run(
-                command,
-                check=True,
-                text=True,
-                capture_output=True,
-                cwd=BunScriptRunner.working_dir,
-            )
-            return {"output": result.stdout, "error": None, "success": True}
-        except subprocess.CalledProcessError as e:
-            return {"output": None, "error": e.stderr, "success": False}
-
+from utils.scripts import BunScriptRunner
 
 ### ALL CLASSES AND FUNCTIONS BELOW ARE AGENT TOOLS ###
 
@@ -129,36 +92,6 @@ class StacksBNSTools:
     def register_bns_name_step_2(bns_name: str):
         """Register a BNS name, step 2 of 2, transaction is required to be successful before registering in step 2."""
         return BunScriptRunner.bun_run("stacks-bns", "register.ts", bns_name)
-
-
-class StacksContracts:
-    @staticmethod
-    @tool("Get contract source code")
-    def get_contract_source_code(contract_name: str):
-        """Get the source code for a given contract. It must be the fully qualified name with ADDRESS.CONTRACT_NAME"""
-        return BunScriptRunner.bun_run(
-            "stacks-contracts", "get-contract-source-code.ts", contract_name
-        )
-
-    @staticmethod
-    @tool("Get Clarity Code Search Tool")
-    def get_code_search_tool():
-        """Get the code search tool for the Clarity book with information about Clarity language syntax, types, and general concepts."""
-        return create_vector_search_tool(
-            clarity_book_code_vector_store,
-            "Code Search",
-            "Search for code snippets in the Clarity book.",
-        )
-
-    @staticmethod
-    @tool("Get Clarity Function Search Tool")
-    def get_function_search_tool():
-        """Get the function search tool for the Clarity book with specific information about functions in Clarity language."""
-        return create_vector_search_tool(
-            clarity_book_function_vector_store,
-            "Function Search",
-            "Search for function documentation in the Clarity book.",
-        )
 
 
 class StacksWalletTools:

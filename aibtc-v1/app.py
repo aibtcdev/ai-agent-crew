@@ -3,7 +3,7 @@ from components.agents_tab import render_agents_tab
 from components.execution_tab import render_execution_tab
 from components.tasks_tab import render_tasks_tab
 from components.tools_tab import render_tools_tab
-from utils import init_session_state
+from utils.session import init_session_state
 
 
 # set up streamlit page

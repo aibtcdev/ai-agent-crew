@@ -1,8 +1,7 @@
 from crewai import Agent
-from aibtc_crews.tools import (
+from crews.tools import (
     AIBTCTokenTools,
     AIBTCResourceTools,
-    StacksContracts,
     StacksWalletTools,
     WebsiteTools,
 )
@@ -99,81 +98,6 @@ def get_transaction_manager(llm=None):
             StacksWalletTools.get_transaction_data,
             StacksWalletTools.get_transaction_status,
         ],
-        verbose=True,
-        allow_delegation=False,
-    )
-
-
-def get_contract_summarizer_agent(llm=None):
-    kwargs = {}
-    if llm is not None:
-        kwargs["llm"] = llm
-
-    return Agent(
-        role="Contract Summarizer",
-        goal="Provide a comprehensive summary of the smart contract's purpose.",
-        backstory="You are a blockchain analyst with expertise in understanding smart contract code in the Clarity language.",
-        tools=[StacksContracts.get_code_search_tool],
-        verbose=True,
-        allow_delegation=False,
-    )
-
-
-def get_function_analyzer_agent(llm=None):
-    kwargs = {}
-    if llm is not None:
-        kwargs["llm"] = llm
-
-    return Agent(
-        role="Function Analyzer",
-        goal="Identify all functions in the smart contract.",
-        backstory="You are a smart contract developer with deep knowledge of function analysis in the Clarity language on the Stacks blockchain.",
-        tools=[StacksContracts.get_function_search_tool],
-        verbose=True,
-        allow_delegation=False,
-    )
-
-
-def get_update_analyzer_agent(llm=None):
-    kwargs = {}
-    if llm is not None:
-        kwargs["llm"] = llm
-
-    return Agent(
-        role="Updateability Analyzer",
-        goal=" Assess if any parts of the contract can be updated and by whom.",
-        backstory="You are a smart contract auditor with expertise in contract governance and upgrade mechanisms in the Clarity language on the Stacks blockchain.",
-        tools=[],
-        verbose=True,
-        allow_delegation=False,
-    )
-
-
-def get_security_analyzer_agent(llm=None):
-    kwargs = {}
-    if llm is not None:
-        kwargs["llm"] = llm
-
-    return Agent(
-        role="Security Analyzer",
-        goal="Identify and explain potential security vulnerabilities in the contract",
-        backstory="You are a blockchain security expert with a keen eye for detecting potential vulnerabilities in smart contracts in the Clarity language on the Stacks blockchain.",
-        tools=[StacksContracts.get_function_search_tool],
-        verbose=True,
-        allow_delegation=False,
-    )
-
-
-def get_report_compiler_agent(llm=None):
-    kwargs = {}
-    if llm is not None:
-        kwargs["llm"] = llm
-
-    return Agent(
-        role="Report Compiler",
-        goal="Compile all output into a final report.",
-        tools=[],
-        backstory="You are a technical writer with expertise in creating clear and concise reports on complex blockchain topics in the Clarity language on the Stacks blockchain.",
         verbose=True,
         allow_delegation=False,
     )

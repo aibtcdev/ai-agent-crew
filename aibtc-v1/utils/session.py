@@ -2,12 +2,10 @@ import anthropic
 import inspect
 import importlib
 import os
-import requests
 import streamlit as st
-from aibtc_crews import agents, tasks
+from crews import agents, tasks
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
 
 
 def load_env_vars():
@@ -89,57 +87,3 @@ def get_llm(model, api_key, api_base):
             openai_api_key=api_key,
             openai_api_base=api_base,
         )
-
-
-def fetch_contract_source(contract_address, contract_name):
-    url = f"https://api.hiro.so/v2/contracts/source/{contract_address}/{contract_name}"
-    response = requests.get(url)
-
-    if response.status_code == 200:
-        data = response.json()
-        return data.get("source")
-    else:
-        return f"Error: {response.status_code} - {response.text}"
-
-
-def fetch_function(contract_address, contract_name):
-    url = (
-        f"https://api.hiro.so/v2/contracts/interface/{contract_address}/{contract_name}"
-    )
-    response = requests.get(url)
-
-    if response.status_code == 200:
-        data = response.json()
-        return data.get("functions")
-    else:
-        return f"Error: {response.status_code} - {response.text}"
-
-
-diagram_llm = ChatOpenAI(model="gpt-4o")
-
-
-def create_diagram(contract_code):
-    prompt_template = """
-    You are a visualization expert specializing in creating clear and informative flow diagrams using mermaid. Analyze the following Clarity smart contract code and its functions, then create a simplest mermaid code to visualize the internal control flow of the contract with correct syntax. Ensure the flow diagram code matches strictly with the documentation.
-
-    This diagram should include:
-
-    Nodes: Representing different functions and processes of the contract.
-    Edges: Showing how the flow of execution moves between the functions.
-    The code should be compatible with streamlit-mermaid version 0.2.0
-    Contract Code:
-
-    {contract_code}
-
-    Generate only a simple Mermaid diagram code as text, nothing extra. Use appropriate colors and shapes to represent different elements in diagram. Ensure that the diagrams are clear and simplest.
-    """
-
-    prompt = ChatPromptTemplate.from_template(prompt_template)
-    diagram_chain = prompt | diagram_llm
-
-    response = diagram_chain.invoke({"contract_code": contract_code})
-
-    diagram_code = response.content
-    diagram_code = diagram_code.replace("`", "").replace("mermaid", "")
-
-    return diagram_code
