@@ -101,6 +101,7 @@ class AIBTC_Agents:
             tools=[AIBTC_Tools.get_code_search_tool],
             verbose=True,
             allow_delegation=False,
+            **kwargs,
         )
 
     @staticmethod
@@ -116,6 +117,7 @@ class AIBTC_Agents:
             tools=[AIBTC_Tools.get_function_search_tool],
             verbose=True,
             allow_delegation=False,
+            **kwargs,
         )
 
     @staticmethod
@@ -131,6 +133,7 @@ class AIBTC_Agents:
             tools=[],
             verbose=True,
             allow_delegation=False,
+            **kwargs,
         )
 
     @staticmethod
@@ -146,6 +149,7 @@ class AIBTC_Agents:
             tools=[AIBTC_Tools.get_function_search_tool],
             verbose=True,
             allow_delegation=False,
+            **kwargs,
         )
 
     @staticmethod
@@ -161,6 +165,7 @@ class AIBTC_Agents:
             backstory="You are a technical writer with expertise in creating clear and concise reports on complex blockchain topics in the Clarity language on the Stacks blockchain.",
             verbose=True,
             allow_delegation=False,
+            **kwargs,
         )
 
 
@@ -303,11 +308,13 @@ class AIBTC_Crew:
 
     @staticmethod
     def create_smart_contract_analysis_crew(contract_code, contract_functions):
-        contract_summarizer = AIBTC_Agents.get_contract_summarizer_agent()
-        function_analyzer = AIBTC_Agents.get_function_analyzer_agent()
-        updateability_analyzer = AIBTC_Agents.get_update_analyzer_agent()
-        security_analyzer = AIBTC_Agents.get_security_analyzer_agent()
-        report_compiler = AIBTC_Agents.get_report_compiler_agent()
+        llm = st.session_state.llm
+
+        contract_summarizer = AIBTC_Agents.get_contract_summarizer_agent(llm)
+        function_analyzer = AIBTC_Agents.get_function_analyzer_agent(llm)
+        updateability_analyzer = AIBTC_Agents.get_update_analyzer_agent(llm)
+        security_analyzer = AIBTC_Agents.get_security_analyzer_agent(llm)
+        report_compiler = AIBTC_Agents.get_report_compiler_agent(llm)
 
         assigned_tasks = [
             AIBTC_Tasks.get_smart_contract_summary(contract_summarizer, contract_code),

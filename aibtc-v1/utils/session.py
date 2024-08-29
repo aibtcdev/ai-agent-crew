@@ -6,6 +6,7 @@ import streamlit as st
 from crews import agents, tasks
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
 
 
 def load_env_vars():
@@ -51,10 +52,10 @@ def init_session_state():
 
     # Initialize other session state variables
     defaults = {
-        "llm_model": "OpenAI",
+        "provider": env_vars.get("LLM_PROVIDER", "OpenAI"),
         "api_key": env_vars.get("OPENAI_API_KEY", ""),
         "api_base": env_vars.get("OPENAI_API_BASE", "https://api.openai.com/v1"),
-        "model_name": env_vars.get("OPENAI_MODEL_NAME", "gpt-3.5-turbo"),
+        "model": env_vars.get("OPENAI_MODEL_NAME", "gpt-3.5-turbo"),
     }
 
     for key, value in defaults.items():
@@ -64,7 +65,8 @@ def init_session_state():
     # Initialize the LLM
     if "llm" not in st.session_state:
         st.session_state.llm = get_llm(
-            st.session_state.llm_model,
+            st.session_state.provider,
+            st.session_state.model,
             st.session_state.api_key,
             st.session_state.api_base,
         )
@@ -78,9 +80,11 @@ def update_session_state(key, value):
     st.session_state[key] = value
 
 
-def get_llm(model, api_key, api_base):
-    if model == "Anthropic":
+def get_llm(provider, model, api_key, api_base):
+    if provider == "Anthropic":
         return anthropic.Anthropic(api_key=api_key)
+    elif provider == "Ollama":
+        return ChatOllama(model=model, base_url=api_base)
     else:
         return ChatOpenAI(
             model=model,

@@ -127,6 +127,22 @@ class StacksWalletTools:
         """Sign a message with the configured wallet address."""
         return BunScriptRunner.bun_run("wallet", "sign-message.ts")
 
+    @staticmethod
+    @tool("Get Address Balance Detailed")
+    def get_address_balance_detailed(address: str):
+        """Get detailed balance information for a given address."""
+        return BunScriptRunner.bun_run(
+            "stacks-wallet", "get-address-balance-detailed.ts", address
+        )
+
+    @staticmethod
+    @tool("Get Address Transactions")
+    def get_address_transactions(address: str):
+        """Get 20 most recent transactions for a given address."""
+        return BunScriptRunner.bun_run(
+            "stacks-wallet", "get-transactions-by-address.ts", address
+        )
+
 
 class WebsiteTools:
     @staticmethod
