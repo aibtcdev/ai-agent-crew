@@ -346,14 +346,9 @@ class AIBTC_Crew:
 
         with st.form("analysis_form"):
             contract_identifier = st.text_input(
-                "Contract Address",
-                help="Enter the full contract identifier or just the address",
-                placeholder="e.g. SP000000000000000000002Q6VF78.pox or SP000000000000000000002Q6VF78",
-            )
-            contract_name = st.text_input(
-                "Contract Name",
-                help="Enter the name of the deployed contract",
-                placeholder="e.g. pox in SP000000000000000000002Q6VF78.pox",
+                "Contract Identifier",
+                help="Enter the full contract identifier including address and name.",
+                placeholder="e.g. SP000000000000000000002Q6VF78.pox",
             )
             submitted = st.form_submit_button("Analyze Contract")
 
@@ -363,17 +358,15 @@ class AIBTC_Crew:
             if parsed_address and parsed_name:
                 contract_address = parsed_address
                 contract_name = parsed_name
-            elif "." not in contract_identifier:
-                contract_address = contract_identifier
             else:
                 st.error(
-                    "Invalid contract identifier format. Please use 'address.name' or provide both fields separately."
+                    "Invalid contract identifier format. Please use 'address.name' format."
                 )
                 st.stop()
 
             if not contract_address or not contract_name:
                 st.error(
-                    "Both contract address and name are required. Please provide both."
+                    "Both contract address and name are required. Please use 'address.name' format."
                 )
                 st.stop()
 
@@ -398,8 +391,12 @@ class AIBTC_Crew:
                     st.write("Source code:")
                     st.code(contract_code)
 
-                st.header("Analysis Results")
+                st.subheader("Analysis Progress")
                 try:
+                    # TODO: refactor into same container, different formats
+                    # - step needs a title (AgentAction or return_values)
+                    # - task is the final output, where to get name? compare indices?
+
                     # create containers for real-time updates
                     st.write("Step Progress:")
                     st.session_state.crew_step_container = st.empty()
@@ -418,6 +415,8 @@ class AIBTC_Crew:
                         result = crew.kickoff()
 
                     st.success("Analysis complete!")
+
+                    st.subheader("Analysis Results")
 
                     result_str = str(result)
                     st.markdown(result_str)
