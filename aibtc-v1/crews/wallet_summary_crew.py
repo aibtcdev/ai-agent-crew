@@ -181,7 +181,7 @@ class AIBTC_Crew:
 
     @staticmethod
     def create_wallet_summary_crew(address):
-        llm = ChatOllama(model="gemma2", base_url="http://localhost:11434")
+        llm = st.session_state.llm
 
         wallet_retriever = AIBTC_Agents.get_wallet_data_retriever_agent(llm)
         transaction_retriever = AIBTC_Agents.get_wallet_transactions_retriever_agent(
