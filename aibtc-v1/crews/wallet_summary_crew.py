@@ -3,7 +3,6 @@ import streamlit as st
 import time
 from crewai import Agent, Crew, Process, Task
 from crewai_tools import tool
-from langchain_ollama import ChatOllama
 from textwrap import dedent
 from utils.session import crew_step_callback, crew_task_callback
 from .tools import StacksWalletTools
@@ -28,7 +27,10 @@ class AIBTC_Agents:
             tools=[StacksWalletTools.get_address_balance_detailed],
             backstory=dedent(
                 """
-                You are a blockchain data analyst specializing in wallet activity on the Stacks blockchain."""
+                You are a blockchain data analyst specializing in wallet activity on the Stacks blockchain. 
+                You have access to various tools to retrieve detailed information about wallet addresses balance details.
+                You excel at extracting meaningful insights and ensure accurate transaction details are provided.
+                """
             ),
             verbose=True,
             **kwargs,
@@ -42,11 +44,42 @@ class AIBTC_Agents:
 
         return Agent(
             role="transaction retriever",
-            goal="Retrieve the last 20 transactions for the specified wallet, if available.",
+            goal=dedent(
+                """
+            Retrieve, parse, and summarize transactions for the specified wallet. 
+            Focus on providing a detailed analysis of the transaction data, including types, dates, events, and involved parties, without summarizing the structure. 
+            Ensure the output is formatted correctly and is ready for use in further analysis or reporting.
+            """
+            ),
             tools=[StacksWalletTools.get_address_transactions],
             backstory=dedent(
                 """
-               You are an expert in blockchain transaction analysis, capable of efficiently querying and filtering large data sets. Your are an expert in JSON parsing."""
+            You are an expert in blockchain transaction analysis with a deep understanding of the Stacks blockchain.
+            Your primary task is to efficiently query and filter large datasets to retrieve transaction information.
+            You excel at extract meaningful insights and ensure accurate transaction details are provided. 
+            Focus on the data within transactions, summarizing key details such as transaction types, dates, events, and involved parties.
+            """
+            ),
+            verbose=True,
+            **kwargs,
+        )
+
+    @staticmethod
+    def get_pattern_recognition_agent(llm=None):
+        kwargs = {}
+        if llm is not None:
+            kwargs["llm"] = llm
+
+        return Agent(
+            role="pattern recognition specialist",
+            goal="Identify recurring patterns, unusual activities, and long-term trends in wallet behavior.",
+            tools=[],  # Add relevant tools
+            backstory=dedent(
+                """
+                You are an expert in blockchain data analysis with a keen eye for patterns and anomalies.
+                Your specialty is in recognizing recurring behaviors, identifying unusual activities, and
+                spotting long-term trends in wallet usage on the Stacks blockchain.
+            """
             ),
             verbose=True,
             **kwargs,
@@ -54,20 +87,24 @@ class AIBTC_Agents:
 
     @staticmethod
     def get_activity_analyzer_agent(llm=None):
+        # Modified implementation
         kwargs = {}
         if llm is not None:
             kwargs["llm"] = llm
 
         return Agent(
-            role="activity analyzer",
-            goal="Analyze the retrieved data to determine the type of activity the wallet is usually involved in, such as frequent transactions, holding patterns, and interaction with contracts.",
+            role="activity interpreter",
+            goal="Interpret wallet activities to provide meaningful insights into the wallet's behavior, purpose, and potential risks or opportunities.",
             tools=[],
             backstory=dedent(
                 """
-               You are a blockchain activity analyst with expertise in behavioral analysis on the Stacks blockchain. """
+                You are a blockchain behavior analyst specializing in interpreting wallet activities on the Stacks blockchain.
+                Your expertise lies in translating raw blockchain data into meaningful insights about wallet behavior,
+                potential purposes, associated risks, and opportunities. You excel at contextualizing activities within
+                the broader Stacks ecosystem.
+            """
             ),
             verbose=True,
-            allow_delegation=False,
             **kwargs,
         )
 
@@ -83,7 +120,9 @@ class AIBTC_Agents:
             tools=[],
             backstory=dedent(
                 """
-               You are a technical writer with expertise in creating clear and concise reports on complex blockchain topics in the Clarity language on the Stacks blockchain."""
+                You are a technical writer with expertise in creating clear and concise reports on complex blockchain topics in the Clarity language on the Stacks blockchain.
+                You have access to various tools to gather data and compile it into a comprehensive report.
+                """
             ),
             verbose=True,
             allow_delegation=False,
@@ -104,15 +143,20 @@ class AIBTC_Tasks:
         return Task(
             description=dedent(
                 f"""
-                Retrieve wallet balance detailed information for the specified address.
-                
-                Here is the address that I need to retrieve wallet balances for:
-                {address}
+            Retrieve detailed wallet balance information for the specified address.
 
-                Your response should be a WalletInfo json object containing the wallet address, STX balance, NFT holdings, and FT holdings.
-                """
+            **Address:** {address}
+
+            Your response MUST be a `WalletInfo` JSON object that includes the following details:
+            - **Wallet Address (`wallet_address`)**
+            - **STX Balance (`stx_balance`)**
+            - **NFT Holdings (`nft_holdings`)**
+            - **FT Holdings (`ft_holdings`)**
+
+            No additional information is required. Ensure the output is clear and suitable for use as context.
+            """
             ),
-            expected_output="A WalletInfo json object containing the wallet address, STX balance, NFT holdings, and FT holdings.",
+            expected_output="The only fields should be returned wallet address, STX balance, NFT holdings, and FT holdings. Simplified for context usage.",
             agent=agent,
         )
 
@@ -122,53 +166,116 @@ class AIBTC_Tasks:
         return Task(
             description=dedent(
                 f"""
-                Retrieve the last transactions associated with an address.
+            Retrieve the last transactions associated with the following address:
+
+            **Address:** {address}
+
+            Your task is to provide a summary of each transaction. For each transaction, include:
+            - **Transaction ID (`tx_id`)**
+            - **Type (`tx_type`)**: Indicate if it was a token transfer, smart contract interaction, etc.
+            - **Date (`block_time_iso`)**
+            - **Amount Sent (`stx_sent`)** and **Amount Received (`stx_received`)**
+            - **Parties Involved:** 
+              - **Sender (`sender_address`)**
+              - **Recipient (`recipient_address` if applicable)**
+
+            **Example Output:**
+            - Transaction ID: 0x72bd82e96624c92da8f0ee3eafd355bc1bd1723d73256aba02a50323df95d437
+            - Type: Smart Contract
+            - Date: 2024-08-30T01:09:46.000Z
+            - Amount Sent: 750000 STX
+            - Amount Received: 0 STX
+            - Parties Involved: Sender: SP2YJ47ZV5KT0XW31Z20YG7W108VECG8CGX8M6PM6
+
+            Ensure your summary is clear and focuses on the actual data within the transactions. Do not describe or summarize the structure of the data itself.
+            """
+            ),
+            expected_output="A summary of each transaction, including transaction ID, type, date, amount sent, amount received, and parties involved. Focus on content, not structure.",
+            agent=agent,
+        )
+
+    @staticmethod
+    def analyze_historical_data_task(agent, address):
+        return Task(
+            description=dedent(
+                f"""
+                Analyze the historical data for the wallet address: {address}
                 
-                Heres the Address that i need to find transactions for
-                {address}
-
-                Your response should be a TransactionList object containing up to 20 transactions associated with the wallet, including details like transaction type (tx_type), date (block_time_iso),  events (stx, ft, nft) and involved parties (tx_sender, tx_recipient, tx_contract_caller, tx_contract_address).
-                """
+                Your analysis should include:
+                1. Trends in transaction frequency and volume over time
+                2. Changes in asset holdings (STX, NFTs, FTs) over time
+                3. Significant events or turning points in the wallet's history
+                
+                Provide insights on how the wallet's usage has evolved and any notable patterns observed.
+            """
             ),
-            expected_output="A TransactionList object containing up to 20 transactions associated with the wallet, including only details like transaction type (tx_type), date (block_time_iso), events (stx, ft, nft) and involved parties (tx_sender, tx_recipient, tx_contract_caller, tx_contract_address). I do not need any other information. I need it to be simplified so it can be passed on as context.",
+            expected_output="A comprehensive analysis of historical trends, including transaction patterns, asset holding changes, and significant events in the wallet's history.",
             agent=agent,
         )
 
-    # analyze_activity_task
     @staticmethod
-    def analyze_activity_task(agent, address):
+    def identify_patterns_task(agent, address, contexts):
         return Task(
             description=dedent(
                 f"""
-                The wallet being analyzed is:
-                {address}
-                Analyze the wallet’s activity patterns, such as frequency of transactions, types of transactions, and interactions with smart contracts.
-                Your response should be a WalletActivityAnalysis object containing insights into the wallet’s activity, including active periods, most common transaction types, and overall engagement in the blockchain ecosystem.
-                """
+                Identify patterns and anomalies in the wallet activity for address: {address}
+                
+                Focus on:
+                1. Recurring transaction patterns (e.g., regular transfers, contract interactions)
+                2. Unusual or outlier activities
+                3. Relationships with other addresses or contracts
+                
+                Provide a summary of the most significant patterns and any potential explanations for observed behaviors.
+            """
             ),
-            expected_output="A WalletActivityAnalysis object containing insights into the wallet’s activity, including active periods, most common transaction types, and overall engagement in the blockchain ecosystem.",
+            expected_output="A detailed summary of identified patterns, anomalies, and potential explanations for the wallet's behavior.",
             agent=agent,
-            tools=[],
+            contexts=contexts,
         )
 
-    # compile_report_task
     @staticmethod
-    def compile_report_task(agent, address):
+    def interpret_activity_task(agent, address, contexts):
         return Task(
             description=dedent(
                 f"""
-                Compile all analyses into a comprehensive final report for address {address}.
-                Use the following information from the crew's shared memory to create a detailed report:
-                1. Wallet Info 
-                2. Transactions 
-                3. Activity Analysis
-                """
+                Interpret the overall activity and purpose of the wallet: {address}
+                
+                Based on the data and patterns observed, provide insights on:
+                1. The likely purpose or use case of this wallet (e.g., personal, business, trading)
+                2. The level of activity and engagement with the Stacks ecosystem
+                3. Potential risks or opportunities associated with this wallet's behavior
+                4. Any notable interactions with known contracts or services on Stacks
+                
+                Offer a comprehensive interpretation that goes beyond raw data to explain the wallet's role and significance.
+            """
             ),
-            # expected_output="A WalletReport object containing all the information gathered from previous tasks, formatted in a clear and organized manner.",
-            expected_output="A clear summary of the wallet's activity and holdings, formatted in markdown. Do not display any json.",
+            expected_output="An in-depth interpretation of the wallet's purpose, activity level, associated risks/opportunities, and significant interactions within the Stacks ecosystem.",
             agent=agent,
-            tools=[],
-            async_execution=False,
+            contexts=contexts,
+        )
+
+    @staticmethod
+    def compile_report_task(agent, address, contexts):
+        return Task(
+            description=dedent(
+                f"""
+                Compile a comprehensive final report for the wallet address: {address}
+                
+                The report should include:
+                1. Executive Summary: A brief overview of the wallet's activity and key insights
+                2. Wallet Info: Current balance, asset holdings, and recent transactions
+                3. Historical Analysis: Trends and significant events in the wallet's history
+                4. Pattern Recognition: Recurring behaviors and anomalies
+                5. Activity Interpretation: Insights on the wallet's purpose, risks, and opportunities
+                6. Conclusion: Overall assessment and potential future outlook
+                
+                Ensure the report is well-structured, easy to read, and provides valuable insights beyond raw data.
+                Use markdown formatting for clarity and organization.
+            """
+            ),
+            expected_output="A comprehensive, well-structured markdown report covering all aspects of the wallet analysis, including an executive summary, detailed findings, and concluding insights.",
+            agent=agent,
+            contexts=contexts,
         )
 
 
@@ -187,26 +294,65 @@ class AIBTC_Crew:
         transaction_retriever = AIBTC_Agents.get_wallet_transactions_retriever_agent(
             llm
         )
+        pattern_recognizer = AIBTC_Agents.get_pattern_recognition_agent(llm)
         activity_analyzer = AIBTC_Agents.get_activity_analyzer_agent(llm)
         report_compiler = AIBTC_Agents.get_report_compiler_agent(llm)
 
-        assigned_tasks = [
-            AIBTC_Tasks.retrieve_wallet_info_task(wallet_retriever, address),
-            AIBTC_Tasks.retrieve_transactions_task(transaction_retriever, address),
-            AIBTC_Tasks.analyze_activity_task(activity_analyzer, address),
-            AIBTC_Tasks.compile_report_task(report_compiler, address),
-        ]
+        get_wallet_info_task = AIBTC_Tasks.retrieve_wallet_info_task(
+            wallet_retriever, address
+        )
+        get_transactions_task = AIBTC_Tasks.retrieve_transactions_task(
+            transaction_retriever, address
+        )
+        analyze_historical_data_task = AIBTC_Tasks.analyze_historical_data_task(
+            pattern_recognizer, address
+        )
+        identify_patterns_task = AIBTC_Tasks.identify_patterns_task(
+            pattern_recognizer,
+            address,
+            [get_wallet_info_task, get_transactions_task, analyze_historical_data_task],
+        )
+        interpret_activity_task = AIBTC_Tasks.interpret_activity_task(
+            activity_analyzer,
+            address,
+            [
+                get_wallet_info_task,
+                get_transactions_task,
+                analyze_historical_data_task,
+                identify_patterns_task,
+            ],
+        )
+        compile_report_task = AIBTC_Tasks.compile_report_task(
+            report_compiler,
+            address,
+            [
+                get_wallet_info_task,
+                get_transactions_task,
+                analyze_historical_data_task,
+                identify_patterns_task,
+                interpret_activity_task,
+            ],
+        )
 
         return Crew(
             agents=[
                 wallet_retriever,
                 transaction_retriever,
+                pattern_recognizer,
                 activity_analyzer,
                 report_compiler,
             ],
-            tasks=assigned_tasks,
+            tasks=[
+                get_wallet_info_task,
+                get_transactions_task,
+                analyze_historical_data_task,
+                identify_patterns_task,
+                interpret_activity_task,
+                compile_report_task,
+            ],
             process=Process.sequential,
-            memory=False,
+            verbose=True,
+            memory=True,
             step_callback=crew_step_callback,
             task_callback=crew_task_callback,
         )

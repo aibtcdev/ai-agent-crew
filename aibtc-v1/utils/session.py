@@ -55,7 +55,7 @@ def init_session_state():
         "provider": env_vars.get("LLM_PROVIDER", "OpenAI"),
         "api_key": env_vars.get("OPENAI_API_KEY", ""),
         "api_base": env_vars.get("OPENAI_API_BASE", "https://api.openai.com/v1"),
-        "model": env_vars.get("OPENAI_MODEL_NAME", "gpt-3.5-turbo"),
+        "model": env_vars.get("OPENAI_MODEL_NAME", "gpt-4o-mini"),
     }
 
     for key, value in defaults.items():

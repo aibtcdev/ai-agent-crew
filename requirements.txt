@@ -7,7 +7,6 @@ langchain_ollama
 langchain_openai
 pandas
 pydantic
-pysqlite3-binary
 python-dotenv
 PyYAML
 streamlit
