@@ -5,7 +5,42 @@ from crews.tools import (
     StacksWalletTools,
     WebsiteTools,
 )
+# project_name="clarinet-project"
 
+
+def createClarinetProject(project_name: str):
+    try:
+        # Create a new Clarinet project
+        subprocess.run(["clarinet", "new", project_name], check=True)
+        print(f"Successfully created project: {project_name}")
+    except subprocess.CalledProcessError as e:
+        print(f"Error creating project '{project_name}': {e}")
+
+
+def add_contract(project_name, contract_name):
+    """Add a new contract to the specified Clarinet project."""
+    try:
+        # Change directory to the project folder
+        os.chdir(project_name)
+
+        # Create a new contract
+        subprocess.run(["clarinet", "contract", "new",
+                       contract_name], check=True)
+        print(f"Successfully added contract: {contract_name}")
+
+        # Check the contracts for syntax errors
+        subprocess.run(["clarinet", "check"], check=True)
+        print("Contracts checked successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error adding contract '{contract_name}': {e}")
+    finally:
+        # Change back to the original directory
+        os.chdir("..")
+
+
+@tool("Clarinet")
+def runClarinet():
+    createClarinetProject("clarinet-project")
 
 def get_website_scraper(llm=None):
     kwargs = {}
