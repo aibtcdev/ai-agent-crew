@@ -10,6 +10,7 @@ import streamlit as st
 # Load environment variables
 load_dotenv()
 
+
 @tool("Clarinet")
 def runClarinet(project_name: str, contract_name: str, contract_code: str) -> str:
     """
@@ -36,7 +37,8 @@ def runClarinet(project_name: str, contract_name: str, contract_code: str) -> st
         os.chdir(project_name)
 
         # Add a new contract
-        subprocess.run(["clarinet", "contract", "new", contract_name], check=True)
+        subprocess.run(["clarinet", "contract", "new",
+                       contract_name], check=True)
         print(f"Added new contract: {contract_name}")
 
         # Write the contract code to the contract file
@@ -46,14 +48,17 @@ def runClarinet(project_name: str, contract_name: str, contract_code: str) -> st
         print(f"Wrote code to {contract_file_path}")
 
         # Check the syntax of the contract
-        result = subprocess.run(["clarinet", "check", contract_name], capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            ["clarinet", "check", contract_name], capture_output=True, text=True
+        )
         print(f"Syntax check result: {result.stdout}")
 
         return f"Successfully created project '{project_name}', added contract '{contract_name}', and checked its syntax."
     except subprocess.CalledProcessError as e:
-        return f"Error: {e.output}"
+        return f"Error: {e}"
     finally:
         os.chdir(initial_dir)
+
 
 def get_llm(model_name):
     if model_name.startswith("gpt"):
@@ -62,6 +67,7 @@ def get_llm(model_name):
         return OllamaLLM(model=model_name)
     else:
         raise ValueError(f"Unsupported model: {model_name}")
+
 
 # Set your desired model name
 model_name = "gpt-4"  # Example with OpenAI GPT-4
@@ -111,7 +117,7 @@ generate_clarity_code_task = Task(
 review_clarity_code_task = Task(
     description=(
         "Review the generated Clarity code, create a Clarinet project with it, and check its syntax. "
-        "Provide a report on the code quality and any issues found during the syntax check. You can find the code in crew's shared memory 'contract code' "
+        "Provide a report on the code quality and any issues found during the syntax check. You can find the code in crew's shared memory 'contract code', store your response in crew's shared memory 'review' "
     ),
     expected_output="A detailed report on code quality, syntax check results, and any issues found.",
     agent=clarity_code_reviewer,
@@ -126,26 +132,34 @@ crew = Crew(
 )
 
 # Function to run the crew
+
+
 def generate_and_review_contract(user_input):
     result = crew.kickoff(inputs={"user_input": user_input})
-    return result.get('clarity_code'), result.get('review_clarity_code_task')
+    print(result, "result(*(***))")
+
+    return result
 
 # Streamlit app definition
+
+
 def main():
     st.title("Clarity Smart Contract Generator and Reviewer")
 
     user_input = st.text_area("Enter your smart contract requirements:",
-                              "Create a Clarity smart contract to lock Bitcoin for a specified time.")
+                              "write functions that will return the info from the map, individually and all in one call")
 
     if st.button("Generate and Review Smart Contract"):
         with st.spinner("Generating and reviewing smart contract..."):
-            generated_code, review_report = generate_and_review_contract(user_input)
+            generated_code = generate_and_review_contract(
+                user_input)
 
         st.subheader("Generated Clarity Code")
         st.code(generated_code, language='clarity')
 
-        st.subheader("Review Report")
-        st.markdown(review_report)
+        # st.subheader("Review Report")
+        # st.markdown(review_report)
+
 
 if __name__ == "__main__":
     main()
