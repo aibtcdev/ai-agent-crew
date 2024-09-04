@@ -19,8 +19,23 @@ def createClarinetProject(project_name: str):
         print(f"Error creating project '{project_name}': {e}")
 
 
-def add_contract(project_name, contract_name, contract_code):
-    """Add a new contract to the specified Clarinet project and write code into it."""
+def add_contract(project_name, contract_name, contract_code) -> str:
+    """
+    Add a new contract to the specified Clarinet project and write code into it.
+
+    This tool allows users to create a new smart contract within a specified
+    Clarinet project. It changes the current working directory to the project folder,
+    creates a new contract file using the `clarinet contract new` command,
+    and writes the provided contract code into that file.
+
+    Args:
+        project_name (str): The name of the Clarinet project folder.
+        contract_name (str): The name of the contract to be created.
+        contract_code (str): The code to be written into the new contract file.
+
+    Returns:
+        str: A message indicating the success or failure of the contract addition operation.
+    """
     try:
         # Change directory to the project folder
         os.chdir(project_name)
@@ -66,7 +81,7 @@ def check_contracts(project_name, contract_name=None):
 
 
 @tool("Clarinet")
-def runClarinet():
+def runClarinet(contract_name: str, contract_code: str):
     project_name = "clarinet-project"
     createClarinetProject()
     add_contract(project_name, contract_name, contract_code)

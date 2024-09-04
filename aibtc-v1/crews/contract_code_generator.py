@@ -42,7 +42,7 @@ clarity_code_generator = Agent(
     ),
     allow_delegation=False,
     llm=llm
-    
+
 )
 
 # Define the Clarity Code Reviewer Agent
@@ -58,6 +58,15 @@ clarity_code_generator = Agent(
 #     allow_delegation=False,
 #     llm=llm
 # )
+task = Task(
+    description="Add a new smart contract to the Clarinet project.",
+    expected_output="A message indicating the success or failure of the contract addition operation.",
+    agent=research_agent,
+    tools=[summarize_tool],
+    function_args={'project_name': 'my_clarinet_project',
+                   'contract_name': 'my_new_contract',
+                   'contract_code': '{{agent_response}}'}
+)
 
 # Define the task for generating Clarity code
 generate_clarity_code_task = Task(
@@ -67,7 +76,7 @@ generate_clarity_code_task = Task(
     ),
     expected_output="A Clarity smart contract code snippet that locks Bitcoin for a specified period. Do not create anything beside code.",
     agent=clarity_code_generator
-    
+
 )
 
 # Define the task for reviewing Clarity code
@@ -84,25 +93,26 @@ generate_clarity_code_task = Task(
 crew = Crew(
     agents=[clarity_code_generator,
             #  clarity_code_reviewer
-             ],
+            ],
     tasks=[generate_clarity_code_task,
-            # review_clarity_code_task
+           # review_clarity_code_task
            ],
-    process=Process.sequential ,
-     verbose=True # Running tasks sequentially; first generation, then review
+    process=Process.sequential,
+    verbose=True  # Running tasks sequentially; first generation, then review
 )
 
 # Function to run the crew
+
+
 def generate_and_review_contract(user_input):
     result = crew.kickoff(inputs={"user_input": user_input})
     return result
 
 
-
 def main():
     st.title("Clarity Smart Contract Generator and Reviewer")
 
-    user_input = st.text_area("Enter your smart contract requirements:", 
+    user_input = st.text_area("Enter your smart contract requirements:",
                               "Create a Clarity smart contract to lock Bitcoin for a specified time.")
 
     if st.button("Generate and Review Smart Contract"):
@@ -111,11 +121,9 @@ def main():
 
         # Display results
         st.subheader("Generated Clarity Code")
-        
-       
+
         st.markdown(result)
 
-      
 
 if __name__ == "__main__":
     main()
