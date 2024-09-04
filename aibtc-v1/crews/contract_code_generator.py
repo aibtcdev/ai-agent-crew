@@ -46,18 +46,19 @@ clarity_code_generator = Agent(
 )
 
 # Define the Clarity Code Reviewer Agent
-# clarity_code_reviewer = Agent(
-#     role="Clarity Code Reviewer",
-#     goal="Review the generated Clarity code for correctness, security vulnerabilities, and adherence to best practices.",
-#     verbose=True,
-#     memory=True,
-#     backstory=(
-#         "You are a meticulous Clarity code reviewer known for ensuring smart contract security and code quality. "
-#         "Your goal is to analyze the generated code, detect potential issues, and provide feedback for improvements."
-#     ),
-#     allow_delegation=False,
-#     llm=llm
-# )
+
+clarity_code_reviewer = Agent(
+    role="Clarity Code Reviewer",
+    goal="Review the generated Clarity code for correctness, security vulnerabilities, and adherence to best practices.",
+    verbose=True,
+    memory=True,
+    backstory=(
+        "You are a meticulous Clarity code reviewer known for ensuring smart contract security and code quality. "
+        "Your goal is to analyze the generated code, detect potential issues, and provide feedback for improvements."
+    ),
+    allow_delegation=False,
+    llm=llm
+)
 task = Task(
     description="Add a new smart contract to the Clarinet project.",
     expected_output="A message indicating the success or failure of the contract addition operation.",
@@ -80,14 +81,14 @@ generate_clarity_code_task = Task(
 )
 
 # Define the task for reviewing Clarity code
-# review_clarity_code_task = Task(
-#     description=(
-#         "Review the generated Clarity code for any syntax errors, logic errors, security vulnerabilities, "
-#         "and adherence to best practices. Ensure the code is optimized for performance and is secure."
-#     ),
-#     expected_output="A detailed report on code quality, potential errors, security vulnerabilities, and suggestions for improvement.",
-#     agent=clarity_code_reviewer
-# )
+review_clarity_code_task = Task(
+    description=(
+        "Review the generated Clarity code for any syntax errors, logic errors, security vulnerabilities, "
+        "and adherence to best practices. Ensure the code is optimized for performance and is secure."
+    ),
+    expected_output="A detailed report on code quality, potential errors, security vulnerabilities, and suggestions for improvement.",
+    agent=clarity_code_reviewer
+)
 
 # Forming the crew with both agents and their tasks
 crew = Crew(

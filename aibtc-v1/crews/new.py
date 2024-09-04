@@ -33,6 +33,7 @@ def runClarinet(project_name: str, contract_name: str, contract_code: str) -> st
     """
     initial_dir = os.getcwd()
     try:
+        print("creating clarinet.....")
         # Create a new Clarinet project
         subprocess.run(["clarinet", "new", project_name], check=True)
 
@@ -70,7 +71,7 @@ def get_llm(model_name):
 
 
 # Set your desired model name
-model_name = "gpt-4"  # Example with OpenAI GPT-4
+model_name = "gpt-4o"  # Example with OpenAI GPT-4
 llm = get_llm(model_name)
 
 # Define the Clarity Code Generator Agent
@@ -98,7 +99,6 @@ clarity_code_reviewer = Agent(
         "Your goal is to analyze the generated code, detect potential issues, and provide feedback for improvements."
     ),
     allow_delegation=False,
-    tools=[runClarinet],
     llm=llm
 )
 
@@ -166,14 +166,14 @@ def main():
         with st.spinner("Generating and reviewing smart contract..."):
             result = generate_and_review_contract(user_input)
 
-        # Display results
-        st.subheader("Generated Clarity Code")
-        generated_code = result.get('clarity_code')
-        st.code(generated_code, language='clar')
+        # # Display results
+        # st.subheader("Generated Clarity Code")
+        # generated_code = result.get('clarity_code')
+        # st.code(generated_code, language='clar')
 
-        st.subheader("Review Report")
-        review_report = result.get('review_report')
-        st.markdown(review_report)
+        # st.subheader("Review Report")
+        # review_report = result.get('review_report')
+        # st.markdown(review_report)
 
 
 if __name__ == "__main__":
