@@ -1,4 +1,6 @@
 from crewai import Agent
+import subprocess
+import os
 from crews.tools import (
     AIBTCTokenTools,
     AIBTCResourceTools,
@@ -17,8 +19,8 @@ def createClarinetProject(project_name: str):
         print(f"Error creating project '{project_name}': {e}")
 
 
-def add_contract(project_name, contract_name):
-    """Add a new contract to the specified Clarinet project."""
+def add_contract(project_name, contract_name, contract_code):
+    """Add a new contract to the specified Clarinet project and write code into it."""
     try:
         # Change directory to the project folder
         os.chdir(project_name)
@@ -28,9 +30,12 @@ def add_contract(project_name, contract_name):
                        contract_name], check=True)
         print(f"Successfully added contract: {contract_name}")
 
-        # Check the contracts for syntax errors
-        subprocess.run(["clarinet", "check"], check=True)
-        print("Contracts checked successfully.")
+        # Write the contract code to the contract file
+        contract_file_path = os.path.join("contracts", f"{contract_name}.clar")
+        with open(contract_file_path, "w") as contract_file:
+            contract_file.write(contract_code)
+        print(f"Successfully wrote code to contract: {contract_name}")
+
     except subprocess.CalledProcessError as e:
         print(f"Error adding contract '{contract_name}': {e}")
     finally:
@@ -38,9 +43,35 @@ def add_contract(project_name, contract_name):
         os.chdir("..")
 
 
+def check_contracts(project_name, contract_name=None):
+    """Check the syntax of contracts in the specified Clarinet project."""
+    try:
+        # Change directory to the project folder
+        os.chdir(project_name)
+
+        if contract_name:
+            # Check a specific contract
+            subprocess.run(["clarinet", "check", contract_name], check=True)
+            print(f"Successfully checked contract: {contract_name}")
+        else:
+            # Check all contracts
+            subprocess.run(["clarinet", "check"], check=True)
+            print("Successfully checked all contracts.")
+
+    except subprocess.CalledProcessError as e:
+        print(f"Error checking contracts: {e}")
+    finally:
+        # Change back to the original directory
+        os.chdir("..")
+
+
 @tool("Clarinet")
 def runClarinet():
-    createClarinetProject("clarinet-project")
+    project_name = "clarinet-project"
+    createClarinetProject()
+    add_contract(project_name, contract_name, contract_code)
+    check_contracts(project_name)
+
 
 def get_website_scraper(llm=None):
     kwargs = {}
