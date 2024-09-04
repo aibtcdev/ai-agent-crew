@@ -70,7 +70,7 @@ def get_llm(model_name):
 
 
 # Set your desired model name
-model_name = "gpt-4"  # Example with OpenAI GPT-4
+model_name = "gpt-4o"  # Example with OpenAI GPT-4
 llm = get_llm(model_name)
 
 # Define the Clarity Code Generator Agent
@@ -102,14 +102,27 @@ clarity_code_reviewer = Agent(
     tools=[runClarinet]
 )
 
+# Define the Clarity Code Compiler Agent
+clarity_code_compiler = Agent(
+    role="Clarity Code Compiler",
+    goal="Combine the generated Clarity code and the code review report into a comprehensive output for the Streamlit app.",
+    verbose=True,
+    memory=True,
+    backstory=(
+        "You are a Clarity code compilation expert responsible for taking the generated Clarity code and the code review report, and combining them into a final, comprehensive output that can be displayed in the Streamlit app."
+    ),
+    allow_delegation=False,
+    llm=llm
+)
+
 # Define the task for generating Clarity code
 generate_clarity_code_task = Task(
     description=(
-        "Generate Clarity code for a smart contract that allows users to lock Bitcoin for a specific time period. "
-        "The code should ensure security, prevent re-entrancy, and handle exceptions properly."
+        "Generate a Clarity code snippet for a smart contract that defines and manages token transfers, including functions for minting, transferring, and checking balances. The code should ensure security, prevent re-entrancy, and handle exceptions properly."
         "Store your code in crew's shared memory 'contract_code' "
+
     ),
-    expected_output="A Clarity smart contract code snippet that locks Bitcoin for a specified period.",
+    expected_output="Provide a Clarity code snippet for a smart contract that defines and manages token transfers.",
     agent=clarity_code_generator,
 )
 
@@ -123,13 +136,29 @@ review_clarity_code_task = Task(
     agent=clarity_code_reviewer,
 )
 
-# Forming the crew with both agents and their tasks
+# Define the task for compiling the Clarity code and review report
+compile_clarity_code_task = Task(
+    description=(
+        "Combine the generated Clarity code and the code review report into a comprehensive output that can be displayed in the Streamlit app. You can access the contract code from crew's shared memory 'contract_code' and the code review from 'review'."
+    ),
+    expected_output="The final output that includes the Clarity code and the code review report.",
+    agent=clarity_code_compiler,
+)
 crew = Crew(
-    agents=[clarity_code_generator, clarity_code_reviewer],
-    tasks=[generate_clarity_code_task, review_clarity_code_task],
+    agents=[clarity_code_generator,
+            clarity_code_reviewer, clarity_code_compiler],
+    tasks=[generate_clarity_code_task,
+           review_clarity_code_task, compile_clarity_code_task],
     process=Process.sequential,
     verbose=True
 )
+# # Forming the crew with both agents and their tasks
+# crew = Crew(
+#     agents=[clarity_code_generator, clarity_code_reviewer],
+#     tasks=[generate_clarity_code_task, review_clarity_code_task],
+#     process=Process.sequential,
+#     verbose=True
+# )
 
 # Function to run the crew
 
@@ -155,7 +184,7 @@ def main():
                 user_input)
 
         st.subheader("Generated Clarity Code")
-        st.code(generated_code, language='clarity')
+        st.markdown(generated_code, language='clarity')
 
         # st.subheader("Review Report")
         # st.markdown(review_report)

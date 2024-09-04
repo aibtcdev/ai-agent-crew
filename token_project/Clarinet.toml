@@ -1,12 +1,12 @@
 [project]
-name = 'btc-lock-project'
+name = 'token_project'
 description = ''
 authors = []
 telemetry = true
 cache_dir = './.cache'
 requirements = []
-[contracts.btc-lock-contract]
-path = 'contracts/btc-lock-contract.clar'
+[contracts.token_contract]
+path = 'contracts/token_contract.clar'
 clarity_version = 2
 epoch = 2.5
 [repl.analysis]

@@ -1,6 +1,6 @@
 
 {
-  "name": "btc-lock-project-tests",
+  "name": "token_project-tests",
   "version": "1.0.0",
   "description": "Run unit tests on this project.",
   "type": "module",
