@@ -1,91 +1,10 @@
 from crewai import Agent
-import subprocess
-import os
 from crews.tools import (
     AIBTCTokenTools,
     AIBTCResourceTools,
     StacksWalletTools,
     WebsiteTools,
 )
-# project_name="clarinet-project"
-
-
-def createClarinetProject(project_name: str):
-    try:
-        # Create a new Clarinet project
-        subprocess.run(["clarinet", "new", project_name], check=True)
-        print(f"Successfully created project: {project_name}")
-    except subprocess.CalledProcessError as e:
-        print(f"Error creating project '{project_name}': {e}")
-
-
-def add_contract(project_name, contract_name, contract_code) -> str:
-    """
-    Add a new contract to the specified Clarinet project and write code into it.
-
-    This tool allows users to create a new smart contract within a specified
-    Clarinet project. It changes the current working directory to the project folder,
-    creates a new contract file using the `clarinet contract new` command,
-    and writes the provided contract code into that file.
-
-    Args:
-        project_name (str): The name of the Clarinet project folder.
-        contract_name (str): The name of the contract to be created.
-        contract_code (str): The code to be written into the new contract file.
-
-    Returns:
-        str: A message indicating the success or failure of the contract addition operation.
-    """
-    try:
-        # Change directory to the project folder
-        os.chdir(project_name)
-
-        # Create a new contract
-        subprocess.run(["clarinet", "contract", "new",
-                       contract_name], check=True)
-        print(f"Successfully added contract: {contract_name}")
-
-        # Write the contract code to the contract file
-        contract_file_path = os.path.join("contracts", f"{contract_name}.clar")
-        with open(contract_file_path, "w") as contract_file:
-            contract_file.write(contract_code)
-        print(f"Successfully wrote code to contract: {contract_name}")
-
-    except subprocess.CalledProcessError as e:
-        print(f"Error adding contract '{contract_name}': {e}")
-    finally:
-        # Change back to the original directory
-        os.chdir("..")
-
-
-def check_contracts(project_name, contract_name=None):
-    """Check the syntax of contracts in the specified Clarinet project."""
-    try:
-        # Change directory to the project folder
-        os.chdir(project_name)
-
-        if contract_name:
-            # Check a specific contract
-            subprocess.run(["clarinet", "check", contract_name], check=True)
-            print(f"Successfully checked contract: {contract_name}")
-        else:
-            # Check all contracts
-            subprocess.run(["clarinet", "check"], check=True)
-            print("Successfully checked all contracts.")
-
-    except subprocess.CalledProcessError as e:
-        print(f"Error checking contracts: {e}")
-    finally:
-        # Change back to the original directory
-        os.chdir("..")
-
-
-@tool("Clarinet")
-def runClarinet(contract_name: str, contract_code: str):
-    project_name = "clarinet-project"
-    createClarinetProject()
-    add_contract(project_name, contract_name, contract_code)
-    check_contracts(project_name)
 
 
 def get_website_scraper(llm=None):
