@@ -184,7 +184,7 @@ def main():
                 user_input)
 
         st.subheader("Generated Clarity Code")
-        st.markdown(generated_code, language='clarity')
+        st.code(generated_code, language='clarity')
 
         # st.subheader("Review Report")
         # st.markdown(review_report)
