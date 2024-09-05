@@ -1,5 +1,6 @@
 from crewai_tools import SeleniumScrapingTool, tool
-from utils.scripts import BunScriptRunner
+from utils.scripts import BunScriptRunner, ClarinetScriptRunner
+import os
 
 ### ALL CLASSES AND FUNCTIONS BELOW ARE AGENT TOOLS ###
 
@@ -169,6 +170,50 @@ class WebsiteTools:
         return scraping_tool._run()
 
 
+class ClarinetTools:
+    # @staticmethod
+    # @tool("Setup New Clarinet Project")
+    def create_clarinet_project(project_name: str):
+        """Setup a new clarinet project using clarinet."""
+        command = f"new {project_name} --disable-telemetry"
+        return ClarinetScriptRunner.clarinet_run(command)
+
+    @staticmethod
+    @tool("Create New Clarinet Contract")
+    def create_clarinet_contract(project_name: str, contract_name: str):
+        """Create a new contract in the existing clarinet project."""
+        command = f"contract new {contract_name}"
+        return ClarinetScriptRunner.clarinet_project_run(project_name, command)
+
+    @staticmethod
+    @tool("Check Clarinet Contract Syntax")
+    def check_clarinet_syntax(project_name: str):
+        """Check the syntax of clarinet contracts."""
+        command = "check"
+        return ClarinetScriptRunner.clarinet_project_run(project_name, command)
+
+    @staticmethod
+    @tool("Write Clarity Contract")
+    def write_clarity_contract(project_name: str, contract_name: str, contract: str):
+        """Write the Clarity contract content to a file."""
+        project_dir = os.path.join(ClarinetScriptRunner.working_dir, project_name)
+        contract_file_path = os.path.join(
+            project_dir, "contracts/", f"{contract_name}.clar"
+        )
+
+        try:
+            os.makedirs(project_dir, exist_ok=True)
+            with open(contract_file_path, "w") as contract_file:
+                contract_file.write(contract)
+            return {
+                "output": f"Contract written to {contract_file_path}",
+                "error": None,
+                "success": True,
+            }
+        except Exception as e:
+            return {"output": None, "error": str(e), "success": False}
+
+
 # for the UI, returns dict of tool groups for display
 # automatically includes any function in the class
 def get_tool_groups():
@@ -178,4 +223,5 @@ def get_tool_groups():
         "Stacks BNS": StacksBNSTools,
         "Stacks Wallet": StacksWalletTools,
         "Website Tools": WebsiteTools,
+        "Clarinet Tools": ClarinetTools,
     }

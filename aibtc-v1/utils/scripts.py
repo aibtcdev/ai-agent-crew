@@ -1,4 +1,5 @@
 import subprocess
+import os
 
 
 # generic runner for Bun.js scripts
@@ -30,3 +31,50 @@ class BunScriptRunner:
             return {"output": result.stdout, "error": None, "success": True}
         except subprocess.CalledProcessError as e:
             return {"output": None, "error": e.stderr, "success": False}
+
+
+# generic runner for Clarinet scripts
+class ClarinetScriptRunner:
+    working_dir = "./temp/"
+
+    @staticmethod
+    def clarinet_run(arg: str = None):
+        """Runs a Clarinet script with an optional positional argument."""
+        command = ["clarinet"]
+
+        # Append the optional argument if provided
+        if arg is not None:
+            command.extend(arg.split())
+
+        try:
+            result = subprocess.run(
+                command,
+                check=True,
+                text=True,
+                capture_output=True,
+                cwd=ClarinetScriptRunner.working_dir,
+            )
+            return {"output": result.stdout, "error": None, "success": True}
+        except subprocess.CalledProcessError as e:
+            return {"output": e.stdout, "error": e.stderr, "success": False}
+
+    @staticmethod
+    def clarinet_project_run(project: str, arg: str = None):
+        """Runs a Clarinet script with an optional positional argument."""
+        command = ["clarinet"]
+
+        # Append the optional argument if provided
+        if arg is not None:
+            command.extend(arg.split())
+
+        try:
+            result = subprocess.run(
+                command,
+                check=True,
+                text=True,
+                capture_output=True,
+                cwd=os.path.join(ClarinetScriptRunner.working_dir, project),
+            )
+            return {"output": result.stdout, "error": None, "success": True}
+        except subprocess.CalledProcessError as e:
+            return {"output": e.stdout, "error": e.stderr, "success": False}
