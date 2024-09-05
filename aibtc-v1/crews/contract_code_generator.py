@@ -10,7 +10,6 @@ import streamlit as st
 # Load environment variables
 load_dotenv()
 
-
 @tool("Clarinet")
 def runClarinet(project_name: str, contract_name: str, contract_code: str) -> str:
     """
@@ -37,8 +36,7 @@ def runClarinet(project_name: str, contract_name: str, contract_code: str) -> st
         os.chdir(project_name)
 
         # Add a new contract
-        subprocess.run(["clarinet", "contract", "new",
-                       contract_name], check=True)
+        subprocess.run(["clarinet", "contract", "new", contract_name], check=True)
         print(f"Added new contract: {contract_name}")
 
         # Write the contract code to the contract file
@@ -59,7 +57,6 @@ def runClarinet(project_name: str, contract_name: str, contract_code: str) -> st
     finally:
         os.chdir(initial_dir)
 
-
 def get_llm(model_name):
     if model_name.startswith("gpt"):
         return ChatOpenAI(model_name=model_name)
@@ -68,20 +65,20 @@ def get_llm(model_name):
     else:
         raise ValueError(f"Unsupported model: {model_name}")
 
-
 # Set your desired model name
-model_name = "gpt-4o"  # Example with OpenAI GPT-4
+model_name = "gpt-4"  # Example with OpenAI GPT-4
 llm = get_llm(model_name)
 
 # Define the Clarity Code Generator Agent
 clarity_code_generator = Agent(
     role="Clarity Code Generator",
-    goal="Generate Clarity code for a smart contract on the Bitcoin blockchain based on user input requirements.",
+    goal="Generate Clarity code for a smart contract on the Stacks blockchain based on user input requirements.",
     verbose=True,
     memory=True,
     backstory=(
-        "You are an expert in Clarity, a smart contract language for the Bitcoin blockchain. "
-        "Your goal is to write secure, efficient, and functional Clarity code based on user instructions. Do not create or write anything beside code."
+        "You are an expert in Clarity, a smart contract language for the Stacks blockchain. "
+        "Your goal is to write secure, efficient, and functional Clarity code based on specific user requirements. "
+        "You should tailor your code generation to meet the exact needs described in the user input."
     ),
     allow_delegation=False,
     llm=llm
@@ -94,8 +91,8 @@ clarity_code_reviewer = Agent(
     verbose=True,
     memory=True,
     backstory=(
-        "You are a meticulous Clarity code reviewer known for ensuring smart contract security and code quality. "
-        "Your goal is to analyze the generated code, create a Clarinet project, and check the syntax."
+        "You are a meticulous Clarity code reviewer known for ensuring smart contract security and code quality on the Stacks blockchain. "
+        "Your goal is to analyze the generated code, create a Clarinet project, and check the syntax, providing detailed feedback on any issues found."
     ),
     allow_delegation=False,
     llm=llm,
@@ -109,7 +106,9 @@ clarity_code_compiler = Agent(
     verbose=True,
     memory=True,
     backstory=(
-        "You are a Clarity code compilation expert responsible for taking the generated Clarity code and the code review report, and combining them into a final, comprehensive output that can be displayed in the Streamlit app."
+        "You are a Clarity code compilation expert for the Stacks blockchain, responsible for taking the generated Clarity code and the code review report, "
+        "and combining them into a final, comprehensive output that can be displayed in the Streamlit app. "
+        "You ensure that the output clearly presents both the code and its review in a user-friendly format."
     ),
     allow_delegation=False,
     llm=llm
@@ -118,11 +117,11 @@ clarity_code_compiler = Agent(
 # Define the task for generating Clarity code
 generate_clarity_code_task = Task(
     description=(
-        "Generate a Clarity code snippet for a smart contract that defines and manages token transfers, including functions for minting, transferring, and checking balances. The code should ensure security, prevent re-entrancy, and handle exceptions properly."
-        "Store your code in crew's shared memory 'contract_code' "
-
+        "Generate a Clarity code snippet for a smart contract on the Stacks blockchain based on the following user requirements: {user_input}. "
+        "Ensure the code is secure, efficient, and properly handles exceptions. "
+        "Store your code in crew's shared memory 'contract_code'."
     ),
-    expected_output="Provide a Clarity code snippet for a smart contract that defines and manages token transfers.",
+    expected_output="Provide a Clarity code snippet for a smart contract that meets the specified user requirements.",
     agent=clarity_code_generator,
 )
 
@@ -130,65 +129,51 @@ generate_clarity_code_task = Task(
 review_clarity_code_task = Task(
     description=(
         "Review the generated Clarity code, create a Clarinet project with it, and check its syntax. "
-        "Provide a report on the code quality and any issues found during the syntax check. You can find the code in crew's shared memory 'contract code', store your response in crew's shared memory 'review' "
+        "Provide a detailed report on the code quality, syntax check results, and any issues found. "
+        "Consider how well the code meets the original user requirements: {user_input}. "
+        "You can find the code in crew's shared memory 'contract_code'. Store your response in crew's shared memory 'review'."
     ),
-    expected_output="A detailed report on code quality, syntax check results, and any issues found.",
+    expected_output="A detailed report on code quality, syntax check results, and any issues found, with reference to the original user requirements.",
     agent=clarity_code_reviewer,
 )
 
 # Define the task for compiling the Clarity code and review report
 compile_clarity_code_task = Task(
     description=(
-        "Combine the generated Clarity code and the code review report into a comprehensive output that can be displayed in the Streamlit app. You can access the contract code from crew's shared memory 'contract_code' and the code review from 'review'."
+        "Combine the generated Clarity code and the code review report into a comprehensive output that can be displayed in the Streamlit app. "
+        "Ensure that the output clearly shows how the code meets the original user requirements: {user_input}. "
+        "You can access the contract code from crew's shared memory 'contract_code' and the code review from 'review'."
     ),
-    expected_output="The final output that includes the Clarity code and the code review report.",
+    expected_output="The final output that includes the Clarity code, the code review report, and how it addresses the user's requirements.",
     agent=clarity_code_compiler,
 )
+
 crew = Crew(
-    agents=[clarity_code_generator,
-            clarity_code_reviewer, clarity_code_compiler],
-    tasks=[generate_clarity_code_task,
-           review_clarity_code_task, compile_clarity_code_task],
+    agents=[clarity_code_generator, clarity_code_reviewer, clarity_code_compiler],
+    tasks=[generate_clarity_code_task, review_clarity_code_task, compile_clarity_code_task],
     process=Process.sequential,
     verbose=True
 )
-# # Forming the crew with both agents and their tasks
-# crew = Crew(
-#     agents=[clarity_code_generator, clarity_code_reviewer],
-#     tasks=[generate_clarity_code_task, review_clarity_code_task],
-#     process=Process.sequential,
-#     verbose=True
-# )
 
 # Function to run the crew
-
-
 def generate_and_review_contract(user_input):
     result = crew.kickoff(inputs={"user_input": user_input})
     print(result, "result(*(***))")
-
     return result
 
 # Streamlit app definition
-
-
 def main():
-    st.title("Clarity Smart Contract Generator and Reviewer")
+    st.title("Clarity Smart Contract Generator and Reviewer for Stacks")
 
     user_input = st.text_area("Enter your smart contract requirements:",
-                              "write functions that will return the info from the map, individually and all in one call")
+                              "Write functions that will return the info from the map, individually and all in one call")
 
     if st.button("Generate and Review Smart Contract"):
         with st.spinner("Generating and reviewing smart contract..."):
-            generated_code = generate_and_review_contract(
-                user_input)
+            generated_output = generate_and_review_contract(user_input)
 
-        st.subheader("Generated Clarity Code")
-        st.code(generated_code, language='clarity')
-
-        # st.subheader("Review Report")
-        # st.markdown(review_report)
-
+        st.subheader("Generated Clarity Code and Review")
+        st.markdown(generated_output)
 
 if __name__ == "__main__":
     main()
