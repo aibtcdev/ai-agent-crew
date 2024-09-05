@@ -1,8 +1,36 @@
 from crewai_tools import SeleniumScrapingTool, tool
 from utils.scripts import BunScriptRunner, ClarinetScriptRunner
 import os
+from utils.vector import (
+    create_vector_search_tool,
+    clarity_book_code_vector_store,
+    clarity_book_function_vector_store,
+)
 
 ### ALL CLASSES AND FUNCTIONS BELOW ARE AGENT TOOLS ###
+
+
+class StacksResources:
+
+    @staticmethod
+    @tool("Get Clarity Code Search Tool")
+    def get_code_search_tool():
+        """Get the code search tool for the Clarity book with information about Clarity language syntax, types, and general concepts."""
+        return create_vector_search_tool(
+            clarity_book_code_vector_store,
+            "Code Search",
+            "Search for code snippets in the Clarity book.",
+        )
+
+    @staticmethod
+    @tool("Get Clarity Function Search Tool")
+    def get_function_search_tool():
+        """Get the function search tool for the Clarity book with specific information about functions in Clarity language."""
+        return create_vector_search_tool(
+            clarity_book_function_vector_store,
+            "Function Search",
+            "Search for function documentation in the Clarity book.",
+        )
 
 
 class AIBTCResourceTools:
@@ -172,7 +200,7 @@ class WebsiteTools:
 
 class ClarinetTools:
     # @staticmethod
-    # @tool("Setup New Clarinet Project")
+    @tool("Setup New Clarinet Project")
     def create_clarinet_project(project_name: str):
         """Setup a new clarinet project using clarinet."""
         command = f"new {project_name} --disable-telemetry"
@@ -224,4 +252,5 @@ def get_tool_groups():
         "Stacks Wallet": StacksWalletTools,
         "Website Tools": WebsiteTools,
         "Clarinet Tools": ClarinetTools,
+        "Stacks Resources": StacksResources,
     }

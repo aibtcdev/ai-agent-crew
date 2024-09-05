@@ -67,9 +67,19 @@ def create_vector_search_tool(vector_store, name, description):
 clarity_book_code_vector_store = create_vector_store(
     [
         "https://book.clarity-lang.org/ch04-00-storing-data.html",
+        "https://book.clarity-lang.org/ch04-01-constants.html",
+        "https://book.clarity-lang.org/ch04-02-variables.html",
+        "https://book.clarity-lang.org/ch04-03-maps.html",
         "https://book.clarity-lang.org/ch05-00-functions.html",
         "https://book.clarity-lang.org/ch03-00-keywords.html",
         "https://book.clarity-lang.org/ch02-00-types.html",
+        "https://book.clarity-lang.org/ch13-01-coding-style.html",
+        "https://book.clarity-lang.org/ch06-00-control-flow.html",
+        "https://book.clarity-lang.org/ch06-01-asserts.html",
+        "https://book.clarity-lang.org/ch06-02-try.html",
+        "https://book.clarity-lang.org/ch06-03-unwrap-flavours.html",
+        "https://book.clarity-lang.org/ch06-04-response-checking.html",
+        "https://raw.githubusercontent.com/stacksgov/sips/main/sips/sip-010/sip-010-fungible-token-standard.md",
     ]
 )
 
