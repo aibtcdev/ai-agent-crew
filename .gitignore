@@ -4,3 +4,4 @@ __pycache__
 myenv
 .flox
 .venv/
+shell.nix
