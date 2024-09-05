@@ -90,7 +90,7 @@ def get_llm(model_name):
         raise ValueError(f"Unsupported model: {model_name}")
 
 # Set your desired model name
-model_name = "gpt-4"  # Example with OpenAI GPT-4
+model_name = "gpt-4o"  
 llm = get_llm(model_name)
 
 # Define the Clarity Code Generator Agent
