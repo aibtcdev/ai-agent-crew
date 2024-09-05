@@ -10,50 +10,74 @@ import streamlit as st
 # Load environment variables
 load_dotenv()
 
-@tool("Clarinet")
-def runClarinet(project_name: str, contract_name: str, contract_code: str) -> str:
+@tool("Create Clarinet Project")
+def create_clarinet_project(project_name: str) -> str:
     """
-    Create a new Clarinet project, add a new contract, and check its syntax.
-
-    This tool creates a new Clarinet project, adds a new contract to it,
-    writes the provided contract code, and checks its syntax.
+    Create a new Clarinet project.
 
     Args:
         project_name (str): The name of the Clarinet project to be created.
+
+    Returns:
+        str: A message indicating the result of the operation.
+    """
+    try:
+        subprocess.run(["clarinet", "new", project_name], check=True)
+        return f"Successfully created new Clarinet project: {project_name}"
+    except subprocess.CalledProcessError as e:
+        return f"Error creating Clarinet project: {e}"
+
+@tool("Create New Smart Contract")
+def create_new_smart_contract(project_name: str, contract_name: str, contract_code: str) -> str:
+    """
+    Create a new smart contract in an existing Clarinet project.
+
+    Args:
+        project_name (str): The name of the existing Clarinet project.
         contract_name (str): The name of the contract to be created.
         contract_code (str): The code to be written into the new contract file.
 
     Returns:
-        str: A message indicating the result of the operations.
+        str: A message indicating the result of the operation.
     """
     initial_dir = os.getcwd()
     try:
-        # Create a new Clarinet project
-        subprocess.run(["clarinet", "new", project_name], check=True)
-        print(f"Created new Clarinet project: {project_name}")
-
-        # Change directory to the project folder
         os.chdir(project_name)
-
-        # Add a new contract
         subprocess.run(["clarinet", "contract", "new", contract_name], check=True)
-        print(f"Added new contract: {contract_name}")
-
-        # Write the contract code to the contract file
+        
         contract_file_path = os.path.join("contracts", f"{contract_name}.clar")
         with open(contract_file_path, "w") as contract_file:
             contract_file.write(contract_code)
-        print(f"Wrote code to {contract_file_path}")
+        
+        return f"Successfully added new contract '{contract_name}' to project '{project_name}' and wrote code to {contract_file_path}"
+    except subprocess.CalledProcessError as e:
+        return f"Error creating smart contract: {e}"
+    except IOError as e:
+        return f"Error writing contract code: {e}"
+    finally:
+        os.chdir(initial_dir)
 
-        # Check the syntax of the contract
+@tool("Check Smart Contract Syntax")
+def check_smart_contract_syntax(project_name: str, contract_name: str) -> str:
+    """
+    Check the syntax of a smart contract in a Clarinet project.
+
+    Args:
+        project_name (str): The name of the Clarinet project.
+        contract_name (str): The name of the contract to check.
+
+    Returns:
+        str: The result of the syntax check.
+    """
+    initial_dir = os.getcwd()
+    try:
+        os.chdir(project_name)
         result = subprocess.run(
             ["clarinet", "check", contract_name], capture_output=True, text=True
         )
-        print(f"Syntax check result: {result.stdout}")
-
-        return f"Successfully created project '{project_name}', added contract '{contract_name}', and checked its syntax."
+        return f"Syntax check result for '{contract_name}' in project '{project_name}':\n{result.stdout}"
     except subprocess.CalledProcessError as e:
-        return f"Error: {e}"
+        return f"Error checking syntax: {e}"
     finally:
         os.chdir(initial_dir)
 
@@ -92,11 +116,11 @@ clarity_code_reviewer = Agent(
     memory=True,
     backstory=(
         "You are a meticulous Clarity code reviewer known for ensuring smart contract security and code quality on the Stacks blockchain. "
-        "Your goal is to analyze the generated code, create a Clarinet project, and check the syntax, providing detailed feedback on any issues found."
+        "Your goal is to analyze the generated code, create a Clarinet project, add the contract, and check the syntax, providing detailed feedback on any issues found."
     ),
     allow_delegation=False,
     llm=llm,
-    tools=[runClarinet]
+    tools=[create_clarinet_project, create_new_smart_contract, check_smart_contract_syntax]
 )
 
 # Define the Clarity Code Compiler Agent
