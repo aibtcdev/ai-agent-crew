@@ -10,6 +10,7 @@ import streamlit as st
 # Load environment variables
 load_dotenv()
 
+
 @tool("Create Clarinet Project")
 def create_clarinet_project(project_name: str) -> str:
     """
@@ -27,6 +28,7 @@ def create_clarinet_project(project_name: str) -> str:
     except subprocess.CalledProcessError as e:
         return f"Error creating Clarinet project: {e}"
 
+
 @tool("Create New Smart Contract")
 def create_new_smart_contract(project_name: str, contract_name: str, contract_code: str) -> str:
     """
@@ -43,12 +45,13 @@ def create_new_smart_contract(project_name: str, contract_name: str, contract_co
     initial_dir = os.getcwd()
     try:
         os.chdir(project_name)
-        subprocess.run(["clarinet", "contract", "new", contract_name], check=True)
-        
+        subprocess.run(["clarinet", "contract", "new",
+                       contract_name], check=True)
+
         contract_file_path = os.path.join("contracts", f"{contract_name}.clar")
         with open(contract_file_path, "w") as contract_file:
             contract_file.write(contract_code)
-        
+
         return f"Successfully added new contract '{contract_name}' to project '{project_name}' and wrote code to {contract_file_path}"
     except subprocess.CalledProcessError as e:
         return f"Error creating smart contract: {e}"
@@ -56,6 +59,7 @@ def create_new_smart_contract(project_name: str, contract_name: str, contract_co
         return f"Error writing contract code: {e}"
     finally:
         os.chdir(initial_dir)
+
 
 @tool("Check Smart Contract Syntax")
 def check_smart_contract_syntax(project_name: str, contract_name: str) -> str:
@@ -72,14 +76,23 @@ def check_smart_contract_syntax(project_name: str, contract_name: str) -> str:
     initial_dir = os.getcwd()
     try:
         os.chdir(project_name)
+
+        # Specify the path to the contract file
+        contract_file_path = os.path.join("contracts", f"{contract_name}.clar")
+
+        # Run the syntax check on the contract file
         result = subprocess.run(
-            ["clarinet", "check", contract_name], capture_output=True, text=True
+            ["clarinet", "check", contract_file_path], capture_output=True, text=True
         )
-        return f"Syntax check result for '{contract_name}' in project '{project_name}':\n{result.stdout}"
+
+        return f"Syntax check result for '{contract_name}' in project '{project_name}':\n{result.stdout}" if result.returncode == 0 else f"Syntax errors in '{contract_name}':\n{result.stderr}"
     except subprocess.CalledProcessError as e:
         return f"Error checking syntax: {e}"
+    except IOError as e:
+        return f"Error accessing contract file: {e}"
     finally:
         os.chdir(initial_dir)
+
 
 def get_llm(model_name):
     if model_name.startswith("gpt"):
@@ -89,8 +102,9 @@ def get_llm(model_name):
     else:
         raise ValueError(f"Unsupported model: {model_name}")
 
+
 # Set your desired model name
-model_name = "gpt-4o"  
+model_name = "gpt-4o"
 llm = get_llm(model_name)
 
 # Define the Clarity Code Generator Agent
@@ -120,7 +134,8 @@ clarity_code_reviewer = Agent(
     ),
     allow_delegation=False,
     llm=llm,
-    tools=[create_clarinet_project, create_new_smart_contract, check_smart_contract_syntax]
+    tools=[create_clarinet_project, create_new_smart_contract,
+           check_smart_contract_syntax]
 )
 
 # Define the Clarity Code Compiler Agent
@@ -173,19 +188,25 @@ compile_clarity_code_task = Task(
 )
 
 crew = Crew(
-    agents=[clarity_code_generator, clarity_code_reviewer, clarity_code_compiler],
-    tasks=[generate_clarity_code_task, review_clarity_code_task, compile_clarity_code_task],
+    agents=[clarity_code_generator,
+            clarity_code_reviewer, clarity_code_compiler],
+    tasks=[generate_clarity_code_task,
+           review_clarity_code_task, compile_clarity_code_task],
     process=Process.sequential,
     verbose=True
 )
 
 # Function to run the crew
+
+
 def generate_and_review_contract(user_input):
     result = crew.kickoff(inputs={"user_input": user_input})
     print(result, "result(*(***))")
     return result
 
 # Streamlit app definition
+
+
 def main():
     st.title("Clarity Smart Contract Generator and Reviewer for Stacks")
 
@@ -198,6 +219,7 @@ def main():
 
         st.subheader("Generated Clarity Code and Review")
         st.markdown(generated_output)
+
 
 if __name__ == "__main__":
     main()
