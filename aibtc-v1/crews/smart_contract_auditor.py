@@ -1,3 +1,5 @@
+import requests
+import streamlit as st
 from crewai import Agent, Task
 from crewai_tools import tool
 from textwrap import dedent
@@ -8,8 +10,6 @@ from utils.vector import (
     clarity_book_code_vector_store,
     clarity_book_function_vector_store,
 )
-import streamlit as st
-import requests
 
 
 class SmartContractAuditCrew(AIBTC_Crew):
