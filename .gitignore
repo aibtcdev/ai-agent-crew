@@ -5,3 +5,4 @@ myenv
 .flox
 .venv/
 shell.nix
+working_dir

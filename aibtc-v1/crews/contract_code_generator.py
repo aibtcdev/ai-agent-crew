@@ -10,21 +10,18 @@ import streamlit as st
 # Load environment variables
 load_dotenv()
 
+WORKING_DIR = "./working_dir"
+
 
 @tool("Create Clarinet Project")
 def create_clarinet_project(project_name: str) -> str:
     """
-    Create a new Clarinet project.
-
-    Args:
-        project_name (str): The name of the Clarinet project to be created.
-
-    Returns:
-        str: A message indicating the result of the operation.
+    Create a new Clarinet project in the working directory.
     """
     try:
-        subprocess.run(["clarinet", "new", project_name], check=True)
-        return f"Successfully created new Clarinet project: {project_name}"
+        os.makedirs(WORKING_DIR, exist_ok=True)
+        subprocess.run(["clarinet", "new", project_name], check=True, cwd=WORKING_DIR)
+        return f"Successfully created new Clarinet project: {project_name} in {WORKING_DIR}"
     except subprocess.CalledProcessError as e:
         return f"Error creating Clarinet project: {e}"
 
@@ -34,22 +31,17 @@ def create_new_smart_contract(
     project_name: str, contract_name: str, contract_code: str
 ) -> str:
     """
-    Create a new smart contract in an existing Clarinet project.
-
-    Args:
-        project_name (str): The name of the existing Clarinet project.
-        contract_name (str): The name of the contract to be created.
-        contract_code (str): The code to be written into the new contract file.
-
-    Returns:
-        str: A message indicating the result of the operation.
+    Create a new smart contract in an existing Clarinet project within the working directory.
     """
-    initial_dir = os.getcwd()
+    project_dir = os.path.join(WORKING_DIR, project_name)
     try:
-        os.chdir(project_name)
-        subprocess.run(["clarinet", "contract", "new", contract_name], check=True)
+        subprocess.run(
+            ["clarinet", "contract", "new", contract_name], check=True, cwd=project_dir
+        )
 
-        contract_file_path = os.path.join("contracts", f"{contract_name}.clar")
+        contract_file_path = os.path.join(
+            project_dir, "contracts", f"{contract_name}.clar"
+        )
         with open(contract_file_path, "w") as contract_file:
             contract_file.write(contract_code)
 
@@ -58,32 +50,22 @@ def create_new_smart_contract(
         return f"Error creating smart contract: {e}"
     except IOError as e:
         return f"Error writing contract code: {e}"
-    finally:
-        os.chdir(initial_dir)
 
 
 @tool("Check Smart Contract Syntax")
 def check_smart_contract_syntax(project_name: str, contract_name: str) -> str:
     """
-    Check the syntax of a smart contract in a Clarinet project.
-
-    Args:
-        project_name (str): The name of the Clarinet project.
-        contract_name (str): The name of the contract to check.
-
-    Returns:
-        str: The result of the syntax check.
+    Check the syntax of a smart contract in a Clarinet project within the working directory.
     """
-    initial_dir = os.getcwd()
+    project_dir = os.path.join(WORKING_DIR, project_name)
     try:
-        os.chdir(project_name)
-
-        # Specify the path to the contract file
         contract_file_path = os.path.join("contracts", f"{contract_name}.clar")
 
-        # Run the syntax check on the contract file
         result = subprocess.run(
-            ["clarinet", "check", contract_file_path], capture_output=True, text=True
+            ["clarinet", "check", contract_file_path],
+            capture_output=True,
+            text=True,
+            cwd=project_dir,
         )
 
         return (
@@ -95,8 +77,6 @@ def check_smart_contract_syntax(project_name: str, contract_name: str) -> str:
         return f"Error checking syntax: {e}"
     except IOError as e:
         return f"Error accessing contract file: {e}"
-    finally:
-        os.chdir(initial_dir)
 
 
 def get_llm(model_name):
