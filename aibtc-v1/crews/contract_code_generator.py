@@ -206,7 +206,7 @@ def main():
         "Write functions that will return the info from the map, individually and all in one call",
     )
 
-    if st.button("Generate and Review Smart Contract"):
+    if st.button("Generate Clarity Code"):
         with st.spinner("Generating and reviewing smart contract..."):
             generated_output = generate_and_review_contract(user_input)
 
