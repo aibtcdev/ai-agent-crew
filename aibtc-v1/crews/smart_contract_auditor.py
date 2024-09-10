@@ -1,7 +1,9 @@
+import re
 import requests
 import streamlit as st
 from crewai import Agent, Task
 from crewai_tools import tool
+from streamlit_mermaid import st_mermaid
 from textwrap import dedent
 from utils.crews import AIBTC_Crew
 from utils.scripts import BunScriptRunner
@@ -72,6 +74,17 @@ class SmartContractAuditCrew(AIBTC_Crew):
         )
         self.add_agent(report_compiler)
 
+        diagram_creator = Agent(
+            role="Diagram Creator",
+            goal="Create a clear and informative flow diagram of the smart contract using mermaid syntax.",
+            backstory="You are a visualization expert specializing in creating clear and informative flow diagrams for Clarity smart contracts.",
+            tools=[],
+            verbose=True,
+            allow_delegation=False,
+            llm=llm,
+        )
+        self.add_agent(diagram_creator)
+
     def setup_tasks(self, contract_code, contract_functions):
         summarize_contract_task = Task(
             description=dedent(
@@ -131,6 +144,27 @@ class SmartContractAuditCrew(AIBTC_Crew):
             tools=[],
         )
         self.add_task(analyze_security_task)
+
+        create_diagram_task = Task(
+            description=dedent(
+                f"""
+                Analyze the following Clarity smart contract code and create a mermaid diagram to visualize the internal control flow of the contract.
+                Contract Code:
+                {contract_code}
+                Your response should be a mermaid diagram code that represents the contract's flow.
+                Ensure the diagram includes:
+                1. Nodes representing different functions and processes of the contract.
+                2. Edges showing how the flow of execution moves between the functions.
+                3. Appropriate colors and shapes to represent different elements.
+                The code should be compatible with streamlit-mermaid version 0.2.0.
+                Store your diagram code in the crew's shared memory with the key 'contract_diagram'.
+                """
+            ),
+            expected_output="A mermaid diagram code representing the smart contract's flow.",
+            agent=self.agents[5],  # diagram_creator
+            callback=diagram_callback,
+        )
+        self.add_task(create_diagram_task)
 
         smart_contract_report_task = Task(
             description=dedent(
@@ -211,6 +245,8 @@ class SmartContractAuditCrew(AIBTC_Crew):
                 st.session_state.crew_step_container = st.empty()
                 st.write("Task Progress:")
                 st.session_state.crew_task_container = st.empty()
+                st.write("Contract Diagram:")
+                st.session_state.crew_diagram_container = st.empty()
 
                 # reset callback lists
                 st.session_state.crew_step_callback = []
@@ -236,8 +272,6 @@ class SmartContractAuditCrew(AIBTC_Crew):
 
                 result_str = str(result)
                 st.markdown(result_str)
-
-                # TODO: add contract diagram code
 
                 st.download_button(
                     label="Download Analysis Report (Text)",
@@ -321,3 +355,22 @@ def fetch_contract_functions(contract_address, contract_name):
         return data.get("functions")
     else:
         return f"Error: {response.status_code} - {response.text}"
+
+
+def diagram_callback(output):
+    # Regular expression to find content between ```mermaid and ``` tags
+    mermaid_pattern = r"```mermaid\n(.*?)\n```"
+    match = re.search(mermaid_pattern, output.raw, re.DOTALL)
+
+    if match:
+        # Extract the mermaid code
+        mermaid_code = match.group(1).strip()
+        # Create a new subheader and render the mermaid diagram
+        with st.session_state.crew_diagram_container:
+            st.subheader("Contract Flow Diagram")
+            st_mermaid(mermaid_code)
+    else:
+        # Display a message if no mermaid diagram is found
+        st.session_state.crew_diagram_container.info(
+            "No mermaid diagram found in the output."
+        )

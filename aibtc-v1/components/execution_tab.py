@@ -8,5 +8,5 @@ def render_execution_tab():
     # smart_contract_audit.render_smart_contract_analysis_crew()
     # wallet_summary.render_wallet_summary_crew()
     # WalletSummaryCrew().render_crew()
-    # SmartContractAuditCrew().render_crew()
-    ClarityCodeGeneratorCrew().render_crew()
+    SmartContractAuditCrew().render_crew()
+    # ClarityCodeGeneratorCrew().render_crew()
