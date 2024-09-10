@@ -1,5 +1,5 @@
 from crewai import Agent, Task, Crew, Process
-from typing import List, Callable
+from typing import List
 from utils.session import crew_step_callback, crew_task_callback
 
 
@@ -8,16 +8,12 @@ class AIBTC_Crew:
         self.name = name
         self.agents: List[Agent] = []
         self.tasks: List[Task] = []
-        self.tools: List[Callable] = []
 
     def add_agent(self, agent: Agent):
         self.agents.append(agent)
 
     def add_task(self, task: Task):
         self.tasks.append(task)
-
-    def add_tool(self, tool: Callable):
-        self.tools.append(tool)
 
     def create_crew(self) -> Crew:
         return Crew(
