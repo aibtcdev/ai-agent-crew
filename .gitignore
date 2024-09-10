@@ -1,4 +1,7 @@
 /env
 .env
 __pycache__
+myenv
 .flox
+.venv/
+shell.nix
