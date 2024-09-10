@@ -1,8 +1,9 @@
 import streamlit as st
 from crewai import Agent, Task
+from crewai_tools import tool
 from textwrap import dedent
 from utils.crews import AIBTC_Crew
-from .tools import StacksWalletTools  # TODO: define these in this file
+from utils.scripts import BunScriptRunner
 
 
 class WalletSummaryCrew(AIBTC_Crew):
@@ -20,8 +21,8 @@ class WalletSummaryCrew(AIBTC_Crew):
                 """
             ),
             tools=[
-                StacksWalletTools.get_address_balance_detailed,
-                StacksWalletTools.get_address_transactions,
+                get_address_balance_detailed,
+                get_address_transactions,
             ],
             backstory=dedent(
                 """
@@ -166,3 +167,24 @@ class WalletSummaryCrew(AIBTC_Crew):
                 st.info("Please check your inputs and try again.")
         else:
             st.info("Enter Wallet Address, then click 'Analyze Wallet' to see results.")
+
+
+#########################
+# Agent Tools
+#########################
+
+
+@tool("Get Address Balance Detailed")
+def get_address_balance_detailed(address: str):
+    """Get detailed balance information for a given address."""
+    return BunScriptRunner.bun_run(
+        "stacks-wallet", "get-address-balance-detailed.ts", address
+    )
+
+
+@tool("Get Address Transactions")
+def get_address_transactions(address: str):
+    """Get 20 most recent transactions for a given address."""
+    return BunScriptRunner.bun_run(
+        "stacks-wallet", "get-transactions-by-address.ts", address
+    )
