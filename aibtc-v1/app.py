@@ -62,7 +62,7 @@ st.image(
 )
 
 # Main layout with tabs
-tab1, tab2, tab3, tab4 = st.tabs(["Agents", "Tools", "Tasks", "Execution"])
+tab1, tab2, tab3, tab4 = st.tabs(["Agents", "Tools", "Tasks", "Run 🏃"])
 
 with tab1:
     render_agents_tab()
