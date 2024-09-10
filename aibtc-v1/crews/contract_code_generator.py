@@ -30,7 +30,9 @@ def create_clarinet_project(project_name: str) -> str:
 
 
 @tool("Create New Smart Contract")
-def create_new_smart_contract(project_name: str, contract_name: str, contract_code: str) -> str:
+def create_new_smart_contract(
+    project_name: str, contract_name: str, contract_code: str
+) -> str:
     """
     Create a new smart contract in an existing Clarinet project.
 
@@ -45,8 +47,7 @@ def create_new_smart_contract(project_name: str, contract_name: str, contract_co
     initial_dir = os.getcwd()
     try:
         os.chdir(project_name)
-        subprocess.run(["clarinet", "contract", "new",
-                       contract_name], check=True)
+        subprocess.run(["clarinet", "contract", "new", contract_name], check=True)
 
         contract_file_path = os.path.join("contracts", f"{contract_name}.clar")
         with open(contract_file_path, "w") as contract_file:
@@ -85,7 +86,11 @@ def check_smart_contract_syntax(project_name: str, contract_name: str) -> str:
             ["clarinet", "check", contract_file_path], capture_output=True, text=True
         )
 
-        return f"Syntax check result for '{contract_name}' in project '{project_name}':\n{result.stdout}" if result.returncode == 0 else f"Syntax errors in '{contract_name}':\n{result.stderr}"
+        return (
+            f"Syntax check result for '{contract_name}' in project '{project_name}':\n{result.stdout}"
+            if result.returncode == 0
+            else f"Syntax errors in '{contract_name}':\n{result.stderr}"
+        )
     except subprocess.CalledProcessError as e:
         return f"Error checking syntax: {e}"
     except IOError as e:
@@ -119,7 +124,7 @@ clarity_code_generator = Agent(
         "You should tailor your code generation to meet the exact needs described in the user input."
     ),
     allow_delegation=False,
-    llm=llm
+    llm=llm,
 )
 
 # Define the Clarity Code Reviewer Agent
@@ -134,8 +139,11 @@ clarity_code_reviewer = Agent(
     ),
     allow_delegation=False,
     llm=llm,
-    tools=[create_clarinet_project, create_new_smart_contract,
-           check_smart_contract_syntax]
+    tools=[
+        create_clarinet_project,
+        create_new_smart_contract,
+        check_smart_contract_syntax,
+    ],
 )
 
 # Define the Clarity Code Compiler Agent
@@ -150,7 +158,7 @@ clarity_code_compiler = Agent(
         "You ensure that the output clearly presents both the code and its review in a user-friendly format."
     ),
     allow_delegation=False,
-    llm=llm
+    llm=llm,
 )
 
 # Define the task for generating Clarity code
@@ -188,12 +196,14 @@ compile_clarity_code_task = Task(
 )
 
 crew = Crew(
-    agents=[clarity_code_generator,
-            clarity_code_reviewer, clarity_code_compiler],
-    tasks=[generate_clarity_code_task,
-           review_clarity_code_task, compile_clarity_code_task],
+    agents=[clarity_code_generator, clarity_code_reviewer, clarity_code_compiler],
+    tasks=[
+        generate_clarity_code_task,
+        review_clarity_code_task,
+        compile_clarity_code_task,
+    ],
     process=Process.sequential,
-    verbose=True
+    verbose=True,
 )
 
 # Function to run the crew
@@ -204,14 +214,17 @@ def generate_and_review_contract(user_input):
     print(result, "result(*(***))")
     return result
 
+
 # Streamlit app definition
 
 
 def main():
     st.title("Clarity Smart Contract Generator and Reviewer for Stacks")
 
-    user_input = st.text_area("Enter your smart contract requirements:",
-                              "Write functions that will return the info from the map, individually and all in one call")
+    user_input = st.text_area(
+        "Enter your smart contract requirements:",
+        "Write functions that will return the info from the map, individually and all in one call",
+    )
 
     if st.button("Generate and Review Smart Contract"):
         with st.spinner("Generating and reviewing smart contract..."):
