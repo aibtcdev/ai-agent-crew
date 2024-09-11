@@ -17,7 +17,7 @@ from utils.vector import (
 
 class SmartContractAuditCrew(AIBTC_Crew):
     def __init__(self):
-        super().__init__("Smart Contract Audit Crew")
+        super().__init__("Smart Contract Auditor")
 
     def setup_agents(self, llm):
         contract_summarizer = Agent(

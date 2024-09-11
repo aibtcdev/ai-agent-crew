@@ -9,7 +9,7 @@ from utils.crews import AIBTC_Crew
 
 class ClarityCodeGeneratorCrew(AIBTC_Crew):
     def __init__(self):
-        super().__init__("Clarity Code Generator Crew")
+        super().__init__("Clarity Code Generator")
 
     def setup_agents(self, llm):
         clarity_code_generator = Agent(

@@ -9,7 +9,7 @@ from utils.scripts import BunScriptRunner
 
 class WalletSummaryCrew(AIBTC_Crew):
     def __init__(self):
-        super().__init__("Wallet Summary Crew")
+        super().__init__("Wallet Summarizer")
 
     def setup_agents(self, llm):
         wallet_agent = Agent(
