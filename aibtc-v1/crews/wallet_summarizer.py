@@ -13,7 +13,7 @@ class WalletSummaryCrew(AIBTC_Crew):
 
     def setup_agents(self, llm):
         wallet_agent = Agent(
-            role="wallet data and transaction retriever",
+            role="Wallet Data and Transaction Retriever",
             goal=dedent(
                 """
                 Retrieve basic wallet information and summarize transactions for the specified wallet. 
@@ -39,7 +39,7 @@ class WalletSummaryCrew(AIBTC_Crew):
         self.add_agent(wallet_agent)
 
         pattern_recognizer = Agent(
-            role="pattern recognition specialist",
+            role="Pattern Recognition Specialist",
             goal="Identify recurring patterns, unusual activities, and long-term trends in wallet behavior.",
             tools=[],
             backstory=dedent(
