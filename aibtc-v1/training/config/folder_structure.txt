@@ -1,0 +1,15 @@
+./training
+├── config                  # Automatically generated per crew
+│   ├── WalletSummarizer
+│   │   ├── agents.yaml
+│   │   └── tasks.yaml
+│   ├── SmartContractAnalyzer
+│   │   ├── agents.yaml
+│   │   └── tasks.yaml
+│   └── ClarityCodeGenerator
+│       ├── agents.yaml
+│       └── tasks.yaml
+│
+├── logs                    # Training logs
+├── results                 # Store training results
+└── generate_yaml.py        # Python script to generate the YAML files
