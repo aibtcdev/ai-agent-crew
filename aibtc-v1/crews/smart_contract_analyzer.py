@@ -15,9 +15,9 @@ from utils.vector import (
 )
 
 
-class SmartContractAuditCrew(AIBTC_Crew):
+class SmartContractAnalyzerCrew(AIBTC_Crew):
     def __init__(self):
-        super().__init__("Smart Contract Auditor")
+        super().__init__("Smart Contract Analyzer")
 
     def setup_agents(self, llm):
         contract_summarizer = Agent(
@@ -263,17 +263,17 @@ class SmartContractAuditCrew(AIBTC_Crew):
 
                 # get LLM from session state
                 llm = st.session_state.llm
-                smart_contract_audit_crew_class = SmartContractAuditCrew()
-                smart_contract_audit_crew_class.setup_agents(llm)
-                smart_contract_audit_crew_class.setup_tasks(
+                smart_contract_analyzer_crew_class = SmartContractAnalyzerCrew()
+                smart_contract_analyzer_crew_class.setup_agents(llm)
+                smart_contract_analyzer_crew_class.setup_tasks(
                     contract_code, contract_functions
                 )
-                smart_contract_audit_crew = (
-                    smart_contract_audit_crew_class.create_crew()
+                smart_contract_analyzer_crew = (
+                    smart_contract_analyzer_crew_class.create_crew()
                 )
 
                 with st.spinner("Analyzing..."):
-                    result = smart_contract_audit_crew.kickoff()
+                    result = smart_contract_analyzer_crew.kickoff()
 
                 st.success("Analysis complete!")
 

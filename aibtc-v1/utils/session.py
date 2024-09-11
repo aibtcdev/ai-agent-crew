@@ -8,7 +8,7 @@ from langchain_openai import ChatOpenAI
 from langchain_ollama import ChatOllama
 from typing import Optional
 
-from crews.smart_contract_auditor import SmartContractAuditCrew
+from crews.smart_contract_analyzer import SmartContractAnalyzerCrew
 from crews.wallet_summarizer import WalletSummaryCrew
 from crews.clarity_code_generator import ClarityCodeGeneratorCrew
 from utils.crews import AIBTC_Crew
