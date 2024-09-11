@@ -64,7 +64,7 @@ class ClarityCodeGeneratorCrew(AIBTC_Crew):
     def setup_tasks(self, user_input):
         generate_clarity_code_task = Task(
             description=(
-                "Generate a Clarity code snippet for a smart contract on the Stacks blockchain based on the following user requirements: {user_input}. "
+                f"Generate a Clarity code snippet for a smart contract on the Stacks blockchain based on the following user requirements: {user_input}. "
                 "Ensure the code is secure, efficient, and properly handles exceptions. "
                 "Store your code in crew's shared memory 'contract_code'."
             ),
