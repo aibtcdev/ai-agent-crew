@@ -1,57 +1,37 @@
-import inspect
 import streamlit as st
+from utils.session import get_crew_class, get_crew_inputs
 
 
-def render_tasks_tab():
-    if not st.session_state.tasks:
+def render_tasks_tab(crew_selection):
+    crew_class = get_crew_class(crew_selection)
+    if crew_class is None:
         st.warning(
-            "No tasks found. Please check your aibtc_crews/tasks.py file and ensure tasks are defined correctly."
+            f"No crew found for {crew_selection}. Please check your crew definitions."
         )
+        return
+
+    input_names = get_crew_inputs(crew_selection)
+
+    st.write(f"Expected inputs for {crew_selection}:")
+    for input_name in input_names:
+        st.write(f"- {input_name}")
+
+    # Create an instance of the crew
+    crew_instance = crew_class()
+
+    # Create mock data
+    mock_data = {input_name: f"mock_{input_name}" for input_name in input_names}
+
+    # Pass the mock data to the setup_tasks method
+    llm = st.session_state.llm
+    crew_instance.setup_agents(llm)
+    crew_instance.setup_tasks(**mock_data)
+
+    st.write("Tasks for this crew:")
+    if hasattr(crew_instance, "tasks") and crew_instance.tasks:
+        for i, task in enumerate(crew_instance.tasks, 1):
+            st.markdown(f"**Task {i}:** {task.description}")
+            st.markdown(f"*Expected Output:* {task.expected_output}")
+            st.markdown("---")
     else:
-
-        # search functionality
-        search_term = st.text_input(
-            "Search tasks", value=st.session_state.tasks_search_term
-        ).lower()
-        st.session_state.tasks_search_term = search_term
-
-        # filtering tasks based on search
-        filtered_tasks = {
-            name: func
-            for name, func in st.session_state.tasks.items()
-            if search_term in name.lower()
-        }
-
-        # split stats and clear filters button
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown(
-                f"**Showing {len(filtered_tasks)} / {len(st.session_state.tasks)} tasks**"
-            )
-        with col2:
-            if st.button("Clear filters", use_container_width=True):
-                st.session_state.tasks_search_term = ""
-                st.rerun()
-
-        for task_name, task_func in filtered_tasks.items():
-            with st.expander(task_name):
-                try:
-                    # get the function signature
-                    sig = inspect.signature(task_func)
-                    # P\prepare default arguments
-                    default_args = {
-                        "agent": None,
-                        "contract_code": "Sample contract code",
-                        "contract_functions": "Sample contract functions",
-                    }
-                    # Only use the arguments that the function accepts
-                    func_args = {
-                        k: v for k, v in default_args.items() if k in sig.parameters
-                    }
-                    # create an instance of the task
-                    task = task_func(**func_args)
-                    # display the task details
-                    st.markdown(f"**Description:** {task.description}")
-                    st.markdown(f"**Expected Output:** {task.expected_output}")
-                except Exception as e:
-                    st.error(f"Error displaying task {task_name}: {str(e)}")
+        st.info("No tasks have been set up for this crew.")

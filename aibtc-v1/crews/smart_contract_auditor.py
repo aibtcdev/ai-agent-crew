@@ -1,8 +1,9 @@
+import inspect
 import re
 import requests
 import streamlit as st
 from crewai import Agent, Task
-from crewai_tools import tool
+from crewai_tools import tool, Tool
 from streamlit_mermaid import st_mermaid
 from textwrap import dedent
 from utils.crews import AIBTC_Crew
@@ -23,7 +24,7 @@ class SmartContractAuditCrew(AIBTC_Crew):
             role="Contract Summarizer",
             goal="Provide a comprehensive summary of the smart contract's purpose.",
             backstory="You are a blockchain analyst with expertise in understanding smart contract code in the Clarity language.",
-            tools=[get_code_search_tool],
+            tools=[AgentTools.get_code_search_tool],
             verbose=True,
             allow_delegation=False,
             llm=llm,
@@ -34,7 +35,7 @@ class SmartContractAuditCrew(AIBTC_Crew):
             role="Function Analyzer",
             goal="Identify all functions in the smart contract.",
             backstory="You are a smart contract developer with deep knowledge of function analysis in the Clarity language on the Stacks blockchain.",
-            tools=[get_function_search_tool],
+            tools=[AgentTools.get_function_search_tool],
             verbose=True,
             allow_delegation=False,
             llm=llm,
@@ -56,7 +57,7 @@ class SmartContractAuditCrew(AIBTC_Crew):
             role="Security Analyzer",
             goal="Identify and explain potential security vulnerabilities in the contract",
             backstory="You are a blockchain security expert with a keen eye for detecting potential vulnerabilities in smart contracts in the Clarity language on the Stacks blockchain.",
-            tools=[get_function_search_tool],
+            tools=[AgentTools.get_function_search_tool],
             verbose=True,
             allow_delegation=False,
             llm=llm,
@@ -183,6 +184,14 @@ class SmartContractAuditCrew(AIBTC_Crew):
         )
         self.add_task(smart_contract_report_task)
 
+    @staticmethod
+    def get_task_inputs():
+        return ["contract_code", "contract_functions"]
+
+    @classmethod
+    def get_all_tools(cls):
+        return AgentTools.get_all_tools()
+
     def render_crew(self):
         st.subheader("Smart Contract Analyzer 🧠")
         st.markdown(
@@ -293,32 +302,46 @@ class SmartContractAuditCrew(AIBTC_Crew):
 #########################
 
 
-@tool("Get contract source code")
-def get_contract_source_code(contract_name: str):
-    """Get the source code for a given contract. It must be the fully qualified name with ADDRESS.CONTRACT_NAME"""
-    return BunScriptRunner.bun_run(
-        "stacks-contracts", "get-contract-source-code.ts", contract_name
-    )
+class AgentTools:
 
+    @staticmethod
+    @tool("Get contract source code")
+    def get_contract_source_code(contract_name: str):
+        """Get the source code for a given contract. It must be the fully qualified name with ADDRESS.CONTRACT_NAME"""
+        return BunScriptRunner.bun_run(
+            "stacks-contracts", "get-contract-source-code.ts", contract_name
+        )
 
-@tool("Get Clarity Code Search Tool")
-def get_code_search_tool():
-    """Get the code search tool for the Clarity book with information about Clarity language syntax, types, and general concepts."""
-    return create_vector_search_tool(
-        clarity_book_code_vector_store,
-        "Code Search",
-        "Search for code snippets in the Clarity book.",
-    )
+    @staticmethod
+    @tool("Get Clarity Code Search Tool")
+    def get_code_search_tool():
+        """Get the code search tool for the Clarity book with information about Clarity language syntax, types, and general concepts."""
+        return create_vector_search_tool(
+            clarity_book_code_vector_store,
+            "Code Search",
+            "Search for code snippets in the Clarity book.",
+        )
 
+    @staticmethod
+    @tool("Get Clarity Function Search Tool")
+    def get_function_search_tool():
+        """Get the function search tool for the Clarity book with specific information about functions in Clarity language."""
+        return create_vector_search_tool(
+            clarity_book_function_vector_store,
+            "Function Search",
+            "Search for function documentation in the Clarity book.",
+        )
 
-@tool("Get Clarity Function Search Tool")
-def get_function_search_tool():
-    """Get the function search tool for the Clarity book with specific information about functions in Clarity language."""
-    return create_vector_search_tool(
-        clarity_book_function_vector_store,
-        "Function Search",
-        "Search for function documentation in the Clarity book.",
-    )
+    @classmethod
+    def get_all_tools(cls):
+        members = inspect.getmembers(cls)
+        tools = [
+            member
+            for name, member in members
+            if isinstance(member, Tool)
+            or (hasattr(member, "__wrapped__") and isinstance(member.__wrapped__, Tool))
+        ]
+        return tools
 
 
 #########################

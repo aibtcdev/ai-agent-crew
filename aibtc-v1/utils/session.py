@@ -8,6 +8,11 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_ollama import ChatOllama
 
+from typing import Optional, List
+from crews.smart_contract_auditor import SmartContractAuditCrew
+from crews.wallet_summarizer import WalletSummaryCrew
+from crews.clarity_code_generator import ClarityCodeGeneratorCrew
+
 
 def load_env_vars():
     load_dotenv()
@@ -50,6 +55,22 @@ def init_session_state():
     if "tasks_search_term" not in st.session_state:
         st.session_state.tasks_search_term = ""
 
+    if "crew_mapping" not in st.session_state:
+        st.session_state.crew_mapping = {
+            "Smart Contract Auditor": {
+                "class": SmartContractAuditCrew,
+                "task_inputs": SmartContractAuditCrew.get_task_inputs,
+            },
+            "Wallet Summarizer": {
+                "class": WalletSummaryCrew,
+                "task_inputs": WalletSummaryCrew.get_task_inputs,
+            },
+            "Clarity Code Generator": {
+                "class": ClarityCodeGeneratorCrew,
+                "task_inputs": ClarityCodeGeneratorCrew.get_task_inputs,
+            },
+        }
+
     # Initialize other session state variables
     defaults = {
         "provider": env_vars.get("LLM_PROVIDER", "OpenAI"),
@@ -71,10 +92,6 @@ def init_session_state():
             st.session_state.api_base,
         )
 
-    # sync from related CrewAI files
-    sync_agents()
-    sync_tasks()
-
 
 def update_session_state(key, value):
     st.session_state[key] = value
@@ -93,21 +110,13 @@ def get_llm(provider, model, api_key, api_base):
         )
 
 
-def crew_step_callback(output):
-    if "crew_step_callback" not in st.session_state:
-        st.session_state.crew_step_callback = []
-    st.session_state.crew_step_callback.append(output)
-    with st.session_state.crew_step_container.container():
-        for i, step in enumerate(st.session_state.crew_step_callback):
-            with st.expander(f"Step {i+1}", expanded=False):
-                st.markdown(step)
+def get_crew_class(crew_name: str) -> Optional[type]:
+    crew_info = st.session_state.crew_mapping.get(crew_name)
+    return crew_info["class"] if crew_info else None
 
 
-def crew_task_callback(output):
-    if "crew_task_callback" not in st.session_state:
-        st.session_state.crew_task_callback = []
-    st.session_state.crew_task_callback.append(output)
-    with st.session_state.crew_task_container.container():
-        for i, task in enumerate(st.session_state.crew_task_callback):
-            with st.expander(f"Task {i+1}", expanded=False):
-                st.markdown(task)
+def get_crew_inputs(crew_name: str):
+    crew_info = st.session_state.crew_mapping.get(crew_name)
+    if crew_info and "task_inputs" in crew_info:
+        return crew_info["task_inputs"]()
+    return []

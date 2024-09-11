@@ -1,20 +1,27 @@
 import pandas as pd
 import streamlit as st
+from utils.session import get_crew_class
 
 
-def render_agents_tab():
-    if not st.session_state.agents:
+def render_agents_tab(crew_selection):
+    crew_class = get_crew_class(crew_selection)
+    if crew_class is None:
         st.warning(
-            "No agents found. Please check your aibtc_crews/agents.py file and ensure agents are defined correctly."
+            f"No crew found for {crew_selection}. Please check your crew definitions."
+        )
+        return
+
+    crew_instance = crew_class()
+    crew_instance.setup_agents(st.session_state.llm)
+
+    if not crew_instance.agents:
+        st.warning(
+            f"No agents found for {crew_selection}. Please check your crew definition."
         )
     else:
-        for agent_name, agent_func in st.session_state.agents.items():
+        for agent in crew_instance.agents:
             with st.container():
-
                 try:
-                    # create an instance of the agent
-                    agent = agent_func(st.session_state.llm)
-
                     img_col, info_col = st.columns([1, 3])
 
                     with img_col:
@@ -55,6 +62,6 @@ def render_agents_tab():
                         else:
                             st.write("No tools available for this agent.")
                 except Exception as e:
-                    st.error(f"Error displaying agent {agent_name}: {str(e)}")
+                    st.error(f"Error displaying agent {agent.role}: {str(e)}")
 
                 st.markdown("---")

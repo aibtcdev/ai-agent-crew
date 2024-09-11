@@ -1,8 +1,9 @@
+import inspect
 import os
 import streamlit as st
 import subprocess
 from crewai import Agent, Task
-from crewai_tools import tool
+from crewai_tools import tool, Tool
 from utils.crews import AIBTC_Crew
 
 
@@ -38,9 +39,9 @@ class ClarityCodeGeneratorCrew(AIBTC_Crew):
             allow_delegation=False,
             llm=llm,
             tools=[
-                create_clarinet_project,
-                create_new_smart_contract,
-                check_smart_contract_syntax,
+                AgentTools.create_clarinet_project,
+                AgentTools.create_new_smart_contract,
+                AgentTools.check_smart_contract_syntax,
             ],
         )
         self.add_agent(clarity_code_reviewer)
@@ -94,6 +95,14 @@ class ClarityCodeGeneratorCrew(AIBTC_Crew):
             agent=self.agents[2],  # clarity_code_compiler
         )
         self.add_task(compile_clarity_code_task)
+
+    @staticmethod
+    def get_task_inputs():
+        return ["user_input"]
+
+    @classmethod
+    def get_all_tools(cls):
+        return AgentTools.get_all_tools()
 
     def render_crew(self):
         st.subheader("Clarity Code Generator 🎱")
@@ -162,74 +171,94 @@ class ClarityCodeGeneratorCrew(AIBTC_Crew):
 #########################
 
 
-@tool("Create Clarinet Project")
-def create_clarinet_project(project_name: str) -> str:
-    """
-    Create a new Clarinet project in the working directory.
-    """
-    try:
-        os.makedirs(WORKING_DIR, exist_ok=True)
-        os.makedirs(os.path.join(WORKING_DIR, ".clarinet"), exist_ok=True)
-        with open(os.path.join(WORKING_DIR, ".clarinet", "clarinetrc.toml"), "w") as f:
-            f.write("enable_telemetry = true")
+class AgentTools:
 
-        subprocess.run(["clarinet", "new", project_name], check=True, cwd=WORKING_DIR)
-        return f"Successfully created new Clarinet project: {project_name} in {WORKING_DIR}"
-    except subprocess.CalledProcessError as e:
-        return f"Error creating Clarinet project: {e}"
+    @staticmethod
+    @tool("Create Clarinet Project")
+    def create_clarinet_project(project_name: str) -> str:
+        """
+        Create a new Clarinet project in the working directory.
+        """
+        try:
+            os.makedirs(WORKING_DIR, exist_ok=True)
+            os.makedirs(os.path.join(WORKING_DIR, ".clarinet"), exist_ok=True)
+            with open(
+                os.path.join(WORKING_DIR, ".clarinet", "clarinetrc.toml"), "w"
+            ) as f:
+                f.write("enable_telemetry = true")
 
+            subprocess.run(
+                ["clarinet", "new", project_name], check=True, cwd=WORKING_DIR
+            )
+            return f"Successfully created new Clarinet project: {project_name} in {WORKING_DIR}"
+        except subprocess.CalledProcessError as e:
+            return f"Error creating Clarinet project: {e}"
 
-@tool("Create New Smart Contract")
-def create_new_smart_contract(
-    project_name: str, contract_name: str, contract_code: str
-) -> str:
-    """
-    Create a new smart contract in an existing Clarinet project within the working directory.
-    """
-    project_dir = os.path.join(WORKING_DIR, project_name)
-    try:
-        subprocess.run(
-            ["clarinet", "contract", "new", contract_name], check=True, cwd=project_dir
-        )
+    @staticmethod
+    @tool("Create New Smart Contract")
+    def create_new_smart_contract(
+        project_name: str, contract_name: str, contract_code: str
+    ) -> str:
+        """
+        Create a new smart contract in an existing Clarinet project within the working directory.
+        """
+        project_dir = os.path.join(WORKING_DIR, project_name)
+        try:
+            subprocess.run(
+                ["clarinet", "contract", "new", contract_name],
+                check=True,
+                cwd=project_dir,
+            )
 
-        contract_file_path = os.path.join(
-            project_dir, "contracts", f"{contract_name}.clar"
-        )
-        with open(contract_file_path, "w") as contract_file:
-            contract_file.write(contract_code)
+            contract_file_path = os.path.join(
+                project_dir, "contracts", f"{contract_name}.clar"
+            )
+            with open(contract_file_path, "w") as contract_file:
+                contract_file.write(contract_code)
 
-        return f"Successfully added new contract '{contract_name}' to project '{project_name}' and wrote code to {contract_file_path}"
-    except subprocess.CalledProcessError as e:
-        return f"Error creating smart contract: {e}"
-    except IOError as e:
-        return f"Error writing contract code: {e}"
+            return f"Successfully added new contract '{contract_name}' to project '{project_name}' and wrote code to {contract_file_path}"
+        except subprocess.CalledProcessError as e:
+            return f"Error creating smart contract: {e}"
+        except IOError as e:
+            return f"Error writing contract code: {e}"
 
+    @staticmethod
+    @tool("Check Smart Contract Syntax")
+    def check_smart_contract_syntax(project_name: str, contract_name: str) -> str:
+        """
+        Check the syntax of a smart contract in a Clarinet project within the working directory.
+        """
+        project_dir = os.path.join(WORKING_DIR, project_name)
+        try:
+            contract_file_path = os.path.join("contracts", f"{contract_name}.clar")
 
-@tool("Check Smart Contract Syntax")
-def check_smart_contract_syntax(project_name: str, contract_name: str) -> str:
-    """
-    Check the syntax of a smart contract in a Clarinet project within the working directory.
-    """
-    project_dir = os.path.join(WORKING_DIR, project_name)
-    try:
-        contract_file_path = os.path.join("contracts", f"{contract_name}.clar")
+            result = subprocess.run(
+                ["clarinet", "check", contract_file_path],
+                capture_output=True,
+                text=True,
+                cwd=project_dir,
+            )
 
-        result = subprocess.run(
-            ["clarinet", "check", contract_file_path],
-            capture_output=True,
-            text=True,
-            cwd=project_dir,
-        )
+            return (
+                f"Syntax check result for '{contract_name}' in project '{project_name}':\n{result.stdout}"
+                if result.returncode == 0
+                else f"Syntax errors in '{contract_name}':\n{result.stderr}"
+            )
+        except subprocess.CalledProcessError as e:
+            return f"Error checking syntax: {e}"
+        except IOError as e:
+            return f"Error accessing contract file: {e}"
 
-        return (
-            f"Syntax check result for '{contract_name}' in project '{project_name}':\n{result.stdout}"
-            if result.returncode == 0
-            else f"Syntax errors in '{contract_name}':\n{result.stderr}"
-        )
-    except subprocess.CalledProcessError as e:
-        return f"Error checking syntax: {e}"
-    except IOError as e:
-        return f"Error accessing contract file: {e}"
+    @classmethod
+    def get_all_tools(cls):
+        members = inspect.getmembers(cls)
+        tools = [
+            member
+            for name, member in members
+            if isinstance(member, Tool)
+            or (hasattr(member, "__wrapped__") and isinstance(member.__wrapped__, Tool))
+        ]
+        return tools
 
 
 #########################

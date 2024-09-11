@@ -1,6 +1,7 @@
+import inspect
 import streamlit as st
 from crewai import Agent, Task
-from crewai_tools import tool
+from crewai_tools import tool, Tool
 from textwrap import dedent
 from utils.crews import AIBTC_Crew
 from utils.scripts import BunScriptRunner
@@ -21,8 +22,8 @@ class WalletSummaryCrew(AIBTC_Crew):
                 """
             ),
             tools=[
-                get_address_balance_detailed,
-                get_address_transactions,
+                AgentTools.get_address_balance_detailed,
+                AgentTools.get_address_transactions,
             ],
             backstory=dedent(
                 """
@@ -117,6 +118,14 @@ class WalletSummaryCrew(AIBTC_Crew):
         )
         self.add_task(analyze_historical_data_task)
 
+    @staticmethod
+    def get_task_inputs():
+        return ["address"]
+
+    @classmethod
+    def get_all_tools(cls):
+        return AgentTools.get_all_tools()
+
     def render_crew(self):
         st.subheader("Wallet Summarizer")
         st.markdown(
@@ -174,17 +183,31 @@ class WalletSummaryCrew(AIBTC_Crew):
 #########################
 
 
-@tool("Get Address Balance Detailed")
-def get_address_balance_detailed(address: str):
-    """Get detailed balance information for a given address."""
-    return BunScriptRunner.bun_run(
-        "stacks-wallet", "get-address-balance-detailed.ts", address
-    )
+class AgentTools:
 
+    @staticmethod
+    @tool("Get Address Balance Detailed")
+    def get_address_balance_detailed(address: str):
+        """Get detailed balance information for a given address."""
+        return BunScriptRunner.bun_run(
+            "stacks-wallet", "get-address-balance-detailed.ts", address
+        )
 
-@tool("Get Address Transactions")
-def get_address_transactions(address: str):
-    """Get 20 most recent transactions for a given address."""
-    return BunScriptRunner.bun_run(
-        "stacks-wallet", "get-transactions-by-address.ts", address
-    )
+    @staticmethod
+    @tool("Get Address Transactions")
+    def get_address_transactions(address: str):
+        """Get 20 most recent transactions for a given address."""
+        return BunScriptRunner.bun_run(
+            "stacks-wallet", "get-transactions-by-address.ts", address
+        )
+
+    @classmethod
+    def get_all_tools(cls):
+        members = inspect.getmembers(cls)
+        tools = [
+            member
+            for name, member in members
+            if isinstance(member, Tool)
+            or (hasattr(member, "__wrapped__") and isinstance(member.__wrapped__, Tool))
+        ]
+        return tools
