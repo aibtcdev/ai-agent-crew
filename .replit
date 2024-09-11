@@ -1,11 +1,25 @@
-modules = ["python-3.11"]
-run = "streamlit run app_v1/aibtcdev_app.py"
+entrypoint = "aibtc-v1/app.py"
+
+run = "git submodule update --init && cd agent-tools-ts && npm install && cd .. && streamlit run main.py"
+
+modules = ["python-3.11", "nodejs-18"]
+
+hidden = [".pythonlibs", ".streamlit"]
 
 [nix]
 channel = "stable-24_05"
 
+[env]
+STREAMLIT_SERVER_HEADLESS = "true"
+
 [deployment]
-run = ["sh", "-c", "streamlit run app_v1/aibtcdev_app.py"]
+run = [
+    "sh",
+    "-c",
+    "git submodule update --init && cd agent-tools-ts && npm install && cd .. && streamlit run --server.enableCORS=false --server.enableWebsocketCompression=false --server.runOnSave=false aibtc-v1/app.py",
+]
+ignorePorts = false
+deploymentTarget = "gce"
 
 [[ports]]
 localPort = 8501
