@@ -55,6 +55,37 @@ text_input_style = """
 """
 st.write(text_input_style, unsafe_allow_html=True)
 
+# custom select box styling
+select_style = """
+<style>
+/* Style for the select box label */
+.stSelectbox label > div > p {
+    font-size: 1.5rem !important;
+    font-weight: bold !important;
+    color: white !important;
+}
+
+/* Style for the select box container */
+.stSelectbox [data-baseweb="select"] {
+    background-color: #000000 !important;
+}
+
+/* Style for the selected item in the closed select box */
+.stSelectbox [data-baseweb="select"] > div {
+    background-color: #000000 !important;
+    color: white !important;
+    font-size: 1rem !important;
+}
+
+
+/* Style for the dropdown options container */
+.stSelectbox [role="listbox"] {
+    background-color: #000000 !important;
+}
+</style>
+"""
+st.write(select_style, unsafe_allow_html=True)
+
 # Display logo full width
 st.image(
     "https://aibtc.dev/logos/aibtcdev-primary-logo-white-wide-1000px.png",
