@@ -1,16 +1,7 @@
-import importlib
 import inspect
 import re
 import streamlit as st
-from typing import Dict, Type
-from crewai_tools import Tool
-
-
-def get_tool_groups() -> Dict[str, Type]:
-    import crews.tools
-
-    importlib.reload(crews.tools)
-    return crews.tools.get_tool_groups()
+from utils.session import get_crew_class
 
 
 def extract_bun_run_command(source: str) -> str:
@@ -40,39 +31,40 @@ def extract_bun_run_command(source: str) -> str:
     return normalized_command.strip()
 
 
-def render_tools_tab():
-    tool_groups = get_tool_groups()
+def render_tools_tab(crew_selection):
+    crew_class = get_crew_class(crew_selection)
 
-    for group_name, tool_class in tool_groups.items():
-        st.subheader(group_name)
+    if crew_class is None:
+        st.warning(
+            f"No crew found for {crew_selection}. Please check your crew definitions."
+        )
+        return
 
-        class_dict = tool_class.__dict__
-        for name, value in class_dict.items():
-            if isinstance(value, staticmethod):
-                tool = value.__func__
-                if isinstance(tool, Tool):
-                    with st.expander(f"{tool.name}"):
-                        st.write(f"**Description:** {tool.description}")
+    try:
+        tools = crew_class.get_all_tools()
+    except Exception as e:
+        st.error(f"Error getting tools: {str(e)}")
+        tools = []
 
-                        # get the function signature
-                        sig = inspect.signature(tool.func)
-                        params = sig.parameters
+    if not tools:
+        st.info("No tools found for this crew.")
+    else:
+        for tool in tools:
+            st.markdown(f"#### {tool.name}")
+            st.write(f"**Description:**: {tool.description}")
+            # get the function signature
+            sig = inspect.signature(tool.func)
+            params = sig.parameters
 
-                        if params:
-                            st.write("**Arguments:**")
-                            for param_name, param in params.items():
-                                if param_name == "dummy_arg":
-                                    st.write(f"(none)")
-                                else:
-                                    st.write(
-                                        f"- {param_name}: {param.annotation.__name__ if param.annotation != inspect.Parameter.empty else 'Any'}"
-                                    )
-                        else:
-                            st.write("**Arguments:** No arguments")
-
-                        # extract and display the BunScriptRunner command
-                        source = inspect.getsource(tool.func)
-                        bun_run_command = extract_bun_run_command(source)
-                        if bun_run_command:
-                            st.write("**Bun execution:**")
-                            st.code(bun_run_command, language="python")
+            if params:
+                st.write("**Arguments:**")
+                for param_name, param in params.items():
+                    if param_name == "dummy_arg":
+                        st.write(f"(none)")
+                    else:
+                        st.write(
+                            f"- {param_name}: {param.annotation.__name__ if param.annotation != inspect.Parameter.empty else 'Any'}"
+                        )
+            else:
+                st.write("**Arguments:** No arguments")
+            st.markdown("---")

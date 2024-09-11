@@ -1,9 +1,23 @@
 import streamlit as st
-from crews.wallet_summary_crew import AIBTC_Crew as wallet_summary
-from crews.smart_contract_audit_crew import AIBTC_Crew as smart_contract_audit
+from utils.session import get_crew_class
 
 
-def render_execution_tab():
-    # st.write("This is where the magic happens.")
-    smart_contract_audit.render_smart_contract_analysis_crew()
-    wallet_summary.render_wallet_summary_crew()
+def render_execution_tab(crew_selection):
+    crew_class = get_crew_class(crew_selection)
+
+    if crew_class is None:
+        st.warning(
+            f"No crew found for {crew_selection}. Please check your crew definitions."
+        )
+        return
+
+    try:
+        # Create an instance of the crew class and call its render_crew method
+        crew_instance = crew_class()
+        crew_instance.render_crew()
+    except AttributeError:
+        st.error(
+            f"The selected crew '{crew_selection}' doesn't have a render_crew method."
+        )
+    except Exception as e:
+        st.error(f"An error occurred while rendering the crew: {str(e)}")

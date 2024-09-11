@@ -1,28 +1,19 @@
-import requests
+import inspect
 import streamlit as st
-import time
-from crewai import Agent, Crew, Process, Task
-from crewai_tools import tool
+from crewai import Agent, Task
+from crewai_tools import tool, Tool
 from textwrap import dedent
-from utils.session import crew_step_callback, crew_task_callback
-from .tools import StacksWalletTools
+from utils.crews import AIBTC_Crew
+from utils.scripts import BunScriptRunner
 
 
-####################
-# AGENTS
-####################
+class WalletSummaryCrew(AIBTC_Crew):
+    def __init__(self):
+        super().__init__("Wallet Summary Crew")
 
-
-class AIBTC_Agents:
-
-    @staticmethod
-    def get_wallet_agent(llm=None):
-        kwargs = {}
-        if llm is not None:
-            kwargs["llm"] = llm
-
-        return Agent(
-            role="wallet data and transaction retriever",
+    def setup_agents(self, llm):
+        wallet_agent = Agent(
+            role="Wallet Data and Transaction Retriever",
             goal=dedent(
                 """
                 Retrieve basic wallet information and summarize transactions for the specified wallet. 
@@ -31,8 +22,8 @@ class AIBTC_Agents:
                 """
             ),
             tools=[
-                StacksWalletTools.get_address_balance_detailed,
-                StacksWalletTools.get_address_transactions,
+                AgentTools.get_address_balance_detailed,
+                AgentTools.get_address_transactions,
             ],
             backstory=dedent(
                 """
@@ -43,59 +34,43 @@ class AIBTC_Agents:
                 """
             ),
             verbose=True,
-            **kwargs,
+            llm=llm,
         )
+        self.add_agent(wallet_agent)
 
-    @staticmethod
-    def get_pattern_recognition_agent(llm=None):
-        kwargs = {}
-        if llm is not None:
-            kwargs["llm"] = llm
-
-        return Agent(
-            role="pattern recognition specialist",
+        pattern_recognizer = Agent(
+            role="Pattern Recognition Specialist",
             goal="Identify recurring patterns, unusual activities, and long-term trends in wallet behavior.",
-            tools=[],  # Add relevant tools
+            tools=[],
             backstory=dedent(
                 """
                 You are an expert in blockchain data analysis with a keen eye for patterns and anomalies.
                 Your specialty is in recognizing recurring behaviors, identifying unusual activities, and
                 spotting long-term trends in wallet usage on the Stacks blockchain.
-            """
+                """
             ),
             verbose=True,
-            **kwargs,
+            llm=llm,
         )
+        self.add_agent(pattern_recognizer)
 
-
-####################
-# TASKS
-####################
-
-
-class AIBTC_Tasks:
-
-    # retrieve_wallet_info_task
-    @staticmethod
-    def retrieve_wallet_info_task(agent, address):
-        return Task(
+    def setup_tasks(self, address):
+        retrieve_wallet_info_task = Task(
             description=dedent(
                 f"""
-            Retrieve detailed wallet balance information for the specified address.
+                Retrieve detailed wallet balance information for the specified address.
 
-            **Address:** {address}
+                **Address:** {address}
 
-            Ensure the output is clear and suitable for use as context.
-            """
+                Ensure the output is clear and suitable for use as context.
+                """
             ),
             expected_output="The only fields should be returned wallet address, STX balance, NFT holdings, and FT holdings. Simplified for context usage.",
-            agent=agent,
+            agent=self.agents[0],  # wallet_agent
         )
+        self.add_task(retrieve_wallet_info_task)
 
-    # retrieve_transactions_task
-    @staticmethod
-    def retrieve_transactions_task(agent, address):
-        return Task(
+        retrieve_transactions_task = Task(
             description=dedent(
                 f"""
                 Retrieve the last transactions associated with the following address:
@@ -121,13 +96,11 @@ class AIBTC_Tasks:
                 Focus on content, not structure.
                 """
             ),
-            agent=agent,
+            agent=self.agents[0],  # wallet_agent
         )
+        self.add_task(retrieve_transactions_task)
 
-    # analyze_historical_data_task
-    @staticmethod
-    def analyze_historical_data_task(agent, address):
-        return Task(
+        analyze_historical_data_task = Task(
             description=dedent(
                 f"""
                 Analyze the historical data for the wallet address: {address}
@@ -138,56 +111,22 @@ class AIBTC_Tasks:
                 3. Significant events or turning points in the wallet's history
                 
                 Provide insights on how the wallet's usage has evolved and any notable patterns observed.
-            """
+                """
             ),
             expected_output="A comprehensive analysis of historical trends, including transaction patterns, asset holding changes, and significant events in the wallet's history.",
-            agent=agent,
+            agent=self.agents[1],  # pattern_recognizer
         )
-
-
-####################
-# CREW(S)
-####################
-
-
-class AIBTC_Crew:
+        self.add_task(analyze_historical_data_task)
 
     @staticmethod
-    def create_wallet_summary_crew(address):
-        llm = st.session_state.llm
+    def get_task_inputs():
+        return ["address"]
 
-        wallet_agent = AIBTC_Agents.get_wallet_agent(llm)
-        pattern_recognizer = AIBTC_Agents.get_pattern_recognition_agent(llm)
+    @classmethod
+    def get_all_tools(cls):
+        return AgentTools.get_all_tools()
 
-        get_wallet_info_task = AIBTC_Tasks.retrieve_wallet_info_task(
-            wallet_agent, address
-        )
-        get_transactions_task = AIBTC_Tasks.retrieve_transactions_task(
-            wallet_agent, address
-        )
-        analyze_historical_data_task = AIBTC_Tasks.analyze_historical_data_task(
-            pattern_recognizer, address
-        )
-
-        return Crew(
-            agents=[
-                wallet_agent,
-                pattern_recognizer,
-            ],
-            tasks=[
-                get_wallet_info_task,
-                get_transactions_task,
-                analyze_historical_data_task,
-            ],
-            process=Process.sequential,
-            verbose=True,
-            memory=True,
-            step_callback=crew_step_callback,
-            task_callback=crew_task_callback,
-        )
-
-    @staticmethod
-    def render_wallet_summary_crew():
+    def render_crew(self):
         st.subheader("Wallet Summarizer")
         st.markdown(
             "This tool will analyze a wallet's activity and holdings on the Stacks blockchain."
@@ -200,24 +139,23 @@ class AIBTC_Crew:
         if submitted and address:
             st.subheader("Analysis Progress")
             try:
-                # TODO: refactor into same container, different formats
-                # - step needs a title (AgentAction or return_values)
-                # - task is the final output, where to get name? compare indices?
-
-                # create containers for real-time updates
                 st.write("Step Progress:")
                 st.session_state.crew_step_container = st.empty()
                 st.write("Task Progress:")
                 st.session_state.crew_task_container = st.empty()
 
-                # reset callback lists
                 st.session_state.crew_step_callback = []
                 st.session_state.crew_task_callback = []
 
-                crew = AIBTC_Crew.create_wallet_summary_crew(address)
+                llm = st.session_state.llm
+
+                wallet_summary_crew_class = WalletSummaryCrew()
+                wallet_summary_crew_class.setup_agents(llm)
+                wallet_summary_crew_class.setup_tasks(address)
+                wallet_summary_crew = wallet_summary_crew_class.create_crew()
 
                 with st.spinner("Analyzing..."):
-                    result = crew.kickoff()
+                    result = wallet_summary_crew.kickoff()
 
                 st.success("Analysis complete!")
 
@@ -229,7 +167,7 @@ class AIBTC_Crew:
                 st.download_button(
                     label="Download Analysis Report (Text)",
                     data=result_str,
-                    file_name="smart_contract_analysis.txt",
+                    file_name="wallet_summary_analysis.txt",
                     mime="text/plain",
                 )
 
@@ -238,3 +176,38 @@ class AIBTC_Crew:
                 st.info("Please check your inputs and try again.")
         else:
             st.info("Enter Wallet Address, then click 'Analyze Wallet' to see results.")
+
+
+#########################
+# Agent Tools
+#########################
+
+
+class AgentTools:
+
+    @staticmethod
+    @tool("Get Address Balance Detailed")
+    def get_address_balance_detailed(address: str):
+        """Get detailed balance information for a given address."""
+        return BunScriptRunner.bun_run(
+            "stacks-wallet", "get-address-balance-detailed.ts", address
+        )
+
+    @staticmethod
+    @tool("Get Address Transactions")
+    def get_address_transactions(address: str):
+        """Get 20 most recent transactions for a given address."""
+        return BunScriptRunner.bun_run(
+            "stacks-wallet", "get-transactions-by-address.ts", address
+        )
+
+    @classmethod
+    def get_all_tools(cls):
+        members = inspect.getmembers(cls)
+        tools = [
+            member
+            for name, member in members
+            if isinstance(member, Tool)
+            or (hasattr(member, "__wrapped__") and isinstance(member.__wrapped__, Tool))
+        ]
+        return tools

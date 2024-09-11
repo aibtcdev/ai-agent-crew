@@ -61,17 +61,23 @@ st.image(
     use_column_width=True,
 )
 
+# initialize crew selections
+available_crews = list(st.session_state.crew_mapping.keys())
+
+# Display crew selection
+crew_selection = st.selectbox("Select your crew:", available_crews)
+
 # Main layout with tabs
-tab1, tab2, tab3, tab4 = st.tabs(["Agents", "Tools", "Tasks", "Execution"])
+tab1, tab2, tab3, tab4 = st.tabs(["Agents", "Tools", "Tasks", "Run 🏃"])
 
 with tab1:
-    render_agents_tab()
+    render_agents_tab(crew_selection)
 
 with tab2:
-    render_tools_tab()
+    render_tools_tab(crew_selection)
 
 with tab3:
-    render_tasks_tab()
+    render_tasks_tab(crew_selection)
 
 with tab4:
-    render_execution_tab()
+    render_execution_tab(crew_selection)
