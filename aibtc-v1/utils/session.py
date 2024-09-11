@@ -3,12 +3,11 @@ import inspect
 import importlib
 import os
 import streamlit as st
-from crews import agents, tasks
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_ollama import ChatOllama
+from typing import Optional
 
-from typing import Optional, List
 from crews.smart_contract_auditor import SmartContractAuditCrew
 from crews.wallet_summarizer import WalletSummaryCrew
 from crews.clarity_code_generator import ClarityCodeGeneratorCrew
@@ -20,24 +19,6 @@ def load_env_vars():
     for key, value in os.environ.items():
         env_vars[key] = value
     return env_vars
-
-
-def sync_agents():
-    importlib.reload(agents)
-    st.session_state.agents = {}
-    for name, func in inspect.getmembers(agents, inspect.isfunction):
-        if name.startswith("get_"):
-            agent_name = name[4:].replace("_", " ").title()
-            st.session_state.agents[agent_name] = func
-
-
-def sync_tasks():
-    importlib.reload(tasks)
-    st.session_state.tasks = {}
-    for name, func in inspect.getmembers(tasks, inspect.isfunction):
-        if name.startswith("get_"):
-            task_name = name.replace("_", " ").title()
-            st.session_state.tasks[task_name] = func
 
 
 def init_session_state():
