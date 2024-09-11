@@ -12,10 +12,6 @@ def render_tasks_tab(crew_selection):
 
     input_names = get_crew_inputs(crew_selection)
 
-    st.write(f"Expected inputs for {crew_selection}:")
-    for input_name in input_names:
-        st.write(f"- {input_name}")
-
     # Create an instance of the crew
     crew_instance = crew_class()
 
@@ -27,10 +23,10 @@ def render_tasks_tab(crew_selection):
     crew_instance.setup_agents(llm)
     crew_instance.setup_tasks(**mock_data)
 
-    st.write("Tasks for this crew:")
     if hasattr(crew_instance, "tasks") and crew_instance.tasks:
         for i, task in enumerate(crew_instance.tasks, 1):
-            st.markdown(f"**Task {i}:** {task.description}")
+            st.markdown(f"#### Task {i}")
+            st.markdown(f"{task.description}")
             st.markdown(f"*Expected Output:* {task.expected_output}")
             st.markdown("---")
     else:

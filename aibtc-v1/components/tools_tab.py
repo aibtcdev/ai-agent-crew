@@ -1,7 +1,6 @@
-import importlib
+import inspect
 import re
 import streamlit as st
-from typing import Dict, Type
 from utils.session import get_crew_class
 
 
@@ -33,8 +32,6 @@ def extract_bun_run_command(source: str) -> str:
 
 
 def render_tools_tab(crew_selection):
-    st.subheader("Tools")
-
     crew_class = get_crew_class(crew_selection)
 
     if crew_class is None:
@@ -44,7 +41,7 @@ def render_tools_tab(crew_selection):
         return
 
     try:
-        tools = crew_class.get_all_tools()  # We're ignoring the debug_info here
+        tools = crew_class.get_all_tools()
     except Exception as e:
         st.error(f"Error getting tools: {str(e)}")
         tools = []
@@ -52,10 +49,22 @@ def render_tools_tab(crew_selection):
     if not tools:
         st.info("No tools found for this crew.")
     else:
-        st.write(f"Number of tools found: {len(tools)}")
         for tool in tools:
-            with st.expander(tool.name):
-                st.write("**Description:**")
-                st.write(tool.description)
-                st.write("**Usage:**")
-                st.code(f"{tool.name}(address: str) -> str")
+            st.markdown(f"#### {tool.name}")
+            st.write(f"**Description:**: {tool.description}")
+            # get the function signature
+            sig = inspect.signature(tool.func)
+            params = sig.parameters
+
+            if params:
+                st.write("**Arguments:**")
+                for param_name, param in params.items():
+                    if param_name == "dummy_arg":
+                        st.write(f"(none)")
+                    else:
+                        st.write(
+                            f"- {param_name}: {param.annotation.__name__ if param.annotation != inspect.Parameter.empty else 'Any'}"
+                        )
+            else:
+                st.write("**Arguments:** No arguments")
+            st.markdown("---")
