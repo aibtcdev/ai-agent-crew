@@ -11,6 +11,7 @@ from typing import Optional
 from crews.smart_contract_auditor import SmartContractAuditCrew
 from crews.wallet_summarizer import WalletSummaryCrew
 from crews.clarity_code_generator import ClarityCodeGeneratorCrew
+from utils.crews import AIBTC_Crew
 
 
 def load_env_vars():
@@ -37,20 +38,7 @@ def init_session_state():
         st.session_state.tasks_search_term = ""
 
     if "crew_mapping" not in st.session_state:
-        st.session_state.crew_mapping = {
-            "Smart Contract Auditor": {
-                "class": SmartContractAuditCrew,
-                "task_inputs": SmartContractAuditCrew.get_task_inputs,
-            },
-            "Wallet Summarizer": {
-                "class": WalletSummaryCrew,
-                "task_inputs": WalletSummaryCrew.get_task_inputs,
-            },
-            "Clarity Code Generator": {
-                "class": ClarityCodeGeneratorCrew,
-                "task_inputs": ClarityCodeGeneratorCrew.get_task_inputs,
-            },
-        }
+        st.session_state.crew_mapping = generate_crew_mapping()
 
     # Initialize other session state variables
     defaults = {
@@ -89,6 +77,49 @@ def get_llm(provider, model, api_key, api_base):
             openai_api_key=api_key,
             openai_api_base=api_base,
         )
+
+
+def generate_crew_mapping():
+    crew_mapping = {}
+
+    current_file = os.path.abspath(__file__)
+    current_dir = os.path.dirname(current_file)
+    crews_dir = os.path.join(current_dir, "..", "crews")
+
+    if not os.path.exists(crews_dir):
+        raise FileNotFoundError(f"The crews directory does not exist: {crews_dir}")
+
+    crew_files = [
+        f for f in os.listdir(crews_dir) if f.endswith(".py") and not f.startswith("__")
+    ]
+
+    for filename in crew_files:
+        module_name = f"crews.{filename[:-3]}"
+        try:
+            module = importlib.import_module(module_name)
+
+            for name, obj in inspect.getmembers(module):
+                if (
+                    inspect.isclass(obj)
+                    and issubclass(obj, AIBTC_Crew)
+                    and obj != AIBTC_Crew
+                ):
+                    # Create an instance to get the name
+                    try:
+                        instance = obj()
+                        crew_name = instance.name
+                    except Exception as e:
+                        print(f"Error creating instance of {name}: {e}")
+                        crew_name = name.replace("Crew", "").replace("_", " ")
+
+                    crew_mapping[crew_name] = {
+                        "class": obj,
+                        "task_inputs": getattr(obj, "get_task_inputs", lambda: []),
+                    }
+        except ImportError as e:
+            print(f"Error importing {module_name}: {e}")
+
+    return crew_mapping
 
 
 def get_crew_class(crew_name: str) -> Optional[type]:
