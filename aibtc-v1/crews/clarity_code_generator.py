@@ -161,7 +161,7 @@ class ClarityCodeGeneratorCrew(AIBTC_Crew):
                 st.error(f"Error during code generation: {e}")
                 st.info("Please check your inputs and try again.")
         else:
-            st.info(
+            st.write(
                 "Please enter your smart contract requirements and click 'Generate Clarity Code'."
             )
 

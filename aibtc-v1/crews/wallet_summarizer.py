@@ -173,9 +173,11 @@ class WalletSummaryCrew(AIBTC_Crew):
 
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
-                st.info("Please check your inputs and try again.")
+                st.write("Please check your inputs and try again.")
         else:
-            st.info("Enter Wallet Address, then click 'Analyze Wallet' to see results.")
+            st.write(
+                "Enter Wallet Address, then click 'Analyze Wallet' to see results."
+            )
 
 
 #########################

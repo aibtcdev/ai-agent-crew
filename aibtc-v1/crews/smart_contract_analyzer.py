@@ -290,9 +290,9 @@ class SmartContractAnalyzerCrew(AIBTC_Crew):
                 )
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
-                st.info("Please check your inputs and try again.")
+                st.error("Please check your inputs and try again.")
         else:
-            st.info(
+            st.write(
                 "Enter Contract Address and Contract Name, then click 'Analyze Contract' to see results."
             )
 

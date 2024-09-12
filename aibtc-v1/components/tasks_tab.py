@@ -30,4 +30,4 @@ def render_tasks_tab(crew_selection):
             st.markdown(f"*Expected Output:* {task.expected_output}")
             st.markdown("---")
     else:
-        st.info("No tasks have been set up for this crew.")
+        st.error("No tasks have been set up for this crew.")
