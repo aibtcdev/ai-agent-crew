@@ -5,6 +5,7 @@ import subprocess
 from crewai import Agent, Task
 from crewai_tools import tool, Tool
 from utils.crews import AIBTC_Crew
+from utils.scripts import get_timestamp
 
 
 class ClarityCodeGeneratorCrew(AIBTC_Crew):
@@ -151,10 +152,13 @@ class ClarityCodeGeneratorCrew(AIBTC_Crew):
                 result_str = str(result)
                 st.markdown(result_str)
 
+                timestamp = get_timestamp()
+                file_name = f"{timestamp}_generated_clarity_code.clar"
+
                 st.download_button(
                     label="Download Clarity Code (Text)",
                     data=result_str,
-                    file_name="generated_clarity_code.clar",
+                    file_name=file_name,
                     mime="text/plain",
                 )
             except Exception as e:
@@ -224,30 +228,28 @@ class AgentTools:
 
     @staticmethod
     @tool("Check Smart Contract Syntax")
-    def check_smart_contract_syntax(project_name: str, contract_name: str) -> str:
+    def check_smart_contract_syntax(project_name: str) -> str:
         """
         Check the syntax of a smart contract in a Clarinet project within the working directory.
         """
         project_dir = os.path.join(WORKING_DIR, project_name)
         try:
-            contract_file_path = os.path.join("contracts", f"{contract_name}.clar")
-
             result = subprocess.run(
-                ["clarinet", "check", contract_file_path],
+                ["clarinet", "check"],
                 capture_output=True,
                 text=True,
                 cwd=project_dir,
             )
 
             return (
-                f"Syntax check result for '{contract_name}' in project '{project_name}':\n{result.stdout}"
+                f"Syntax check result for '{project_name}':\n{result.stdout}"
                 if result.returncode == 0
-                else f"Syntax errors in '{contract_name}':\n{result.stderr}"
+                else f"Syntax errors in '{project_name}':\n{result.stderr}"
             )
         except subprocess.CalledProcessError as e:
             return f"Error checking syntax: {e}"
         except IOError as e:
-            return f"Error accessing contract file: {e}"
+            return f"Error accessing project: {e}"
 
     @classmethod
     def get_all_tools(cls):
@@ -265,4 +267,4 @@ class AgentTools:
 # Helper Functions
 #########################
 
-WORKING_DIR = "./working_dir"
+WORKING_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "working_dir")
