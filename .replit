@@ -1,6 +1,6 @@
 entrypoint = "aibtc-v1/app.py"
 
-run = "git submodule update --init && cd agent-tools-ts && npm install && cd .. && streamlit run aibtc-v1/app.py"
+run = "sh -c setup.sh && streamlit run aibtc-v1/app.py"
 
 modules = ["python-3.11", "nodejs-18"]
 
@@ -16,7 +16,7 @@ STREAMLIT_SERVER_HEADLESS = "true"
 run = [
     "sh",
     "-c",
-    "git submodule update --init && cd agent-tools-ts && npm install && cd .. && streamlit run --server.enableCORS=false --server.enableWebsocketCompression=false --server.runOnSave=false --client.toolbarMode=viewer aibtc-v1/app.py",
+    "setup.sh && streamlit run --server.enableCORS=false --server.enableWebsocketCompression=false --server.runOnSave=false --client.toolbarMode=viewer aibtc-v1/app.py",
 ]
 ignorePorts = false
 deploymentTarget = "gce"
