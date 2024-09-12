@@ -15,76 +15,6 @@ st.set_page_config(
 # initialize session state
 init_session_state()
 
-# set max page width
-page_width = """
-<style>
-.main .block-container {
-    max-width: 800px;
-    padding-top: 2rem;
-    padding-right: 1rem;
-    padding-left: 1rem;
-    padding-bottom: 3rem;
-    margin: 0 auto;
-}
-</style>
-"""
-st.write(page_width, unsafe_allow_html=True)
-
-# custom tab styling
-tab_style = """
-<style>
-button[data-baseweb="tab"] {
-    margin: 0;
-    width: 100%;
-}
-button[data-baseweb="tab"] > div[data-testid="stMarkdownContainer"] > p {
-  font-size: 24px !important;
-  font-weight: bold !important;
-}
-</style>
-"""
-st.write(tab_style, unsafe_allow_html=True)
-
-# custom text input styling
-text_input_style = """
-<style>
-.stTextInput > div > div > input {
-    background-color: #000000;
-}
-</style>
-"""
-st.write(text_input_style, unsafe_allow_html=True)
-
-# custom select box styling
-select_style = """
-<style>
-/* Style for the select box label */
-.stSelectbox label > div > p {
-    font-size: 1.5rem !important;
-    font-weight: bold !important;
-    color: white !important;
-}
-
-/* Style for the select box container */
-.stSelectbox [data-baseweb="select"] {
-    background-color: #000000 !important;
-}
-
-/* Style for the selected item in the closed select box */
-.stSelectbox [data-baseweb="select"] > div {
-    background-color: #000000 !important;
-    color: white !important;
-    font-size: 1rem !important;
-}
-
-
-/* Style for the dropdown options container */
-.stSelectbox [role="listbox"] {
-    background-color: #000000 !important;
-}
-</style>
-"""
-st.write(select_style, unsafe_allow_html=True)
 
 # Display logo full width
 st.image(
@@ -112,3 +42,68 @@ with tab3:
 
 with tab4:
     render_tasks_tab(crew_selection)
+
+# custom css styling
+# at the end to prevent pushing content down
+
+custom_styles = """
+<style>
+/* set max page width */
+.main .block-container {
+    max-width: 800px;
+    padding-top: 2rem;
+    padding-right: 1rem;
+    padding-left: 1rem;
+    padding-bottom: 3rem;
+    margin: 0 auto;
+}
+
+/* hide navigation menu */
+header[data-testid="stHeader"] {
+    display: none;
+    visibility: hidden;
+}
+
+/* custom tab styling */
+button[data-baseweb="tab"] {
+    margin: 0;
+    width: 100%;
+}
+button[data-baseweb="tab"] > div[data-testid="stMarkdownContainer"] > p {
+  font-size: 24px !important;
+  font-weight: bold !important;
+}
+
+/* custom text input styling */
+.stTextInput > div > div > input {
+    background-color: #000000;
+}
+
+/* custom select box styling */
+
+/* select box label */
+.stSelectbox label > div > p {
+    font-size: 1.5rem !important;
+    font-weight: bold !important;
+    color: white !important;
+}
+
+/* select box container */
+.stSelectbox [data-baseweb="select"] {
+    background-color: #000000 !important;
+}
+
+/* select box selected item when closed */
+.stSelectbox [data-baseweb="select"] > div {
+    background-color: #000000 !important;
+    color: white !important;
+    font-size: 1rem !important;
+}
+
+/* select box dropdown options container */
+.stSelectbox [role="listbox"] {
+    background-color: #000000 !important;
+}
+</style>
+"""
+st.write(custom_styles, unsafe_allow_html=True)
