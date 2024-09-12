@@ -48,6 +48,36 @@ with tab4:
 
 custom_styles = """
 <style>
+/* load regular custom font */
+@font-face {
+  font-family: 'DM Sans 9pt';
+  src: url('https://aibtc.dev/fonts/DMSans-9ptRegular.woff2') format('woff2'),
+       url('https://aibtc.dev/fonts/DMSans-9ptRegular.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* load italic custom font */
+@font-face {
+  font-family: 'DM Sans 9pt';
+  src: url('https://aibtc.dev/fonts/DMSans-9ptItalic.woff2') format('woff2'),
+       url('https://aibtc.dev/fonts/DMSans-9ptItalic.woff') format('woff');
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* set font for the entire document */
+html, body {
+  font-family: 'DM Sans 9pt', 'DM Sans', sans-serif !important;
+}
+
+/* set font for common elements */
+h1, h2, h3, h4, h5, h6, p, a, span, div, button, input, select, textarea {
+  font-family: 'DM Sans 9pt', 'DM Sans', 'Source Sans Pro', sans-serif !important;
+}
+
 /* set max page width */
 .main .block-container {
     max-width: 800px;
