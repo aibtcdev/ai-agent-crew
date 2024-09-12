@@ -12,40 +12,7 @@ st.set_page_config(
     layout="wide",
 )
 
-# initialize session state
-init_session_state()
-
-
-# Display logo full width
-st.image(
-    "https://aibtc.dev/logos/aibtcdev-primary-logo-white-wide-1000px.png",
-    use_column_width=True,
-)
-
-# initialize crew selections
-available_crews = list(st.session_state.crew_mapping.keys())
-
-# Display crew selection
-crew_selection = st.selectbox("Select your crew:", available_crews)
-
-# Main layout with tabs
-tab1, tab2, tab3, tab4 = st.tabs(["Run 🏃", "Agents", "Tools", "Tasks"])
-
-with tab1:
-    render_execution_tab(crew_selection)
-
-with tab2:
-    render_agents_tab(crew_selection)
-
-with tab3:
-    render_tools_tab(crew_selection)
-
-with tab4:
-    render_tasks_tab(crew_selection)
-
 # custom css styling
-# at the end to prevent pushing content down
-
 custom_styles = """
 <style>
 /* load regular custom font */
@@ -137,3 +104,35 @@ button[data-baseweb="tab"] > div[data-testid="stMarkdownContainer"] > p {
 </style>
 """
 st.write(custom_styles, unsafe_allow_html=True)
+
+
+# initialize session state
+init_session_state()
+
+
+# Display logo full width
+st.image(
+    "https://aibtc.dev/logos/aibtcdev-primary-logo-white-wide-1000px.png",
+    use_column_width=True,
+)
+
+# initialize crew selections
+available_crews = list(st.session_state.crew_mapping.keys())
+
+# Display crew selection
+crew_selection = st.selectbox("Select your crew:", available_crews)
+
+# Main layout with tabs
+tab1, tab2, tab3, tab4 = st.tabs(["Run 🏃", "Agents", "Tools", "Tasks"])
+
+with tab1:
+    render_execution_tab(crew_selection)
+
+with tab2:
+    render_agents_tab(crew_selection)
+
+with tab3:
+    render_tools_tab(crew_selection)
+
+with tab4:
+    render_tasks_tab(crew_selection)
