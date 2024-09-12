@@ -16,7 +16,7 @@ STREAMLIT_SERVER_HEADLESS = "true"
 run = [
     "sh",
     "-c",
-    "git submodule update --init && cd agent-tools-ts && npm install && cd .. && streamlit run --server.enableCORS=false --server.enableWebsocketCompression=false --server.runOnSave=false aibtc-v1/app.py",
+    "git submodule update --init && cd agent-tools-ts && npm install && cd .. && streamlit run --server.enableCORS=false --server.enableWebsocketCompression=false --server.runOnSave=false --client.toolbarMode=viewer aibtc-v1/app.py",
 ]
 ignorePorts = false
 deploymentTarget = "gce"
