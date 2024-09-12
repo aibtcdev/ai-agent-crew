@@ -159,7 +159,7 @@ class ClarityCodeGeneratorCrew(AIBTC_Crew):
                 )
             except Exception as e:
                 st.error(f"Error during code generation: {e}")
-                st.info("Please check your inputs and try again.")
+                st.error("Please check your inputs and try again.")
         else:
             st.write(
                 "Please enter your smart contract requirements and click 'Generate Clarity Code'."
