@@ -7,7 +7,7 @@ from crewai_tools import tool, Tool
 from streamlit_mermaid import st_mermaid
 from textwrap import dedent
 from utils.crews import AIBTC_Crew
-from utils.scripts import BunScriptRunner
+from utils.scripts import BunScriptRunner, get_timestamp
 from utils.vector import (
     create_vector_search_tool,
     clarity_book_code_vector_store,
@@ -237,11 +237,13 @@ class SmartContractAnalyzerCrew(AIBTC_Crew):
             ):
                 st.error(f"Failed to fetch contract functions: {contract_functions}")
             else:
+                timestamp = get_timestamp()
+
                 with st.expander("View Contract Code"):
                     st.download_button(
                         label="Download Smart Contract Code",
                         data=contract_code,
-                        file_name=f"{contract_address}.{contract_name}.clar",
+                        file_name=f"{timestamp}_{contract_address}.{contract_name}.clar",
                         mime="text/plain",
                     )
                     st.write("Source code:")
@@ -282,10 +284,12 @@ class SmartContractAnalyzerCrew(AIBTC_Crew):
                 result_str = str(result)
                 st.markdown(result_str)
 
+                timestamp = get_timestamp()
+
                 st.download_button(
                     label="Download Analysis Report (Text)",
                     data=result_str,
-                    file_name="smart_contract_analysis.txt",
+                    file_name=f"{timestamp}_smart_contract_analysis.txt",
                     mime="text/plain",
                 )
             except Exception as e:

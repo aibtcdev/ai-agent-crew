@@ -4,7 +4,7 @@ from crewai import Agent, Task
 from crewai_tools import tool, Tool
 from textwrap import dedent
 from utils.crews import AIBTC_Crew
-from utils.scripts import BunScriptRunner
+from utils.scripts import BunScriptRunner, get_timestamp
 
 
 class WalletSummaryCrew(AIBTC_Crew):
@@ -164,10 +164,12 @@ class WalletSummaryCrew(AIBTC_Crew):
                 result_str = str(result)
                 st.markdown(result_str)
 
+                timestamp = get_timestamp()
+
                 st.download_button(
                     label="Download Analysis Report (Text)",
                     data=result_str,
-                    file_name="wallet_summary_analysis.txt",
+                    file_name=f"{timestamp}_wallet_summary_analysis.txt",
                     mime="text/plain",
                 )
 
