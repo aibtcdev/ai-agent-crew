@@ -1,0 +1,6 @@
+# source this file to add clarinet to your PATH
+clarinet_env() {
+  LD_LIBRARY_PATH="./glibc-2.34:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH" "/home/runner/.local/bin/clarinet" "$@"
+}
+alias clarinet=clarinet_env
+export PATH="/home/runner/.local/bin:$PATH"
