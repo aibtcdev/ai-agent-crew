@@ -47,7 +47,7 @@ def render_tools_tab(crew_selection):
         tools = []
 
     if not tools:
-        st.info("No tools found for this crew.")
+        st.error("No tools found for this crew.")
     else:
         for tool in tools:
             st.markdown(f"#### {tool.name}")
