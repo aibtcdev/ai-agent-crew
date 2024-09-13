@@ -182,11 +182,12 @@ class AgentTools:
         os.path.dirname(os.path.abspath(__file__)), "working_dir"
     )
     # set location for env file that loads glibcc 2.34
-    CLARINET_CONFIG_FILE = os.path.join("./clarinet-deps", "clarinet_config")
+    CLARINET_DEPS_DIR = "./clarinet-deps"
+    CLARINET_CONFIG_FILE = os.path.join(CLARINET_DEPS_DIR, "clarinet_config")
 
     @classmethod
     def _run_clarinet_command(
-        cls, command: List[str], cwd: str = WORKING_DIR
+        cls, command: List[str], cwd: str = CLARINET_WORKING_DIR
     ) -> subprocess.CompletedProcess:
         """
         Run a Clarinet command with the correct environment setup.
@@ -224,15 +225,18 @@ class AgentTools:
         Create a new Clarinet project in the working directory.
         """
         try:
-            os.makedirs(cls.WORKING_DIR, exist_ok=True)
-            os.makedirs(os.path.join(cls.WORKING_DIR, ".clarinet"), exist_ok=True)
+            os.makedirs(cls.CLARINET_WORKING_DIR, exist_ok=True)
+            os.makedirs(
+                os.path.join(cls.CLARINET_WORKING_DIR, ".clarinet"), exist_ok=True
+            )
             with open(
-                os.path.join(cls.WORKING_DIR, ".clarinet", "clarinetrc.toml"), "w"
+                os.path.join(cls.CLARINET_WORKING_DIR, ".clarinet", "clarinetrc.toml"),
+                "w",
             ) as f:
                 f.write("enable_telemetry = true")
 
             result = cls._run_clarinet_command(["new", project_name])
-            return f"Successfully created new Clarinet project: {project_name} in {cls.WORKING_DIR}\n{result.stdout}"
+            return f"Successfully created new Clarinet project: {project_name} in {cls.CLARINET_WORKING_DIR}\n{result.stdout}"
         except subprocess.CalledProcessError as e:
             return f"Error creating Clarinet project: {e.stderr}"
         except FileNotFoundError as e:
@@ -246,7 +250,7 @@ class AgentTools:
         """
         Create a new smart contract in an existing Clarinet project within the working directory.
         """
-        project_dir = os.path.join(cls.WORKING_DIR, project_name)
+        project_dir = os.path.join(cls.CLARINET_WORKING_DIR, project_name)
         try:
             result = cls._run_clarinet_command(
                 ["contract", "new", contract_name], cwd=project_dir
@@ -272,7 +276,7 @@ class AgentTools:
         """
         Check the syntax of a smart contract in a Clarinet project within the working directory.
         """
-        project_dir = os.path.join(cls.WORKING_DIR, project_name)
+        project_dir = os.path.join(cls.CLARINET_WORKING_DIR, project_name)
         try:
             result = cls._run_clarinet_command(["check"], cwd=project_dir)
 
