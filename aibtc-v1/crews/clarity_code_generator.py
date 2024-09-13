@@ -177,41 +177,79 @@ class ClarityCodeGeneratorCrew(AIBTC_Crew):
 
 class AgentTools:
 
-    @staticmethod
+    # set working directory for Clarinet projects to the same location as the crews files
+    CLARINET_WORKING_DIR = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "working_dir"
+    )
+    # set location for env file that loads glibcc 2.34
+    CLARINET_CONFIG_FILE = os.path.join("./clarinet-deps", "clarinet_config")
+
+    @classmethod
+    def _run_clarinet_command(
+        cls, command: List[str], cwd: str = WORKING_DIR
+    ) -> subprocess.CompletedProcess:
+        """
+        Run a Clarinet command with the correct environment setup.
+        """
+        # ensure the config file exists
+        if not os.path.exists(cls.CLARINET_CONFIG_FILE):
+            raise FileNotFoundError(
+                f"Clarinet config file not found at {cls.CLARINET_CONFIG_FILE}"
+            )
+
+        # set up the environment
+        env = os.environ.copy()
+        env["LD_LIBRARY_PATH"] = (
+            f"{cls.CLARINET_DEPS_DIR}:{env.get('LD_LIBRARY_PATH', '')}"
+        )
+
+        # run the clarinet command
+        return subprocess.run(
+            [
+                "bash",
+                "-c",
+                f"source {cls.CLARINET_CONFIG_FILE} && clarinet {' '.join(command)}",
+            ],
+            check=True,
+            cwd=cwd,
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+
+    @classmethod
     @tool("Create Clarinet Project")
-    def create_clarinet_project(project_name: str) -> str:
+    def create_clarinet_project(cls, project_name: str) -> str:
         """
         Create a new Clarinet project in the working directory.
         """
         try:
-            os.makedirs(WORKING_DIR, exist_ok=True)
-            os.makedirs(os.path.join(WORKING_DIR, ".clarinet"), exist_ok=True)
+            os.makedirs(cls.WORKING_DIR, exist_ok=True)
+            os.makedirs(os.path.join(cls.WORKING_DIR, ".clarinet"), exist_ok=True)
             with open(
-                os.path.join(WORKING_DIR, ".clarinet", "clarinetrc.toml"), "w"
+                os.path.join(cls.WORKING_DIR, ".clarinet", "clarinetrc.toml"), "w"
             ) as f:
                 f.write("enable_telemetry = true")
 
-            subprocess.run(
-                ["clarinet", "new", project_name], check=True, cwd=WORKING_DIR
-            )
-            return f"Successfully created new Clarinet project: {project_name} in {WORKING_DIR}"
+            result = cls._run_clarinet_command(["new", project_name])
+            return f"Successfully created new Clarinet project: {project_name} in {cls.WORKING_DIR}\n{result.stdout}"
         except subprocess.CalledProcessError as e:
-            return f"Error creating Clarinet project: {e}"
+            return f"Error creating Clarinet project: {e.stderr}"
+        except FileNotFoundError as e:
+            return f"Configuration error: {str(e)}"
 
-    @staticmethod
+    @classmethod
     @tool("Create New Smart Contract")
     def create_new_smart_contract(
-        project_name: str, contract_name: str, contract_code: str
+        cls, project_name: str, contract_name: str, contract_code: str
     ) -> str:
         """
         Create a new smart contract in an existing Clarinet project within the working directory.
         """
-        project_dir = os.path.join(WORKING_DIR, project_name)
+        project_dir = os.path.join(cls.WORKING_DIR, project_name)
         try:
-            subprocess.run(
-                ["clarinet", "contract", "new", contract_name],
-                check=True,
-                cwd=project_dir,
+            result = cls._run_clarinet_command(
+                ["contract", "new", contract_name], cwd=project_dir
             )
 
             contract_file_path = os.path.join(
@@ -220,26 +258,23 @@ class AgentTools:
             with open(contract_file_path, "w") as contract_file:
                 contract_file.write(contract_code)
 
-            return f"Successfully added new contract '{contract_name}' to project '{project_name}' and wrote code to {contract_file_path}"
+            return f"Successfully added new contract '{contract_name}' to project '{project_name}' and wrote code to {contract_file_path}\n{result.stdout}"
         except subprocess.CalledProcessError as e:
-            return f"Error creating smart contract: {e}"
+            return f"Error creating smart contract: {e.stderr}"
         except IOError as e:
             return f"Error writing contract code: {e}"
+        except FileNotFoundError as e:
+            return f"Configuration error: {str(e)}"
 
-    @staticmethod
+    @classmethod
     @tool("Check Smart Contract Syntax")
-    def check_smart_contract_syntax(project_name: str) -> str:
+    def check_smart_contract_syntax(cls, project_name: str) -> str:
         """
         Check the syntax of a smart contract in a Clarinet project within the working directory.
         """
-        project_dir = os.path.join(WORKING_DIR, project_name)
+        project_dir = os.path.join(cls.WORKING_DIR, project_name)
         try:
-            result = subprocess.run(
-                ["clarinet", "check"],
-                capture_output=True,
-                text=True,
-                cwd=project_dir,
-            )
+            result = cls._run_clarinet_command(["check"], cwd=project_dir)
 
             return (
                 f"Syntax check result for '{project_name}':\n{result.stdout}"
@@ -247,9 +282,11 @@ class AgentTools:
                 else f"Syntax errors in '{project_name}':\n{result.stderr}"
             )
         except subprocess.CalledProcessError as e:
-            return f"Error checking syntax: {e}"
+            return f"Error checking syntax: {e.stderr}"
         except IOError as e:
             return f"Error accessing project: {e}"
+        except FileNotFoundError as e:
+            return f"Configuration error: {str(e)}"
 
     @classmethod
     def get_all_tools(cls):
@@ -261,10 +298,3 @@ class AgentTools:
             or (hasattr(member, "__wrapped__") and isinstance(member.__wrapped__, Tool))
         ]
         return tools
-
-
-#########################
-# Helper Functions
-#########################
-
-WORKING_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "working_dir")
