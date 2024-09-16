@@ -4,7 +4,7 @@ import streamlit as st
 import subprocess
 from crewai import Agent, Task
 from crewai_tools import tool, Tool
-from typing import List
+from run_clarinet import ClarinetExecutor
 from utils.crews import AIBTC_Crew
 from utils.scripts import get_timestamp
 
@@ -137,6 +137,7 @@ class ClarityCodeGeneratorCrew(AIBTC_Crew):
                 llm = st.session_state.llm
 
                 # create and run the crew
+                print("Creating Clarity Code Generator Crew...")
                 clarity_code_generator_crew_class = ClarityCodeGeneratorCrew()
                 clarity_code_generator_crew_class.setup_agents(llm)
                 clarity_code_generator_crew_class.setup_tasks(user_input)
@@ -145,6 +146,7 @@ class ClarityCodeGeneratorCrew(AIBTC_Crew):
                 )
 
                 with st.spinner("Generating Clarity code..."):
+                    print("Running Clarity Code Generator Crew...")
                     result = clarity_code_generator_crew.kickoff()
 
                 st.success("Code generation complete!")
@@ -177,85 +179,41 @@ class ClarityCodeGeneratorCrew(AIBTC_Crew):
 
 
 class AgentTools:
-
-    # set values based on the Clarinet environment setup
-    CLARINET_SETUP_DIR = os.path.expanduser("~/ai-agent-crew/clarinet")
-    CLARINET_BIN_DIR = os.path.join(CLARINET_SETUP_DIR, "bin")
-    CLARINET_BIN_PATH = os.path.join(CLARINET_BIN_DIR, "clarinet")
-    CLARINET_DEPS_DIR = os.path.join(CLARINET_SETUP_DIR, "glibc-2.34")
-
-    # set the working directory as same location as the crews files
-    CLARINET_WORKING_DIR = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "working_dir"
-    )
-
-    @classmethod
-    def _run_clarinet_command(
-        cls, command: List[str], cwd: str = CLARINET_WORKING_DIR
-    ) -> subprocess.CompletedProcess:
-        """
-        Run a Clarinet command with the correct environment setup.
-        """
-        # check that the clarinet binary exists
-        if not os.path.exists(cls.CLARINET_BIN_PATH):
-            raise FileNotFoundError(
-                f"Clarinet binary not found at {cls.CLARINET_BIN_PATH}"
-            )
-        # set up the environment
-        env = os.environ.copy()
-        env["LD_LIBRARY_PATH"] = (
-            f"{cls.CLARINET_DEPS_DIR}:/usr/lib/x86_64-linux-gnu:{env.get('LD_LIBRARY_PATH', '')}"
-        )
-        env["PATH"] = f"{cls.CLARINET_BIN_DIR}:{env.get('PATH', '')}"
-        # prepare the command
-        args = [cls.CLARINET_BIN_PATH] + command
-        # run the command
-        return subprocess.run(
-            args,
-            check=True,
-            cwd=cwd,
-            env=env,
-            capture_output=True,
-            text=True,
-        )
-
-    @classmethod
+    @staticmethod
     @tool("Create Clarinet Project")
-    def create_clarinet_project(cls, project_name: str) -> str:
-        """
-        Create a new Clarinet project in the working directory.
-        """
+    def create_clarinet_project(project_name: str) -> str:
+        """Create a new Clarinet project with the given name."""
         try:
-            # create the working directory if it doesn't exist
-            os.makedirs(cls.CLARINET_WORKING_DIR, exist_ok=True)
-            # disable telemetry question at project setup
+            os.makedirs(ClarinetExecutor.CLARINET_WORKING_DIR, exist_ok=True)
             os.makedirs(
-                os.path.join(cls.CLARINET_WORKING_DIR, ".clarinet"), exist_ok=True
+                os.path.join(ClarinetExecutor.CLARINET_WORKING_DIR, ".clarinet"),
+                exist_ok=True,
             )
             with open(
-                os.path.join(cls.CLARINET_WORKING_DIR, ".clarinet", "clarinetrc.toml"),
+                os.path.join(
+                    ClarinetExecutor.CLARINET_WORKING_DIR,
+                    ".clarinet",
+                    "clarinetrc.toml",
+                ),
                 "w",
             ) as f:
                 f.write("enable_telemetry = true")
-            # run the clarinet command and get the result
-            result = cls._run_clarinet_command(["new", project_name])
-            return f"Successfully created new Clarinet project: {project_name} in {cls.CLARINET_WORKING_DIR}\n{result.stdout}"
+            result = ClarinetExecutor.run_clarinet_command(["new", project_name])
+            return f"Successfully created new Clarinet project: {project_name} in {ClarinetExecutor.CLARINET_WORKING_DIR}\n{result.stdout}"
         except subprocess.CalledProcessError as e:
             return f"Error creating Clarinet project: {e.stderr}"
         except FileNotFoundError as e:
             return f"Configuration error: {str(e)}"
 
-    @classmethod
+    @staticmethod
     @tool("Create New Smart Contract")
     def create_new_smart_contract(
-        cls, project_name: str, contract_name: str, contract_code: str
+        project_name: str, contract_name: str, contract_code: str
     ) -> str:
-        """
-        Create a new smart contract in an existing Clarinet project within the working directory.
-        """
-        project_dir = os.path.join(cls.CLARINET_WORKING_DIR, project_name)
+        """Create a new smart contract in the Clarinet project with the given name and code."""
+        project_dir = os.path.join(ClarinetExecutor.CLARINET_WORKING_DIR, project_name)
         try:
-            result = cls._run_clarinet_command(
+            result = ClarinetExecutor.run_clarinet_command(
                 ["contract", "new", contract_name], cwd=project_dir
             )
             contract_file_path = os.path.join(
@@ -263,23 +221,19 @@ class AgentTools:
             )
             with open(contract_file_path, "w") as contract_file:
                 contract_file.write(contract_code)
-
             return f"Successfully added new contract '{contract_name}' to project '{project_name}' and wrote code to {contract_file_path}\n{result.stdout}"
         except subprocess.CalledProcessError as e:
             return f"Error creating smart contract: {e.stderr}"
         except IOError as e:
             return f"Error writing contract code: {e}"
 
-    @classmethod
+    @staticmethod
     @tool("Check Smart Contract Syntax")
-    def check_smart_contract_syntax(cls, project_name: str) -> str:
-        """
-        Check the syntax of a smart contract in a Clarinet project within the working directory.
-        """
-        project_dir = os.path.join(cls.CLARINET_WORKING_DIR, project_name)
+    def check_smart_contract_syntax(project_name: str) -> str:
+        """Check the syntax of the smart contracts in the Clarinet project."""
+        project_dir = os.path.join(ClarinetExecutor.CLARINET_WORKING_DIR, project_name)
         try:
-            result = cls._run_clarinet_command(["check"], cwd=project_dir)
-
+            result = ClarinetExecutor.run_clarinet_command(["check"], cwd=project_dir)
             return (
                 f"Syntax check result for '{project_name}':\n{result.stdout}"
                 if result.returncode == 0

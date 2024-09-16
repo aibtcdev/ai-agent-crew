@@ -5,4 +5,9 @@ myenv
 .flox
 .venv/
 shell.nix
+
+# generated clarinet files/folders
 working_dir
+clarinet/bin
+clarinet/run-clarinet.sh
+clarinet/clarinet-config
