@@ -1,6 +1,6 @@
 entrypoint = "aibtc-v1/app.py"
 
-run = "bash $HOME/ai-agent-crew/clarinet/setup-clarinet.sh && streamlit run aibtc-v1/app.py"
+run = "bash $PWD/clarinet/setup-clarinet.sh && streamlit run  --server.headless true aibtc-v1/app.py"
 
 modules = ["python-3.11", "nodejs-18"]
 
@@ -9,14 +9,11 @@ hidden = [".pythonlibs", ".streamlit"]
 [nix]
 channel = "stable-24_05"
 
-[env]
-STREAMLIT_SERVER_HEADLESS = "true"
-
 [deployment]
-build = ["sh", "-c", "bash $PWD/clarinet/setup-clarinet.sh && cd $PWD/agent-tools-ts && npm install"]
-run = ["sh", "-c", "streamlit --server.enableCORS=false --server.enableWebsocketCompression=false --server.runOnSave=false --client.toolbarMode=viewer run aibtc-v1/app.py"]
+build = ["sh", "-c", "bash $PWD/clarinet/setup-clarinet.sh"]
+run = ["sh", "-c", "streamlit run --server.address 0.0.0.0 --server.headless true --server.runOnSave false aibtc-v1/app.py -- --server.enableCORS false --server.enableWebsocketCompression false"]
 ignorePorts = false
-deploymentTarget = "gce"
+deploymentTarget = "cloudrun"
 
 [[ports]]
 localPort = 8501
