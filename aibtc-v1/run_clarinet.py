@@ -25,7 +25,7 @@ class ClarinetExecutor:
 
         if not os.path.exists(clarinetrc_path):
             with open(clarinetrc_path, "w") as f:
-                f.write("enable_telemetry = true")
+                f.write("enable_telemetry = true\nenable_hints = false\n")
 
     @classmethod
     def _setup_working_dir(cls):
