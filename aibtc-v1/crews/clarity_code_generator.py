@@ -223,7 +223,7 @@ class AgentTools:
             return (
                 f"Syntax check result for '{project_name}':\n{result.stdout}"
                 if result.returncode == 0
-                else f"Syntax errors in '{project_name}':\n{result.stderr}"
+                else f"Syntax errors in '{project_name}':\n{result.stdout + result.stderr}"
             )
         except subprocess.CalledProcessError as e:
             return f"Error checking syntax: {e.stderr}"
