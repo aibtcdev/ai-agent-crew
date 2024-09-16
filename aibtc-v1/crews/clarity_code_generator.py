@@ -184,20 +184,6 @@ class AgentTools:
     def create_clarinet_project(project_name: str) -> str:
         """Create a new Clarinet project with the given name."""
         try:
-            os.makedirs(ClarinetExecutor.CLARINET_WORKING_DIR, exist_ok=True)
-            os.makedirs(
-                os.path.join(ClarinetExecutor.CLARINET_WORKING_DIR, ".clarinet"),
-                exist_ok=True,
-            )
-            with open(
-                os.path.join(
-                    ClarinetExecutor.CLARINET_WORKING_DIR,
-                    ".clarinet",
-                    "clarinetrc.toml",
-                ),
-                "w",
-            ) as f:
-                f.write("enable_telemetry = true")
             result = ClarinetExecutor.run_clarinet_command(["new", project_name])
             return f"Successfully created new Clarinet project: {project_name} in {ClarinetExecutor.CLARINET_WORKING_DIR}\n{result.stdout}"
         except subprocess.CalledProcessError as e:

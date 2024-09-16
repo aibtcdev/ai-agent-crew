@@ -16,6 +16,23 @@ class ClarinetExecutor:
             current_dir = parent_dir
 
     @classmethod
+    def _setup_global_config(cls):
+        home_dir = os.path.expanduser("~")
+        clarinet_config_dir = os.path.join(home_dir, ".clarinet")
+        clarinetrc_path = os.path.join(clarinet_config_dir, "clarinetrc.toml")
+
+        os.makedirs(clarinet_config_dir, exist_ok=True)
+
+        if not os.path.exists(clarinetrc_path):
+            with open(clarinetrc_path, "w") as f:
+                f.write("enable_telemetry = true")
+
+    @classmethod
+    def _setup_working_dir(cls):
+        cls._setup_paths()
+        os.makedirs(cls.CLARINET_WORKING_DIR, exist_ok=True)
+
+    @classmethod
     def _setup_paths(cls):
         project_root = cls._find_project_root()
         cls.CLARINET_SETUP_DIR = os.path.join(project_root, "clarinet")
@@ -25,9 +42,16 @@ class ClarinetExecutor:
         cls.CLARINET_WORKING_DIR = os.path.join(
             project_root, "aibtc-v1", "crews", "working_dir"
         )
+        cls.CLARINET_CONFIG_FILE = os.path.join(
+            cls.CLARINET_SETUP_DIR, "clarinet-config"
+        )
 
     @classmethod
     def run_clarinet_command(cls, command, cwd=None):
+        # setup global config before each run
+        cls._setup_global_config()
+        # setup working dir before each run
+        cls._setup_working_dir()
         # setup paths before each run
         cls._setup_paths()
 
