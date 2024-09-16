@@ -11,6 +11,9 @@ find_project_root() {
         if [ -d "$current_dir/ai-agent-crew" ]; then
             echo "$current_dir/ai-agent-crew"
             return 0
+        elif [ -d "$current_dir/aibtc-v1" ]; then
+            echo "$current_dir"
+            return 0
         fi
         current_dir="$(dirname "$current_dir")"
     done
