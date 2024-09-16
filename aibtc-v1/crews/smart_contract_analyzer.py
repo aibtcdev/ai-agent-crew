@@ -6,7 +6,7 @@ from crewai import Agent, Task
 from crewai_tools import tool, Tool
 from streamlit_mermaid import st_mermaid
 from textwrap import dedent
-from utils.crews import AIBTC_Crew
+from utils.crews import AIBTC_Crew, display_token_usage
 from utils.scripts import BunScriptRunner, get_timestamp
 from utils.vector import (
     create_vector_search_tool,
@@ -279,9 +279,11 @@ class SmartContractAnalyzerCrew(AIBTC_Crew):
 
                 st.success("Analysis complete!")
 
+                display_token_usage(result.token_usage)
+
                 st.subheader("Analysis Results")
 
-                result_str = str(result)
+                result_str = str(result.raw)
                 st.markdown(result_str)
 
                 timestamp = get_timestamp()

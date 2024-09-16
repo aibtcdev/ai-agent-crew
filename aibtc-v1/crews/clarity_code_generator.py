@@ -5,7 +5,7 @@ import subprocess
 from crewai import Agent, Task
 from crewai_tools import tool, Tool
 from run_clarinet import ClarinetExecutor
-from utils.crews import AIBTC_Crew
+from utils.crews import AIBTC_Crew, display_token_usage
 from utils.scripts import get_timestamp
 
 
@@ -150,9 +150,12 @@ class ClarityCodeGeneratorCrew(AIBTC_Crew):
                     result = clarity_code_generator_crew.kickoff()
 
                 st.success("Code generation complete!")
+
+                display_token_usage(result.token_usage)
+
                 st.subheader("Clarity Code Generation Results")
 
-                result_str = str(result)
+                result_str = str(result.raw)
                 st.markdown(result_str)
 
                 timestamp = get_timestamp()
