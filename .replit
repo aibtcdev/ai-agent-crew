@@ -1,6 +1,6 @@
 entrypoint = "aibtc-v1/app.py"
 
-run = "sh $HOME/ai-agent-crew/clarinet/setup-clarinet.sh && streamlit run aibtc-v1/app.py"
+run = "bash $HOME/ai-agent-crew/clarinet/setup-clarinet.sh && streamlit run aibtc-v1/app.py"
 
 modules = ["python-3.11", "nodejs-18"]
 
@@ -13,7 +13,7 @@ channel = "stable-24_05"
 STREAMLIT_SERVER_HEADLESS = "true"
 
 [deployment]
-run = "sh $HOME/ai-agent-crew/clarinet/setup-clarinet.sh && streamlit --server.enableCORS=false --server.enableWebsocketCompression=false --server.runOnSave=false --client.toolbarMode=viewer run aibtc-v1/app.py"
+run = ["sh", "-c", "bash $HOME/ai-agent-crew/clarinet/setup-clarinet.sh && streamlit --server.enableCORS=false --server.enableWebsocketCompression=false --server.runOnSave=false --client.toolbarMode=viewer run aibtc-v1/app.py"]
 ignorePorts = false
 deploymentTarget = "gce"
 
