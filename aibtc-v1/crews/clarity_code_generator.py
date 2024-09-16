@@ -4,6 +4,7 @@ import streamlit as st
 import subprocess
 from crewai import Agent, Task
 from crewai_tools import tool, Tool
+from typing import List
 from utils.crews import AIBTC_Crew
 from utils.scripts import get_timestamp
 
@@ -177,13 +178,16 @@ class ClarityCodeGeneratorCrew(AIBTC_Crew):
 
 class AgentTools:
 
-    # set working directory for Clarinet projects to the same location as the crews files
+    # set values based on the Clarinet environment setup
+    CLARINET_SETUP_DIR = os.path.expanduser("~/ai-agent-crew/clarinet")
+    CLARINET_BIN_DIR = os.path.join(CLARINET_SETUP_DIR, "bin")
+    CLARINET_BIN_PATH = os.path.join(CLARINET_BIN_DIR, "clarinet")
+    CLARINET_DEPS_DIR = os.path.join(CLARINET_SETUP_DIR, "glibc-2.34")
+
+    # set the working directory as same location as the crews files
     CLARINET_WORKING_DIR = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "working_dir"
     )
-    # set location for env file that loads glibcc 2.34
-    CLARINET_DEPS_DIR = "./clarinet-deps"
-    CLARINET_CONFIG_FILE = os.path.join(CLARINET_DEPS_DIR, "clarinet_config")
 
     @classmethod
     def _run_clarinet_command(
@@ -192,25 +196,22 @@ class AgentTools:
         """
         Run a Clarinet command with the correct environment setup.
         """
-        # ensure the config file exists
-        if not os.path.exists(cls.CLARINET_CONFIG_FILE):
+        # check that the clarinet binary exists
+        if not os.path.exists(cls.CLARINET_BIN_PATH):
             raise FileNotFoundError(
-                f"Clarinet config file not found at {cls.CLARINET_CONFIG_FILE}"
+                f"Clarinet binary not found at {cls.CLARINET_BIN_PATH}"
             )
-
         # set up the environment
         env = os.environ.copy()
         env["LD_LIBRARY_PATH"] = (
-            f"{cls.CLARINET_DEPS_DIR}:{env.get('LD_LIBRARY_PATH', '')}"
+            f"{cls.CLARINET_DEPS_DIR}:/usr/lib/x86_64-linux-gnu:{env.get('LD_LIBRARY_PATH', '')}"
         )
-
-        # run the clarinet command
+        env["PATH"] = f"{cls.CLARINET_BIN_DIR}:{env.get('PATH', '')}"
+        # prepare the command
+        args = [cls.CLARINET_BIN_PATH] + command
+        # run the command
         return subprocess.run(
-            [
-                "bash",
-                "-c",
-                f"source {cls.CLARINET_CONFIG_FILE} && clarinet {' '.join(command)}",
-            ],
+            args,
             check=True,
             cwd=cwd,
             env=env,
@@ -225,7 +226,9 @@ class AgentTools:
         Create a new Clarinet project in the working directory.
         """
         try:
+            # create the working directory if it doesn't exist
             os.makedirs(cls.CLARINET_WORKING_DIR, exist_ok=True)
+            # disable telemetry question at project setup
             os.makedirs(
                 os.path.join(cls.CLARINET_WORKING_DIR, ".clarinet"), exist_ok=True
             )
@@ -234,7 +237,7 @@ class AgentTools:
                 "w",
             ) as f:
                 f.write("enable_telemetry = true")
-
+            # run the clarinet command and get the result
             result = cls._run_clarinet_command(["new", project_name])
             return f"Successfully created new Clarinet project: {project_name} in {cls.CLARINET_WORKING_DIR}\n{result.stdout}"
         except subprocess.CalledProcessError as e:
@@ -255,7 +258,6 @@ class AgentTools:
             result = cls._run_clarinet_command(
                 ["contract", "new", contract_name], cwd=project_dir
             )
-
             contract_file_path = os.path.join(
                 project_dir, "contracts", f"{contract_name}.clar"
             )
@@ -267,8 +269,6 @@ class AgentTools:
             return f"Error creating smart contract: {e.stderr}"
         except IOError as e:
             return f"Error writing contract code: {e}"
-        except FileNotFoundError as e:
-            return f"Configuration error: {str(e)}"
 
     @classmethod
     @tool("Check Smart Contract Syntax")
@@ -289,8 +289,6 @@ class AgentTools:
             return f"Error checking syntax: {e.stderr}"
         except IOError as e:
             return f"Error accessing project: {e}"
-        except FileNotFoundError as e:
-            return f"Configuration error: {str(e)}"
 
     @classmethod
     def get_all_tools(cls):
