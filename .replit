@@ -1,6 +1,6 @@
 entrypoint = "aibtc-v1/app.py"
 
-run = "bash $PWD/clarinet/setup-clarinet.sh && streamlit run  --server.headless true aibtc-v1/app.py"
+run = "bash $PWD/clarinet/setup-clarinet.sh && pip install -U -r $PWD/requirements.txt && streamlit run  --server.headless true aibtc-v1/app.py"
 
 modules = ["python-3.11", "nodejs-18"]
 
@@ -10,7 +10,7 @@ hidden = [".pythonlibs", ".streamlit"]
 channel = "stable-24_05"
 
 [deployment]
-build = ["sh", "-c", "bash $PWD/clarinet/setup-clarinet.sh"]
+build = ["sh", "-c", "bash $PWD/clarinet/setup-clarinet.sh && pip install -U -r $PWD/requirements.txt"]
 run = ["sh", "-c", "streamlit run --server.address 0.0.0.0 --server.headless true --server.runOnSave false aibtc-v1/app.py -- --server.enableCORS false --server.enableWebsocketCompression false"]
 ignorePorts = false
 deploymentTarget = "cloudrun"
