@@ -1,3 +1,4 @@
+import streamlit as st
 from crewai import Agent, Task, Crew, Process
 from typing import List
 from utils.callbacks import crew_step_callback, crew_task_callback
@@ -28,3 +29,14 @@ class AIBTC_Crew:
 
     def render_crew(self):
         pass
+
+
+def display_token_usage(token_usage):
+    st.subheader("Token Usage")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("Total Tokens", token_usage.total_tokens)
+        st.metric("Prompt Tokens", token_usage.prompt_tokens)
+    with col2:
+        st.metric("Completion Tokens", token_usage.completion_tokens)
+        st.metric("Successful Requests", token_usage.successful_requests)

@@ -1,9 +1,10 @@
 import inspect
+import json
 import streamlit as st
 from crewai import Agent, Task
 from crewai_tools import tool, Tool
 from textwrap import dedent
-from utils.crews import AIBTC_Crew
+from utils.crews import AIBTC_Crew, display_token_usage
 from utils.scripts import BunScriptRunner, get_timestamp
 
 
@@ -159,9 +160,11 @@ class WalletSummaryCrew(AIBTC_Crew):
 
                 st.success("Analysis complete!")
 
+                display_token_usage(result.token_usage)
+
                 st.subheader("Analysis Results")
 
-                result_str = str(result)
+                result_str = str(result.raw)
                 st.markdown(result_str)
 
                 timestamp = get_timestamp()
@@ -193,6 +196,9 @@ class AgentTools:
     @tool("Get Address Balance Detailed")
     def get_address_balance_detailed(address: str):
         """Get detailed balance information for a given address."""
+        # helper if address is sent as json
+        if isinstance(address, dict) and "address" in address:
+            address = address["address"]
         return BunScriptRunner.bun_run(
             "stacks-wallet", "get-address-balance-detailed.ts", address
         )
@@ -201,6 +207,9 @@ class AgentTools:
     @tool("Get Address Transactions")
     def get_address_transactions(address: str):
         """Get 20 most recent transactions for a given address."""
+        # helper if address is sent as json
+        if isinstance(address, dict) and "address" in address:
+            address = address["address"]
         return BunScriptRunner.bun_run(
             "stacks-wallet", "get-transactions-by-address.ts", address
         )
