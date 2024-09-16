@@ -1,6 +1,11 @@
+# set up environment
+CLARINET_SETUP_DIR="$HOME/ai-agent-crew/clarinet-deps"
+CLARINET_BIN_DIR="$CLARINET_DIR/bin"
+CLARINET_DEPS_DIR="$CLARINET_DIR/glibc-2.34"
+
 # source this file to add clarinet to your PATH
 clarinet_env() {
-  LD_LIBRARY_PATH="./glibc-2.34:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH" "/home/runner/.local/bin/clarinet" "$@"
+  LD_LIBRARY_PATH="$CLARINET_DEPS_DIR:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH" "$CLARINET_BIN_DIR/clarinet" "$@"
 }
 alias clarinet=clarinet_env
-export PATH="/home/runner/.local/bin:$PATH"
+export PATH="$CLARINET_BIN_DIR:$PATH"
