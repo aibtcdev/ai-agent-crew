@@ -1,7 +1,7 @@
 # set up environment
-CLARINET_SETUP_DIR="$HOME/ai-agent-crew/clarinet-deps"
-CLARINET_BIN_DIR="$CLARINET_DIR/bin"
-CLARINET_DEPS_DIR="$CLARINET_DIR/glibc-2.34"
+CLARINET_SETUP_DIR="$HOME/ai-agent-crew/clarinet"
+CLARINET_BIN_DIR="$CLARINET_SETUP_DIR/bin"
+CLARINET_DEPS_DIR="$CLARINET_SETUP_DIR/glibc-2.34"
 
 # source this file to add clarinet to your PATH
 clarinet_env() {
