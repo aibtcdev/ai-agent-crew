@@ -7,50 +7,94 @@
 > [!CAUTION]
 > This is an early experiment, agents do automatic things, here be dragons, run at your own risk.
 
-This repository contains the code for the AI Agent Crew, a collection of agents that can be used to perform assigned tasks using defined tools.
+AIBTC AI Agent Crew is a Python-based project that leverages AI agents to perform various tasks related to Bitcoin and the Stacks blockchain. It provides a Streamlit user interface for interacting with these AI agents and visualizing their outputs.
+
+The project uses the [CrewAI framework](https://crewai.com) to create and manage AI agents, tasks, and tools. It integrates with the `agent-tools-ts` submodule to perform low-level blockchain operations.
+
+## Key Features
+
+Streamlit UI for easy interaction with AI agents
+Multiple specialized crews for different blockchain-related tasks
+Integration with various LLM providers (OpenAI, Anthropic, Ollama)
+Extensible architecture for adding new crews and tools
 
 ## Development
 
-Tech stack:
+### Tech Stack
 
-- Python 3.11 ([miniconda recommended](https://docs.anaconda.com/free/miniconda/index.html#latest-miniconda-installer-links) for virtual env)
-- CrewAI
-- CrewAI Tools
+- Python 3.11
+- Streamlit for the user interface
+- CrewAI and CrewAI Tools for AI agent management
+- Langchain for language model interactions
+- Bun.js (via submodule) for TypeScript-based blockchain tools
 
-To run this locally:
+### Prerequisites
 
-1. Clone this repository
-2. Create or activate the virtual environment
-   1. Create: `conda create -n ai-agent-crew python=3.11`
-   2. Activate: `conda activate ai-agent-crew`
-3. Install dependencies: `pip install -r requirements.txt`
-4. Run locally: `python run_crew.py`
+- Python 3.11 (virtual environment recommended)
+- Git
 
-### Choosing an LLM
+### Installation
 
-CrewAI allows for multiple model configurations, from using OpenAI/Microsoft Azure APIs to running local models, [see the documentation](https://docs.crewai.com/how-to/LLM-Connections/#configuration-examples) for more info on how to configure for your specific needs.
+1. Clone the repository with submodules:
 
-An example env file (`.env.example`) is provided.
+   ```
+   git clone --recurse-submodules https://github.com/aibtcdev/ai-agent-crew.git
+   cd ai-agent-crew
+   ```
 
-Current testing is being done with [Text generation web UI](https://github.com/oobabooga/text-generation-webui)
+2. Create and activate a virtual environment (using [miniconda](https://docs.anaconda.com/miniconda/)):
 
-Command to run Text generation web UI:
-`python server.py --api --verbose`
+   ```
+   conda create -n ai-agent-crew python=3.11
+   conda activate ai-agent-crew
+   ```
 
-Command to run Text generation web UI on another machine:
-`python server.py --api --verbose --listen`
+3. Install dependencies:
 
-If you already have local models downloaded, you can specify the model directory for Text generation web UI to read from:
-`python server.py --model-dir /path/to/your/model_files --listen --api --verbose`
+   ```
+   pip install -r requirements.txt
+   ```
 
-Once running, access the web UI at port 7860 and:
+4. Set up the `agent-tools-ts` submodule:
 
-- On the `Model` tab, select the model to load
-- (optional) On the `Parameters - Generation` tab, set custom parameters for the model
-- On the `Model` tab, load the model and wait until "Successfully loaded" appears
+   Follow the setup instructions in the [agent-tools-ts README](./agent-tools-ts/README.md) to install Bun.js
 
-> [!TIP]
-> The IP address and port of the model running on Text generation web UI should be set in `.env` to use a local model.
+### Configuration
+
+1. Copy the .env.example file to .env:
+
+   ```
+   cp .env.example .env
+   ```
+
+2. Edit the `.env` file to set your API keys and other configuration options.
+
+### Usage
+
+To run the Streamlit app:
+
+```
+streamlit run aibtc-v1/app.py
+```
+
+This will start the Streamlit server and open the application in your default web browser.
+
+### Project Structure
+
+`aibtc-v1/app.py`: Main Streamlit application entry point
+`aibtc-v1/crews/`: Contains different AI agent crews (e.g., `SmartContractAnalyzerCrew`, `WalletSummaryCrew`)
+`aibtc-v1/components/`: Streamlit UI components for different tabs
+`aibtc-v1/utils/`: Utility functions and classes
+`agent-tools-ts/`: Submodule for TypeScript-based blockchain tools
+
+### Adding New Crews
+
+To add a new crew:
+
+1. Create a new Python file in the `aibtc-v1/crews/` directory.
+2. Define a new class that inherits from `AIBTC_Crew` in `aibtc-v1/utils/crews.py`.
+3. Implement the required methods: `setup_agents()`, `setup_tasks()`, and `render_crew()`.
+4. Update the `aibtc-v1/utils/session.py` file to include your new crew in the `generate_crew_mapping()` function.
 
 ### Setting up the Wallet
 
@@ -58,31 +102,17 @@ This repository also imports the `aibtcdev/agent-tools-ts` repository as a submo
 
 This provides TypeScript functions to interact with a Stacks wallet using Stacks.js.
 
-To clone the repository and sync the submodule, run the following command:
-
-- ssh: `git clone --recurse-submodules git@github.com:aibtcdev/ai-agent-crew.git`
-- https: `git clone --recurse-submodules https://github.com/aibtcdev/ai-agent-crew.git`
-
 To update the submodule, run the following command:
 `git submodule update --remote --merge`
 
 Within the `scripts` directory is a `.env.example` file, you can disregard it as the top-level `.env.example` file for this repository covers all the needed values.
 
-Within the `scripts/src` directory are various scripts that can be run to interact with the wallet. These should be wrapped as a langchain `@tool` for LLMs to access it.
+Within the `scripts/src` directory are various scripts that can be run to interact with the wallet tooling. These should be wrapped as a CrewAI `@tool` for LLMs to access it.
 
-## AI Agent Framework
+## Contributing
 
-### CrewAI
+We welcome contributions! Please see our [CONTRIBUTING.md](./CONTRIBUTING.md) file for details on how to get started.
 
-[CrewAI](https://crewai.com) provides an easy-to-use interface for creating and managing agents, tasks, tools, and crews. It is built on top of [Langchain](https://python.langchain.com/docs/get_started/introduction), a decentralized, open-source, and privacy-focused AI platform.
+## Contact
 
-- **Agents:** a team member; an autonomous unit programmed to perform tasks, make decisions, and communication with other agents
-- **Tasks:** a task; individual assignments that agents complete
-- **Tools:** a skill; single-input functions that agents can use to complete tasks (can use [any Langchain tool](https://python.langchain.com/docs/modules/agents/tools/) or define custom ones)
-- **Crew:** a collaborative group; a group of agents that work together to complete a set of tasks
-
-View the [CrewAI Documentation](https://docs.crewai.com/) or [chat with the docs](https://chatg.pt/DWjSBZn) to learn more!
-
-### Tools
-
-- Tool definitions are in the `/tools` directory
+If you have any questions about contributing, please open an issue, ask in the [AIBTC Discord](https://discord.gg/Z59Z3FNbEX) or reach out to us on X [@aibtcdev](https://x.com/aibtcdev).
