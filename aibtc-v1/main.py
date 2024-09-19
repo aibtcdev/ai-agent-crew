@@ -1,9 +1,9 @@
-from fastapi.responses import RedirectResponse
+import os
+import subprocess
 import uvicorn
 from fastapi import FastAPI, Request
+from fastapi.responses import RedirectResponse
 from utils.session import generate_crew_mapping
-import subprocess
-import os
 
 # Create the main FastAPI application
 app = FastAPI()
