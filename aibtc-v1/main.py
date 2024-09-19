@@ -37,12 +37,17 @@ async def router_middleware(request: Request, call_next):
 
 # Start the Streamlit app in a subprocess
 def run_streamlit():
-    streamlit_script_path = os.path.join(os.getcwd(), "streamlit_app.py")
+    streamlit_script_path = os.path.join(os.getcwd(), "aibtc-v1/streamlit_app.py")
+
     subprocess.Popen(
         [
             "streamlit", "run", streamlit_script_path, 
+            "--server.address=0.0.0.0",
             "--server.port=8501", 
             "--server.enableCORS=false"
+            "--server.enableXsrfProtection=false",
+            "--server.headless=true",
+            "--server.runOnSave=false",
         ],
     )
 
