@@ -98,8 +98,8 @@ class ClarityCodeGeneratorCrew(AIBTC_Crew):
         )
         self.add_task(compile_clarity_code_task)
 
-    @staticmethod
-    def get_task_inputs():
+    @classmethod
+    def get_task_inputs(cls):
         return ["user_input"]
 
     @classmethod

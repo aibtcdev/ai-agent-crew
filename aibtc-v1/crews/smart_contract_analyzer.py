@@ -184,8 +184,8 @@ class SmartContractAnalyzerCrew(AIBTC_Crew):
         )
         self.add_task(smart_contract_report_task)
 
-    @staticmethod
-    def get_task_inputs():
+    @classmethod
+    def get_task_inputs(cls):
         return ["contract_code", "contract_functions"]
 
     @classmethod

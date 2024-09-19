@@ -1,9 +1,23 @@
 import streamlit as st
 from crewai import Agent, Task, Crew, Process
-from typing import List
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, create_model
+from typing import Dict, List, Type
 from utils.callbacks import crew_step_callback, crew_task_callback
 
 
+# dynamically create an input model for API endpoints
+def create_input_model(class_name: str, fields: List[str]) -> Type[BaseModel]:
+    return create_model(f"{class_name}Input", **{field: (str, ...) for field in fields})
+
+
+# expected API output model
+class CrewOutput(BaseModel):
+    result: str
+    token_usage: Dict[str, int]
+
+
+# base class that defines the structure of a crew
 class AIBTC_Crew:
     def __init__(self, name: str):
         self.name = name
@@ -29,6 +43,30 @@ class AIBTC_Crew:
 
     def render_crew(self):
         pass
+
+    def create_api_endpoint(self) -> APIRouter:
+        router = APIRouter()
+
+        CrewInput = create_input_model(self.__class__.__name__, self.get_task_inputs())
+
+        @router.post(
+            f"/{self.name.lower().replace(' ', '-')}", response_model=CrewOutput
+        )
+        async def run_crew(input_data: CrewInput):
+            try:
+                crew = self.create_crew()
+                # Convert Pydantic model to dictionary
+                input_dict = input_data.dict()
+                # Pass the input dictionary to setup_tasks
+                self.setup_tasks(**input_dict)
+                result = crew.kickoff()
+                return CrewOutput(
+                    result=str(result.raw), token_usage=result.token_usage
+                )
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        return router
 
 
 def display_token_usage(token_usage):

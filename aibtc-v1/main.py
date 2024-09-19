@@ -1,32 +1,12 @@
-import subprocess
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.wsgi import WSGIMiddleware
 from utils.session import generate_crew_mapping
+import streamlit.web.bootstrap as bootstrap
+from streamlit.web.server import Server
 
 # Create the main FastAPI application
 app = FastAPI()
-
-# Run Streamlit as a subprocess
-streamlit_process = subprocess.Popen(
-    [
-        "streamlit",
-        "run",
-        "aibtc-v1/streamlit_app.py",
-        "--server.port",
-        "8501",
-        "--server.address",
-        "0.0.0.0",
-        "--server.headless",
-        "true",
-        "--server.runOnSave",
-        "false",
-        "--server.enableCORS",
-        "false",
-        "--server.enableWebsocketCompression",
-        "false",
-    ]
-)
 
 # Create API router
 api_router = FastAPI()
@@ -43,10 +23,22 @@ for crew_name, crew_info in crew_mapping.items():
 # Include the API routes
 app.mount("/api", api_router)
 
-# Mount Streamlit app
-from streamlit.web.server import Server
+# Initialize Streamlit
+streamlit_script_path = "aibtc-v1/streamlit_app.py"
+streamlit_config = {
+    "server.port": 8501,
+    "server.address": "0.0.0.0",
+    "server.headless": True,
+    "server.runOnSave": False,
+    "server.enableCORS": False,
+    "server.enableXsrfProtection": False,
+}
 
-streamlit_app = WSGIMiddleware(Server(streamlit_process.pid).app)
+bootstrap_streamlit = lambda script_path: bootstrap.run(script_path, **streamlit_config)
+streamlit_server = Server(bootstrap_streamlit, streamlit_script_path)
+
+# Mount Streamlit app
+streamlit_app = WSGIMiddleware(streamlit_server.app)
 
 
 @app.middleware("http")

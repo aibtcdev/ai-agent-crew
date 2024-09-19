@@ -118,8 +118,8 @@ class WalletSummaryCrew(AIBTC_Crew):
         )
         self.add_task(analyze_historical_data_task)
 
-    @staticmethod
-    def get_task_inputs():
+    @classmethod
+    def get_task_inputs(cls):
         return ["address"]
 
     @classmethod
