@@ -1,26 +1,10 @@
-import anthropic
 import inspect
 import importlib
 import os
 import streamlit as st
-from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
-from langchain_ollama import ChatOllama
 from typing import Optional
-
-from crews.smart_contract_analyzer import SmartContractAnalyzerCrew
-from crews.wallet_summarizer import WalletSummaryCrew
-from crews.clarity_code_generator import ClarityCodeGeneratorCrew
 from utils.crews import AIBTC_Crew
-
-
-def load_env_vars():
-    load_dotenv()
-    env_vars = {}
-    for key, value in os.environ.items():
-        env_vars[key] = value
-    return env_vars
-
+from utils.llm import get_llm, load_env_vars
 
 def init_session_state():
     env_vars = load_env_vars()
@@ -64,19 +48,6 @@ def init_session_state():
 
 def update_session_state(key, value):
     st.session_state[key] = value
-
-
-def get_llm(provider, model, api_key, api_base):
-    if provider == "Anthropic":
-        return anthropic.Anthropic(api_key=api_key)
-    elif provider == "Ollama":
-        return ChatOllama(model=model, base_url=api_base)
-    else:
-        return ChatOpenAI(
-            model=model,
-            openai_api_key=api_key,
-            openai_api_base=api_base,
-        )
 
 
 def generate_crew_mapping():
