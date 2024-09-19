@@ -1,54 +1,54 @@
+from fastapi.responses import RedirectResponse
 import uvicorn
 from fastapi import FastAPI, Request
-from fastapi.middleware.wsgi import WSGIMiddleware
 from utils.session import generate_crew_mapping
-import streamlit.web.bootstrap as bootstrap
-from streamlit.web.server import Server
+import subprocess
+import os
 
 # Create the main FastAPI application
 app = FastAPI()
 
-# Create API router
-api_router = FastAPI()
-
 # Generate the crew mapping
 crew_mapping = generate_crew_mapping()
 
-# Add endpoints for each crew
+# Create API router
 for crew_name, crew_info in crew_mapping.items():
     crew_class = crew_info["class"]
     crew_instance = crew_class()
-    api_router.include_router(crew_instance.create_api_endpoint(), tags=[crew_name])
+    app.include_router(crew_instance.create_api_endpoint(), prefix=f"/api/{crew_name}")
 
-# Include the API routes
-app.mount("/api", api_router)
-
-# Initialize Streamlit
-streamlit_script_path = "aibtc-v1/streamlit_app.py"
-streamlit_config = {
-    "server.port": 8501,
-    "server.address": "0.0.0.0",
-    "server.headless": True,
-    "server.runOnSave": False,
-    "server.enableCORS": False,
-    "server.enableXsrfProtection": False,
-}
-
-bootstrap_streamlit = lambda script_path: bootstrap.run(script_path, **streamlit_config)
-streamlit_server = Server(bootstrap_streamlit, streamlit_script_path)
-
-# Mount Streamlit app
-streamlit_app = WSGIMiddleware(streamlit_server.app)
-
-
+# Middleware for routing to API or Streamlit
 @app.middleware("http")
 async def router_middleware(request: Request, call_next):
+    # Handle FastAPI-related paths
+    fastapi_paths = ["/", "/docs", "/redoc", "/openapi.json"]
+    
     if request.url.path.startswith("/api/"):
+        # If it's an API request, handle it by FastAPI
+        response = await call_next(request)
+    elif any(request.url.path.startswith(path) for path in fastapi_paths):
+        # If it's a request to FastAPI routes like root, docs, or openapi
         response = await call_next(request)
     else:
-        response = await streamlit_app(request.scope, request.receive, request.send)
+        # Redirect all other traffic to Streamlit
+        response = RedirectResponse(url="http://localhost:8501" + request.url.path)
+    
     return response
 
+# Start the Streamlit app in a subprocess
+def run_streamlit():
+    streamlit_script_path = os.path.join(os.getcwd(), "streamlit_app.py")
+    subprocess.Popen(
+        [
+            "streamlit", "run", streamlit_script_path, 
+            "--server.port=8501", 
+            "--server.enableCORS=false"
+        ],
+    )
 
 if __name__ == "__main__":
+    # Run Streamlit as a background process
+    run_streamlit()
+    
+    # Start the FastAPI server
     uvicorn.run(app, host="0.0.0.0", port=8080)
