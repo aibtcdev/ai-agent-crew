@@ -271,7 +271,7 @@ class SmartContractAnalyzerCrew(AIBTC_Crew):
                     contract_code, contract_functions
                 )
                 smart_contract_analyzer_crew = (
-                    smart_contract_analyzer_crew_class.create_crew()
+                    smart_contract_analyzer_crew_class.create_crew(callbacks=True)
                 )
 
                 with st.spinner("Analyzing..."):

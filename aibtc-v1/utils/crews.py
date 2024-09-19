@@ -1,10 +1,11 @@
 import streamlit as st
 from crewai import Agent, Task, Crew, Process
+from crewai.types.usage_metrics import UsageMetrics
+from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, create_model
 from typing import Dict, List, Type
 from utils.callbacks import crew_step_callback, crew_task_callback
-from utils.llm import get_llm, load_env_vars
 
 
 # dynamically create an input model for API endpoints
@@ -13,9 +14,9 @@ def create_input_model(class_name: str, fields: List[str]) -> Type[BaseModel]:
 
 
 # expected API output model
-class CrewOutput(BaseModel):
+class CrewAPIOutput(BaseModel):
     result: str
-    token_usage: Dict[str, int]
+    token_usage: UsageMetrics
 
 
 # base class that defines the structure of a crew
@@ -31,15 +32,15 @@ class AIBTC_Crew:
     def add_task(self, task: Task):
         self.tasks.append(task)
 
-    def create_crew(self) -> Crew:
+    def create_crew(self, callbacks=False) -> Crew:
         return Crew(
             agents=self.agents,
             tasks=self.tasks,
             process=Process.sequential,
             verbose=True,
             memory=True,
-            step_callback=crew_step_callback,
-            task_callback=crew_task_callback,
+            step_callback=crew_step_callback if callbacks else None,
+            task_callback=crew_task_callback if callbacks else None,
         )
 
     def render_crew(self):
@@ -51,11 +52,12 @@ class AIBTC_Crew:
         CrewInput = create_input_model(self.__class__.__name__, self.get_task_inputs())
 
         @router.post(
-            f"/{self.name.lower().replace(' ', '-')}", response_model=CrewOutput
+            f"/{self.name.lower().replace(' ', '-')}", response_model=CrewAPIOutput
         )
         async def run_crew(input_data: CrewInput):
             try:
-                env_vars = load_env_vars()
+                load_dotenv()
+                # env_vars = load_env_vars()
                 # llm = get_llm(
                 #    env_vars.get("LLM_PROVIDER", "OpenAI"),
                 #    env_vars.get("OPENAI_API_KEY", ""),
@@ -69,7 +71,7 @@ class AIBTC_Crew:
                 self.setup_tasks(**input_dict)
                 crew = self.create_crew()
                 result = crew.kickoff()
-                return CrewOutput(
+                return CrewAPIOutput(
                     result=str(result.raw), token_usage=result.token_usage
                 )
             except Exception as e:

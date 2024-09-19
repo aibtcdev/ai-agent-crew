@@ -142,7 +142,7 @@ class ClarityCodeGeneratorCrew(AIBTC_Crew):
                 clarity_code_generator_crew_class.setup_agents(llm)
                 clarity_code_generator_crew_class.setup_tasks(user_input)
                 clarity_code_generator_crew = (
-                    clarity_code_generator_crew_class.create_crew()
+                    clarity_code_generator_crew_class.create_crew(callbacks=True)
                 )
 
                 with st.spinner("Generating Clarity code..."):
