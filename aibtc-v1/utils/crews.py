@@ -48,7 +48,6 @@ class AIBTC_Crew:
         router = APIRouter()
 
         CrewInput = create_input_model(self.__class__.__name__, self.get_task_inputs())
-
         @router.post(
             f"/{self.name.lower().replace(' ', '-')}", response_model=CrewOutput
         )

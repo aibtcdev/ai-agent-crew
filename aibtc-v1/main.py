@@ -15,13 +15,13 @@ crew_mapping = generate_crew_mapping()
 for crew_name, crew_info in crew_mapping.items():
     crew_class = crew_info["class"]
     crew_instance = crew_class()
-    app.include_router(crew_instance.create_api_endpoint(), prefix=f"/api/{crew_name}")
+    app.include_router(crew_instance.create_api_endpoint(), prefix=f"/api")
 
 # Middleware for routing to API or Streamlit
 @app.middleware("http")
 async def router_middleware(request: Request, call_next):
     # Handle FastAPI-related paths
-    fastapi_paths = ["/", "/docs", "/redoc", "/openapi.json"]
+    fastapi_paths = ["/docs", "/redoc", "/openapi.json"]
     
     if request.url.path.startswith("/api/"):
         # If it's an API request, handle it by FastAPI
@@ -44,7 +44,7 @@ def run_streamlit():
             "streamlit", "run", streamlit_script_path, 
             "--server.address=0.0.0.0",
             "--server.port=8501", 
-            "--server.enableCORS=false"
+            "--server.enableCORS=false",
             "--server.enableXsrfProtection=false",
             "--server.headless=true",
             "--server.runOnSave=false",
