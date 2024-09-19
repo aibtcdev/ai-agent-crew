@@ -56,12 +56,14 @@ class AIBTC_Crew:
         async def run_crew(input_data: CrewInput):
             try:
                 env_vars = load_env_vars()
-                llm = get_llm(
-                    env_vars.get("LLM_PROVIDER", "OpenAI"),
-                    env_vars.get("OPENAI_API_KEY", ""),
-                    env_vars.get("OPENAI_API_BASE", "https://api.openai.com/v1"),
-                    env_vars.get("OPENAI_MODEL_NAME", "gpt-4o"),
-                )
+                # llm = get_llm(
+                #    env_vars.get("LLM_PROVIDER", "OpenAI"),
+                #    env_vars.get("OPENAI_API_KEY", ""),
+                #    env_vars.get("OPENAI_API_BASE", "https://api.openai.com/v1"),
+                #    env_vars.get("OPENAI_MODEL_NAME", "gpt-4o"),
+                # )
+                # temporary, testing with LiteLLM changes
+                llm = "gpt-4o"
                 self.setup_agents(llm)
                 input_dict = input_data.dict()
                 self.setup_tasks(**input_dict)

@@ -39,12 +39,14 @@ def init_session_state():
 
     # Initialize the LLM
     if "llm" not in st.session_state:
-        st.session_state.llm = get_llm(
-            st.session_state.provider,
-            st.session_state.model,
-            st.session_state.api_key,
-            st.session_state.api_base,
-        )
+        # st.session_state.llm = get_llm(
+        #    st.session_state.provider,
+        #    st.session_state.model,
+        #    st.session_state.api_key,
+        #    st.session_state.api_base,
+        # )
+        # temporary, testing with LiteLLM changes
+        st.session_state.llm = "gpt-4o"
 
 
 def update_session_state(key, value):
