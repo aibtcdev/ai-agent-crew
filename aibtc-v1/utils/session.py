@@ -6,6 +6,7 @@ from typing import Optional
 from utils.crews import AIBTC_Crew
 from utils.llm import get_llm, load_env_vars
 
+
 def init_session_state():
     env_vars = load_env_vars()
 
@@ -29,7 +30,7 @@ def init_session_state():
         "provider": env_vars.get("LLM_PROVIDER", "OpenAI"),
         "api_key": env_vars.get("OPENAI_API_KEY", ""),
         "api_base": env_vars.get("OPENAI_API_BASE", "https://api.openai.com/v1"),
-        "model": env_vars.get("OPENAI_MODEL_NAME", "gpt-4o-mini"),
+        "model": env_vars.get("OPENAI_MODEL_NAME", "gpt-4o"),
     }
 
     for key, value in defaults.items():

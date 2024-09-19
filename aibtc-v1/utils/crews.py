@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, create_model
 from typing import Dict, List, Type
 from utils.callbacks import crew_step_callback, crew_task_callback
+from utils.llm import get_llm, load_env_vars
 
 
 # dynamically create an input model for API endpoints
@@ -48,16 +49,23 @@ class AIBTC_Crew:
         router = APIRouter()
 
         CrewInput = create_input_model(self.__class__.__name__, self.get_task_inputs())
+
         @router.post(
             f"/{self.name.lower().replace(' ', '-')}", response_model=CrewOutput
         )
         async def run_crew(input_data: CrewInput):
             try:
-                crew = self.create_crew()
-                # Convert Pydantic model to dictionary
+                env_vars = load_env_vars()
+                llm = get_llm(
+                    env_vars.get("LLM_PROVIDER", "OpenAI"),
+                    env_vars.get("OPENAI_API_KEY", ""),
+                    env_vars.get("OPENAI_API_BASE", "https://api.openai.com/v1"),
+                    env_vars.get("OPENAI_MODEL_NAME", "gpt-4o"),
+                )
+                self.setup_agents(llm)
                 input_dict = input_data.dict()
-                # Pass the input dictionary to setup_tasks
                 self.setup_tasks(**input_dict)
+                crew = self.create_crew()
                 result = crew.kickoff()
                 return CrewOutput(
                     result=str(result.raw), token_usage=result.token_usage
