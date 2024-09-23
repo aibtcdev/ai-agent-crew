@@ -137,14 +137,14 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         )
         self.add_agent(contract_report_writer)
 
-    def setup_tasks(self):
+    def setup_tasks(self, contract_identifier):
         #
         # STAGE 1: PREP THE INFORMATION
         #
 
         # get the contract code
         get_contract_code = Task(
-            description="Retrieve the contract code for analysis.",
+            description=f"Retrieve the contract code for analysis. User Input: {contract_identifier}",
             expected_output="The contract code for analysis in raw format with no modifications or additional output.",
             agent=self.agents[0],  # contract retrieval agent
             context=[],
@@ -528,7 +528,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
 
     @staticmethod
     def get_task_inputs():
-        return []
+        return ["contract_identifier"]
 
     @classmethod
     def get_all_tools(cls):
@@ -547,24 +547,6 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
             submitted = st.form_submit_button("Analyze Contract")
 
         if submitted and contract_identifier:
-            # Validate contract_identifier
-            parsed_address, parsed_name = parse_contract_identifier(contract_identifier)
-
-            if parsed_address and parsed_name:
-                contract_address = parsed_address
-                contract_name = parsed_name
-            else:
-                st.error(
-                    "Invalid contract identifier format. Please use 'address.name' format."
-                )
-                st.stop()
-
-            if not contract_address or not contract_name:
-                st.error(
-                    "Both contract address and name are required. Please use 'address.name' format."
-                )
-                st.stop()
-
             st.subheader("Analysis Progress")
             try:
                 # create containers for real-time updates
@@ -583,16 +565,13 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 # Create an instance of SmartContractAnalyzerV2
                 smart_contract_analyzer_crew_class = SmartContractAnalyzerV2()
                 smart_contract_analyzer_crew_class.setup_agents(llm)
-                smart_contract_analyzer_crew_class.setup_tasks()
+                smart_contract_analyzer_crew_class.setup_tasks(contract_identifier)
                 smart_contract_analyzer_crew = (
                     smart_contract_analyzer_crew_class.create_crew()
                 )
 
-                # Provide the contract_name as input to the crew
-                inputs = {"contract_name": contract_identifier}
-
                 with st.spinner("Analyzing..."):
-                    result = smart_contract_analyzer_crew.kickoff(inputs=inputs)
+                    result = smart_contract_analyzer_crew.kickoff()
 
                 st.success("Analysis complete!")
 
