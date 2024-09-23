@@ -465,7 +465,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
 
     @staticmethod
     def get_task_inputs():
-        return ["contract_code"]
+        return []
 
     @classmethod
     def get_all_tools(cls):
