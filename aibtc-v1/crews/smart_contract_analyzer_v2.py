@@ -154,10 +154,12 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         # what is the general purpose of the contract
         general_concept = Task(
             description="Given the contract code, what is the general concept of the contract?",
-            expected_output=(
-                "A summary of the contract's purpose and functionality.",
-                "This should follow the strict format defined below:",
-                taskReportFormat,
+            expected_output=dedent(
+                f"""
+                A summary of the contract's purpose and functionality.
+                This should follow the strict format defined below:
+                {taskReportFormat}
+                """
             ),
             agent=self.agents[1],  # contract analysis agent
             context=[get_contract_code],
@@ -168,9 +170,11 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         trait_functions = Task(
             description="Identify functions that take traits as arguments and note what each function does.",
             expected_output=(
-                "A list of functions that take traits as arguments with descriptions of what each function does.",
-                "This should follow the strict Markdown format defined below:",
-                taskReportFormat,
+                f"""
+                A list of functions that take traits as arguments with descriptions of what each function does. 
+                This should follow the strict Markdown format defined below:
+                {taskReportFormat}
+                """
             ),
             agent=self.agents[1],  # contract analysis agent
             context=[get_contract_code],
@@ -180,10 +184,12 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         # check for functions that use as-contract
         as_contract_functions = Task(
             description="Identify all instances where `as-contract` is used with `contract-call?` and note the functions involved.",
-            expected_output=(
-                "Documentation of all instances where `as-contract` is used with `contract-call?`, including function names.",
-                "This should follow the strict Markdown format defined below:",
-                taskReportFormat,
+            expected_output=dedent(
+                f"""
+                Documentation of all instances where `as-contract` is used with `contract-call?`, including function names.
+                This should follow the strict Markdown format defined below:
+                {taskReportFormat}
+                """
             ),
             agent=self.agents[1],  # contract analysis agent
             context=[get_contract_code],
@@ -196,10 +202,12 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 "Help identify and categorize functions that would be considered GREEN in terms of risk.",
                 "GREEN - harmless, do not participate in anything super important, in most cases it will be just a read-only function that returns value stored on-chain",
             ),
-            expected_output=(
-                "A list of functions categorized as GREEN based on their risk levels.",
-                "This should follow the strict Markdown format defined below:",
-                taskListFormat,
+            expected_output=dedent(
+                f"""
+                A list of functions categorized as GREEN based on their risk levels.
+                This should follow the strict Markdown format defined below:
+                {taskListFormat}
+                """
             ),
             agent=self.agents[1],  # contract analysis agent
             context=[get_contract_code],
@@ -212,10 +220,12 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 "Help identify and categorize functions that would be considered YELLOW in terms of risk.",
                 "YELLOW - can change value of variable of map entry, but they are not used to anything critical. In most cases it will functions that can modify meta-data stored on chain.",
             ),
-            expected_output=(
-                "A list of functions categorized as YELLOW based on their risk levels.",
-                "This should follow the strict Markdown format defined below:",
-                taskListFormat,
+            expected_output=dedent(
+                f"""
+                A list of functions categorized as YELLOW based on their risk levels.
+                This should follow the strict Markdown format defined below:
+                {taskListFormat}
+                """
             ),
             agent=self.agents[1],  # contract analysis agent
             context=[get_contract_code],
@@ -227,10 +237,12 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 "Help identify and categorize functions that would be considered ORANGE in terms of risk.",
                 "ORANGE - functions without side-effects used by functions with side-effects and functions with side-effects that can alter contract behavior but not in a way that can lead to theft, funds loss or contract lock.",
             ),
-            expected_output=(
-                "A list of functions categorized as ORANGE based on their risk levels.",
-                "This should follow the strict Markdown format defined below:",
-                taskListFormat,
+            expected_output=dedent(
+                f"""
+                A list of functions categorized as ORANGE based on their risk levels.
+                This should follow the strict Markdown format defined below:
+                {taskListFormat}
+                """
             ),
             agent=self.agents[1],  # contract analysis agent
             context=[get_contract_code],
@@ -240,10 +252,12 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         # check for missing functions
         missing_functions = Task(
             description="Help identify and categorize functions that are missing from the GREEN, YELLOW, and ORANGE categories, if any.",
-            expected_output=(
-                "A list of functions that are missing from the GREEN, YELLOW, and ORANGE categories.",
-                "This should follow the strict Markdown format defined below:",
-                taskListFormat,
+            expected_output=dedent(
+                f"""
+                A list of functions that are missing from the GREEN, YELLOW, and ORANGE categories.
+                This should follow the strict Markdown format defined below:
+                {taskListFormat}
+                """
             ),
             agent=self.agents[1],  # contract analysis agent
             context=[
@@ -265,11 +279,13 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 "Functions that are read-only should not have any side-effects.",
                 "Example: A function that returns the balance of an account should not modify the balance.",
             ),
-            expected_output=(
-                "An analysis of GREEN functions with any reported issues and recommended fixes.",
-                "Do not include any contract code, only the analysis and recommendations.",
-                "This should follow the strict Markdown format defined below:",
-                taskReportFormat,
+            expected_output=dedent(
+                f"""
+                An analysis of GREEN functions with any reported issues and recommended fixes.
+                Do not include any contract code, only the analysis and recommendations.
+                This should follow the strict Markdown format defined below:
+                {taskReportFormat}
+                """
             ),
             agent=self.agents[1],  # contract analysis agent
             context=[get_contract_code, green_functions],
@@ -283,11 +299,13 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 "Example: Function that allows to change token URI can be executed successfully by anyone, but only admin should be allowed to do that.",
                 "Functions secured using `tx-sender` or `contract-caller` value must be triple checked. If values they change aren't critical (used to secure other functions) they are OK.",
             ),
-            expected_output=(
-                "An analysis of YELLOW functions with any reported issues and recommended fixes.",
-                "Do not include any contract code, only the analysis and recommendations.",
-                "This should follow the strict Markdown format defined below:",
-                taskReportFormat,
+            expected_output=dedent(
+                f"""
+                An analysis of YELLOW functions with any reported issues and recommended fixes.
+                Do not include any contract code, only the analysis and recommendations.
+                This should follow the strict Markdown format defined below:
+                {taskReportFormat}
+                """
             ),
             agent=self.agents[1],  # contract analysis agent
             context=[get_contract_code, yellow_functions],
@@ -301,11 +319,13 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 "Who can perform each action should be documented and verified as part of the report.",
                 "Functions secured using `tx-sender` or `contract-caller` value must be triple checked.",
             ),
-            expected_output=(
-                "An analysis of ORANGE functions with any reported issues and recommended fixes.",
-                "Do not include any contract code, only the analysis and recommendations.",
-                "This should follow the strict Markdown format defined below:",
-                taskReportFormat,
+            expected_output=dedent(
+                f"""
+                An analysis of ORANGE functions with any reported issues and recommended fixes.
+                Do not include any contract code, only the analysis and recommendations.
+                This should follow the strict Markdown format defined below:
+                {taskReportFormat}
+                """
             ),
             agent=self.agents[1],  # contract analysis agent
             context=[get_contract_code, orange_functions],
@@ -325,8 +345,21 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 "This should follow the strict Markdown format defined below:",
                 taskReportFormat,
             ),
+            expected_output=dedent(
+                f"""
+                An analysis of RED functions with any reported issues and recommended fixes.
+                Do not include any contract code, only the analysis and recommendations.
+                This should follow the strict Markdown format defined below:
+                {taskReportFormat}
+                """
+            ),
             agent=self.agents[1],  # contract analysis agent
-            context=[get_contract_code, trait_functions, as_contract_functions],
+            context=[
+                get_contract_code,
+                trait_functions,
+                as_contract_functions,
+                missing_functions,
+            ],
         )
         self.add_task(analyze_red_contracts)
 
@@ -340,11 +373,13 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 "Complex logic should be broken down into smaller, more manageable parts.",
                 "Edge cases and potential vulnerabilities should be identified and addressed.",
             ),
-            expected_output=(
-                "An analysis of complex logic segments with any reported issues and recommended fixes.",
-                "Do not include any contract code, only the analysis and recommendations.",
-                "This should follow the strict Markdown format defined below:",
-                taskReportFormat,
+            expected_output=dedent(
+                f"""
+                An analysis of complex logic segments with any reported issues and recommended fixes.
+                Do not include any contract code, only the analysis and recommendations.
+                This should follow the strict Markdown format defined below:
+                {taskReportFormat}
+                """
             ),
             agent=self.agents[1],  # contract analysis agent
             context=[get_contract_code],
@@ -357,11 +392,13 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 "Fees and token transfers should be validated to prevent zero or unintended values.",
                 "Edge cases and potential vulnerabilities should be identified and addressed.",
             ),
-            expected_output=(
-                "An analysis of fee validation and token transfer logic with any reported issues and recommended fixes.",
-                "Do not include any contract code, only the analysis and recommendations.",
-                "This should follow the strict Markdown format defined below:",
-                taskReportFormat,
+            expected_output=dedent(
+                f"""
+                An analysis of fee validation and token transfer logic with any reported issues and recommended fixes.
+                Do not include any contract code, only the analysis and recommendations.
+                This should follow the strict Markdown format defined below:
+                {taskReportFormat}
+                """
             ),
             agent=self.agents[1],  # contract analysis agent
             context=[get_contract_code],
@@ -374,11 +411,13 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 "User inputs should be properly validated to prevent vulnerabilities.",
                 "Edge cases and potential vulnerabilities should be identified and addressed.",
             ),
-            expected_output=(
-                "An analysis of input validation logic with any reported issues and recommended fixes.",
-                "Do not include any contract code, only the analysis and recommendations.",
-                "This should follow the strict Markdown format defined below:",
-                taskReportFormat,
+            expected_output=dedent(
+                f"""
+                An analysis of input validation logic with any reported issues and recommended fixes.
+                Do not include any contract code, only the analysis and recommendations.
+                This should follow the strict Markdown format defined below:
+                {taskReportFormat}
+                """
             ),
             agent=self.agents[1],  # contract analysis agent
             context=[get_contract_code],
@@ -391,11 +430,13 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 "Pause functionality should include a way to resume to prevent permanent contract lockout.",
                 "Edge cases and potential vulnerabilities should be identified and addressed.",
             ),
-            expected_output=(
-                "An analysis of pause and resume mechanisms with any reported issues and recommended fixes.",
-                "Do not include any contract code, only the analysis and recommendations.",
-                "This should follow the strict Markdown format defined below:",
-                taskReportFormat,
+            expected_output=dedent(
+                f"""
+                An analysis of pause and resume mechanisms with any reported issues and recommended fixes.
+                Do not include any contract code, only the analysis and recommendations.
+                This should follow the strict Markdown format defined below:
+                {taskReportFormat}
+                """
             ),
             agent=self.agents[1],  # contract analysis agent
             context=[get_contract_code],
@@ -409,10 +450,12 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         # compile analysis information
         compile_analysis = Task(
             description="Compile the findings from the contract analysis into a comprehensive audit report.",
-            expected_output=(
-                "A detailed audit report summarizing the findings from the contract analysis.",
-                "This should follow the strict Markdown format defined below:",
-                analysisFormat,
+            expected_output=dedent(
+                f"""
+                A detailed audit report summarizing the findings from the contract analysis.
+                This should follow the strict Markdown format defined below:
+                {analysisFormat}
+                """
             ),
             agent=self.agents[2],  # contract report writer
             context=[
@@ -432,10 +475,12 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         # compile review information
         compile_review = Task(
             description="Compile the findings from the contract review into a comprehensive audit report.",
-            expected_output=(
-                "A detailed audit report summarizing the findings from the contract review.",
-                "This should follow the strict Markdown format defined below:",
-                reviewFormat,
+            expected_output=dedent(
+                f"""
+                A detailed audit report summarizing the findings from the contract review.
+                This should follow the strict Markdown format defined below:
+                {reviewFormat}
+                """
             ),
             agent=self.agents[2],  # contract report writer
             context=[
@@ -450,13 +495,15 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         # final report
         final_report = Task(
             description="Finalize the audit report with all the compiled information.",
-            expected_output=(
-                "The finalized audit report ready for delivery to the contract developers.",
-                "This should be a well-structured and detailed report that includes all the findings and recommendations.",
-                "The report format should match the provided template.",
-                analysisFormat,
-                reviewFormat,
-                "## Additional Comments",
+            expected_output=dedent(
+                f"""
+                The finalized audit report ready for delivery to the contract developers.
+                This should be a well-structured and detailed report that includes all the findings and recommendations.
+                The report format should match the provided template.
+                {analysisFormat}
+                {reviewFormat}
+                ## Additional Comments
+                """
             ),
             agent=self.agents[2],  # contract report writer
             context=[compile_analysis, compile_review],
