@@ -2,6 +2,7 @@ import inspect
 import streamlit as st
 from crewai import Agent, Task
 from crewai_tools import tool, Tool
+from textwrap import dedent
 from utils.crews import AIBTC_Crew, display_token_usage
 from utils.scripts import BunScriptRunner, get_timestamp
 
@@ -88,10 +89,12 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         contract_retrieval_agent = Agent(
             role="Contract Retrieval Expert",
             goal="To retrieve the contract code for analysis.",
-            backstory=(
-                "You are a contract retrieval agent with expertise in fetching contract code and functions for analysis.",
-                "Your role is crucial in providing the necessary data for the audit team to perform their tasks effectively.",
-                "You always use the fully qualified contract name (ADDRESS.CONTRACT_NAME) to ensure accurate retrieval.",
+            backstory=dedent(
+                """
+                You are a contract retrieval agent with expertise in fetching contract code and functions for analysis.,
+                Your role is crucial in providing the necessary data for the audit team to perform their tasks effectively.,
+                You always use the fully qualified contract name (ADDRESS.CONTRACT_NAME) to ensure accurate retrieval.,
+                """
             ),
             tools=[AgentTools.get_contract_source_code],
             verbose=True,
@@ -104,9 +107,11 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         contract_analysis_agent = Agent(
             role="Contract Analysis Expert",
             goal="To analyze the contract code and functions to understand the purpose and function of a smart contract.",
-            backstory=(
-                "You are a contract analysis agent with expertise in dissecting smart contract codebases and identifying potential risks.",
-                "Your role is critical in assessing the security and functionality of the contracts under audit.",
+            backstory=dedent(
+                """
+                You are a contract analysis agent with expertise in dissecting smart contract codebases and identifying potential risks. 
+                Your role is critical in assessing the security and functionality of the contracts under audit.
+                """
             ),
             tools=[],
             verbose=True,
@@ -119,15 +124,18 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         contract_report_writer = Agent(
             role="Contract Report Writer",
             goal="To compile the findings from the contract analysis into a comprehensive audit report.",
-            backstory=(
-                "You are a contract report writer with experience in summarizing complex technical information into clear and concise reports.",
-                "Your role is essential in documenting the audit results and recommendations for the contract developers.",
+            backstory=dedent(
+                """
+                You are a contract report writer with experience in summarizing complex technical information into clear and concise reports.,
+                Your role is essential in documenting the audit results and recommendations for the contract developers.,
+                """
             ),
             tools=[],
             verbose=True,
             allow_delegation=False,
             llm=llm,
         )
+        self.add_agent(contract_report_writer)
 
     def setup_tasks(self):
         #
