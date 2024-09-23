@@ -198,9 +198,11 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
 
         # check for green functions
         green_functions = Task(
-            description=(
-                "Help identify and categorize functions that would be considered GREEN in terms of risk.",
-                "GREEN - harmless, do not participate in anything super important, in most cases it will be just a read-only function that returns value stored on-chain",
+            description=dedent(
+                f"""
+                Help identify and categorize functions that would be considered GREEN in terms of risk.
+                GREEN - harmless, do not participate in anything super important, in most cases it will be just a read-only function that returns value stored on-chain.
+                """
             ),
             expected_output=dedent(
                 f"""
@@ -216,9 +218,11 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
 
         # check for yellow functions
         yellow_functions = Task(
-            description=(
-                "Help identify and categorize functions that would be considered YELLOW in terms of risk.",
-                "YELLOW - can change value of variable of map entry, but they are not used to anything critical. In most cases it will functions that can modify meta-data stored on chain.",
+            description=dedent(
+                f"""
+                Help identify and categorize functions that would be considered YELLOW in terms of risk.
+                YELLOW - can change value of variable of map entry, but they are not used to anything critical. In most cases it will functions that can modify meta-data stored on chain.
+                """
             ),
             expected_output=dedent(
                 f"""
@@ -233,9 +237,11 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
 
         # check for orange functions
         orange_functions = Task(
-            description=(
-                "Help identify and categorize functions that would be considered ORANGE in terms of risk.",
-                "ORANGE - functions without side-effects used by functions with side-effects and functions with side-effects that can alter contract behavior but not in a way that can lead to theft, funds loss or contract lock.",
+            description=dedent(
+                f"""
+                Help identify and categorize functions that would be considered ORANGE in terms of risk.
+                ORANGE - functions without side-effects used by functions with side-effects and functions with side-effects that can alter contract behavior but not in a way that can lead to theft, funds loss or contract lock.
+                """
             ),
             expected_output=dedent(
                 f"""
@@ -274,10 +280,12 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         #
 
         analyze_green_contracts = Task(
-            description=(
-                "Analyze the GREEN functions for correctness and consider the following:",
-                "Functions that are read-only should not have any side-effects.",
-                "Example: A function that returns the balance of an account should not modify the balance.",
+            description=dedent(
+                f"""
+                Analyze the GREEN functions for correctness and consider the following:
+                - Functions that are read-only should not have any side-effects.
+                - Example: A function that returns the balance of an account should not modify the balance.
+                """
             ),
             expected_output=dedent(
                 f"""
@@ -293,11 +301,13 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         self.add_task(analyze_green_contracts)
 
         analyze_yellow_contracts = Task(
-            description=(
-                "Analyze the YELLOW functions for proper authorization and access control and consider the following:",
-                "Functions that can be called by people who shouldn't be able to call them must be fixed.",
-                "Example: Function that allows to change token URI can be executed successfully by anyone, but only admin should be allowed to do that.",
-                "Functions secured using `tx-sender` or `contract-caller` value must be triple checked. If values they change aren't critical (used to secure other functions) they are OK.",
+            description=dedent(
+                f"""
+                Analyze the YELLOW functions for proper authorization and access control and consider the following:
+                - Functions that can be called by people who shouldn't be able to call them must be fixed.
+                - Example: Function that allows to change token URI can be executed successfully by anyone, but only admin should be allowed to do that.
+                - Functions secured using `tx-sender` or `contract-caller` value must be triple checked. If values they change aren't critical (used to secure other functions) they are OK.
+                """
             ),
             expected_output=dedent(
                 f"""
@@ -313,11 +323,13 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         self.add_task(analyze_yellow_contracts)
 
         analyze_orange_contracts = Task(
-            description=(
-                "Analyze the ORANGE functions for for proper authorization, access control and security vulnerabilities, and consider the following:",
-                "Functions with side-effects (minting, transferring, burning STX/FT/NFT) must be secured properly.",
-                "Who can perform each action should be documented and verified as part of the report.",
-                "Functions secured using `tx-sender` or `contract-caller` value must be triple checked.",
+            description=dedent(
+                f"""
+                Analyze the ORANGE functions for proper authorization, access control, and security vulnerabilities and consider the following:
+                - Functions with side-effects (minting, transferring, burning STX/FT/NFT) must be secured properly.
+                - Who can perform each action should be documented and verified as part of the report.
+                - Functions secured using `tx-sender` or `contract-caller` value must be triple checked.
+                """
             ),
             expected_output=dedent(
                 f"""
@@ -333,17 +345,13 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         self.add_task(analyze_orange_contracts)
 
         analyze_red_contracts = Task(
-            description=(
-                "Analyze the provided functions as RED functions for critical security issues and consider the following:",
-                "Functions that can lead to theft, funds loss or contract lock must be secured properly.",
-                "Who can perform each action should be documented and verified as part of the report.",
-                "Functions secured using `tx-sender` or `contract-caller` value must be triple checked.",
-            ),
-            expected_output=(
-                "An analysis of RED functions with any reported issues and recommended fixes.",
-                "Do not include any contract code, only the analysis and recommendations.",
-                "This should follow the strict Markdown format defined below:",
-                taskReportFormat,
+            description=dedent(
+                f"""
+                Analyze the provided functions as RED functions for critical security issues and consider the following:
+                - Functions that can lead to theft, funds loss or contract lock must be secured properly.
+                - Who can perform each action should be documented and verified as part of the report.
+                - Functions secured using `tx-sender` or `contract-caller` value must be triple checked.
+                """
             ),
             expected_output=dedent(
                 f"""
@@ -368,10 +376,12 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         #
 
         review_complex_logic = Task(
-            description=(
-                "Review complex logic identified in previous stages for potential flaws and consider the following:",
-                "Complex logic should be broken down into smaller, more manageable parts.",
-                "Edge cases and potential vulnerabilities should be identified and addressed.",
+            description=dedent(
+                f"""
+                Review the complex logic identified in the previous stages for potential flaws and consider the following:
+                - Complex logic should be broken down into smaller, more manageable parts.
+                - Edge cases and potential vulnerabilities should be identified and addressed.
+                """
             ),
             expected_output=dedent(
                 f"""
@@ -387,10 +397,12 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         self.add_task(review_complex_logic)
 
         review_fee_validation = Task(
-            description=(
-                "Review the validation of fees and token transfers for potential issues and consider the following:",
-                "Fees and token transfers should be validated to prevent zero or unintended values.",
-                "Edge cases and potential vulnerabilities should be identified and addressed.",
+            description=dedent(
+                f"""
+                Review the validation of fees and token transfers for potential issues and consider the following:
+                - Fees and token transfers should be validated to prevent zero or unintended values.
+                - Edge cases and potential vulnerabilities should be identified and addressed.
+                """
             ),
             expected_output=dedent(
                 f"""
@@ -406,10 +418,12 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         self.add_task(review_fee_validation)
 
         review_input_validation = Task(
-            description=(
-                "Review the validation of user-provided inputs for potential vulnerabilities and consider the following:",
-                "User inputs should be properly validated to prevent vulnerabilities.",
-                "Edge cases and potential vulnerabilities should be identified and addressed.",
+            description=dedent(
+                f"""
+                Review the validation of user-provided inputs for potential vulnerabilities and consider the following:
+                - User inputs should be properly validated to prevent vulnerabilities.
+                - Edge cases and potential vulnerabilities should be identified and addressed.
+                """
             ),
             expected_output=dedent(
                 f"""
@@ -425,10 +439,12 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         self.add_task(review_input_validation)
 
         review_pause_resume = Task(
-            description=(
-                "Review the mechanisms for pausing and resuming contract operations for potential issues and consider the following:",
-                "Pause functionality should include a way to resume to prevent permanent contract lockout.",
-                "Edge cases and potential vulnerabilities should be identified and addressed.",
+            description=dedent(
+                f"""
+                Review the mechanisms for pausing and resuming contract operations for potential issues and consider the following:
+                - Pause functionality should include a way to resume to prevent permanent contract lockout.
+                - Edge cases and potential vulnerabilities should be identified and addressed.
+                """
             ),
             expected_output=dedent(
                 f"""
