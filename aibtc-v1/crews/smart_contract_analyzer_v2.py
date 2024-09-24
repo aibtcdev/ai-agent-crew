@@ -20,35 +20,35 @@ clarityHints = """
 """
 
 taskListFormat = """
-### {header that describes the analysis, e.g. GREEN Functions}
+### {{header that describes the analysis, e.g. GREEN Functions}}
 
-- {item 1}: {description of item 1}
-- {item 2}: {description of item 2}
-- {item 3}: {description of item 3}
+- {{item 1}}: {{description of item 1}}
+- {{item 2}}: {{description of item 2}}
+- {{item 3}}: {{description of item 3}}
 """
 
 taskReportFormat = """
-### {header that describes the analysis, e.g. GREEN Functions}
+### {{header that describes the analysis, e.g. GREEN Functions}}
 
 #### Summary of Findings
 
-{short summary of findings}
+{{short summary of findings}}
 
 #### Detailed Analysis
 
-{detailed analysis of findings}
+{{detailed analysis of findings}}
 """
 
 codeReferences = """
 #### References to Specific Code Segments
 
-{references to specific code segments}
+{{references to specific code segments}}
 """
 
 analysisFormat = """
 ## General Concept
 
-{general concept of the contract}
+{{general concept of the contract}}
 
 ## Function Analysis
 
@@ -56,55 +56,55 @@ analysisFormat = """
 
 #### List of RED Functions
 
-{list of RED functions}
+{{list of RED functions}}
 
 #### Analysis of RED Functions
 
-{analysis of RED functions}
+{{analysis of RED functions}}
 
 ### ORANGE Functions
 
 #### List of ORANGE Functions
 
-{list of ORANGE functions}
+{{list of ORANGE functions}}
 
 #### Analysis of ORANGE Functions
 
-{analysis of ORANGE functions}
+{{analysis of ORANGE functions}}
 
 ### YELLOW Functions
 
 #### List of YELLOW Functions
 
-{list of YELLOW functions}
+{{list of YELLOW functions}}
 
 #### Analysis of YELLOW Functions
 
-{analysis of YELLOW functions}
+{{analysis of YELLOW functions}}
 
 ### GREEN Functions
 
 #### List of GREEN Functions
 
-{list of GREEN functions}
+{{list of GREEN functions}}
 
 #### Analysis of GREEN Functions
 
-{analysis of GREEN functions}
+{{analysis of GREEN functions}}
 
 ### Missing Functions
 
 #### List of Missing Functions
 
-{list of missing functions}
+{{list of missing functions}}
 
 #### Analysis of Missing Functions
 
-{analysis of missing functions}
+{{analysis of missing functions}}
 
 ### Additional Comments
 
-{additional comments}
+{{additional comments}}
 """
 
 reviewFormat = """
@@ -112,23 +112,23 @@ reviewFormat = """
 
 ### Complex Logic Review
 
-{analysis of complex logic}
+{{analysis of complex logic}}
 
 ### Fee Validation
 
-{analysis of fee validation}
+{{analysis of fee validation}}
 
 ### Input Validation
 
-{analysis of input validation}
+{{analysis of input validation}}
 
 ### Pause and Resume Mechanisms
 
-{analysis of pause and resume mechanisms}
+{{analysis of pause and resume mechanisms}}
 
 ### Edge Cases
 
-{analysis of edge cases}
+{{analysis of edge cases}}
 """
 
 
