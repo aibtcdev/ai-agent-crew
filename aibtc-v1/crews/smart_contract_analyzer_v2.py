@@ -6,9 +6,21 @@ from textwrap import dedent
 from utils.crews import AIBTC_Crew, display_token_usage
 from utils.scripts import BunScriptRunner, get_timestamp
 
+clarityHints = """
+### Clarity Hints
+
+- all Clarity code blocks should start with ```clarity
+- reentrancy is not possible at the language level, transactions are atomic
+- traits are a defined interface that can be implemented by contracts
+- `contract-caller` represents the principal that called the contract
+- `tx-sender` represents the principal that initiated the transaction and can be another contract
+- `as-contract` is used to switch calling context from user to contract
+- `contract-call?` is used to interact with other contracts
+- `try!`, `unwrap!`, `unwrap-err!` are used to handle control flow
+"""
 
 taskListFormat = """
-## {description of analysis}
+### {header that describes the analysis, e.g. GREEN Functions}
 
 - {item 1}: {description of item 1}
 - {item 2}: {description of item 2}
@@ -16,67 +28,107 @@ taskListFormat = """
 """
 
 taskReportFormat = """
-## Summary of Findings
+### {header that describes the analysis, e.g. GREEN Functions}
+
+#### Summary of Findings
 
 {short summary of findings}
 
-## Detailed Analysis
+#### Detailed Analysis
 
 {detailed analysis of findings}
+"""
 
-## References to Specific Code Segments
+codeReferences = """
+#### References to Specific Code Segments
 
 {references to specific code segments}
 """
 
 analysisFormat = """
-# Contract analysis for {contract_name}
-
 ## General Concept
 
 {general concept of the contract}
 
-## RED Functions
+## Function Analysis
+
+### RED Functions
+
+#### List of RED Functions
 
 {list of RED functions}
 
-## ORANGE Functions
+#### Analysis of RED Functions
+
+{analysis of RED functions}
+
+### ORANGE Functions
+
+#### List of ORANGE Functions
 
 {list of ORANGE functions}
 
-## YELLOW Functions
+#### Analysis of ORANGE Functions
+
+{analysis of ORANGE functions}
+
+### YELLOW Functions
+
+#### List of YELLOW Functions
 
 {list of YELLOW functions}
 
-## GREEN Functions
+#### Analysis of YELLOW Functions
+
+{analysis of YELLOW functions}
+
+### GREEN Functions
+
+#### List of GREEN Functions
 
 {list of GREEN functions}
 
-## Missing Functions
+#### Analysis of GREEN Functions
+
+{analysis of GREEN functions}
+
+### Missing Functions
+
+#### List of Missing Functions
 
 {list of missing functions}
+
+#### Analysis of Missing Functions
+
+{analysis of missing functions}
+
+### Additional Comments
+
+{additional comments}
 """
 
 reviewFormat = """
-## Complex Logic Review
+## General Code Review
 
-{review of complex logic}
+### Complex Logic Review
 
-## Fee Validation
+{analysis of complex logic}
 
-{validation of fees and token transfers}
+### Fee Validation
 
-## Input Validation
+{analysis of fee validation}
 
-{validation of user-provided inputs}
+### Input Validation
 
-## Pause and Resume Mechanisms
+{analysis of input validation}
+
+### Pause and Resume Mechanisms
 
 {analysis of pause and resume mechanisms}
 
-## Final Analysis
+### Edge Cases
 
-{final analysis of the contract}
+{analysis of edge cases}
 """
 
 
@@ -108,9 +160,10 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
             role="Contract Analysis Expert",
             goal="To analyze the contract code and functions to understand the purpose and function of a smart contract.",
             backstory=dedent(
-                """
+                f"""
                 You are a contract analysis agent with expertise in dissecting smart contract codebases and identifying potential risks. 
                 Your role is critical in assessing the security and functionality of the contracts under audit.
+                {clarityHints}
                 """
             ),
             tools=[],
@@ -138,6 +191,8 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         self.add_agent(contract_report_writer)
 
     def setup_tasks(self, contract_identifier):
+        # TODO: add names to all tasks!
+
         #
         # STAGE 1: PREP THE INFORMATION
         #
@@ -166,14 +221,14 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         )
         self.add_task(general_concept)
 
-        # check for functions that use traits
+        # create list of functions that use traits
         trait_functions = Task(
-            description="Identify functions that take traits as arguments and note what each function does.",
+            description="Help identify and categorize functions that take traits as arguments.",
             expected_output=(
                 f"""
                 A list of functions that take traits as arguments with descriptions of what each function does. 
                 This should follow the strict Markdown format defined below:
-                {taskReportFormat}
+                {taskListFormat}
                 """
             ),
             agent=self.agents[1],  # contract analysis agent
@@ -183,12 +238,12 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
 
         # check for functions that use as-contract
         as_contract_functions = Task(
-            description="Identify all instances where `as-contract` is used with `contract-call?` and note the functions involved.",
+            description="Help identify and categorize functions that use `as-contract` with `contract-call?`.",
             expected_output=dedent(
                 f"""
-                Documentation of all instances where `as-contract` is used with `contract-call?`, including function names.
+                A list of functions that use `as-contract` with `contract-call?` with descriptions of what each function does.
                 This should follow the strict Markdown format defined below:
-                {taskReportFormat}
+                {taskListFormat}
                 """
             ),
             agent=self.agents[1],  # contract analysis agent
@@ -206,7 +261,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
             ),
             expected_output=dedent(
                 f"""
-                A list of functions categorized as GREEN based on their risk levels.
+                A list of functions with a short description categorized as GREEN based on their risk levels.
                 This should follow the strict Markdown format defined below:
                 {taskListFormat}
                 """
@@ -234,6 +289,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
             agent=self.agents[1],  # contract analysis agent
             context=[get_contract_code],
         )
+        self.add_task(yellow_functions)
 
         # check for orange functions
         orange_functions = Task(
@@ -255,12 +311,37 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         )
         self.add_task(orange_functions)
 
-        # check for missing functions
-        missing_functions = Task(
-            description="Help identify and categorize functions that are missing from the GREEN, YELLOW, and ORANGE categories, if any.",
+        # check for red functions
+        red_functions = Task(
+            description=dedent(
+                f"""
+                Help identify and categorize functions that would be considered RED in terms of risk.
+                RED - functions that can lead to theft, funds loss or contract lock.
+                """
+            ),
             expected_output=dedent(
                 f"""
-                A list of functions that are missing from the GREEN, YELLOW, and ORANGE categories.
+                A list of functions categorized as RED based on their risk levels.
+                This should follow the strict Markdown format defined below:
+                {taskListFormat}
+                """
+            ),
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code],
+        )
+        self.add_task(red_functions)
+
+        # check for missing functions
+        missing_functions = Task(
+            description=dedent(
+                """
+                Help identify and categorize functions that are missing from the provided lists.
+                Only include a function if it is missing from all categories.
+                """
+            ),
+            expected_output=dedent(
+                f"""
+                A list of functions in the contract code that are missing from the provided categories.
                 This should follow the strict Markdown format defined below:
                 {taskListFormat}
                 """
@@ -271,6 +352,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 green_functions,
                 yellow_functions,
                 orange_functions,
+                red_functions,
             ],
         )
         self.add_task(missing_functions)
@@ -279,7 +361,51 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         # STAGE 2 - ANALYZE THE CATEGORIES
         #
 
-        analyze_green_contracts = Task(
+        analyze_trait_functions = Task(
+            description=dedent(
+                f"""
+                Analyze the functions that take traits as arguments for correctness and consider the following:
+                - Traits should be used correctly and consistently throughout the contract.
+                - Functions should to be written with the assumption that the supplied contract is malicious and cannot be trusted at any point in time
+                """
+            ),
+            expected_output=dedent(
+                f"""
+                An analysis of trait functions with any reported issues and recommended fixes.
+                Do not include any new or modified contract code, only the analysis and recommendations.
+                This should follow the strict Markdown format defined below:
+                {taskReportFormat}
+                {codeReferences}
+                """
+            ),
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code, trait_functions],
+        )
+        self.add_task(analyze_trait_functions)
+
+        analyze_as_contract_functions = Task(
+            description=dedent(
+                f"""
+                Analyze the functions that use `as-contract` with `contract-call?` for correctness and consider the following:
+                - `as-contract` function is used to switch calling context from user to contract.
+                - The use of `as-contract` should be appropriate and secure.
+                """
+            ),
+            expected_output=dedent(
+                f"""
+                An analysis of functions using `as-contract` with `contract-call?` with any reported issues and recommended fixes.
+                Do not include any new or modified contract code, only the analysis and recommendations.
+                This should follow the strict Markdown format defined below:
+                {taskReportFormat}
+                {codeReferences}
+                """
+            ),
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code, as_contract_functions],
+        )
+        self.add_task(analyze_as_contract_functions)
+
+        analyze_green_functions = Task(
             description=dedent(
                 f"""
                 Analyze the GREEN functions for correctness and consider the following:
@@ -290,7 +416,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
             expected_output=dedent(
                 f"""
                 An analysis of GREEN functions with any reported issues and recommended fixes.
-                Do not include any contract code, only the analysis and recommendations.
+                Do not include any new or modified contract code, only the analysis and recommendations.
                 This should follow the strict Markdown format defined below:
                 {taskReportFormat}
                 """
@@ -298,9 +424,9 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
             agent=self.agents[1],  # contract analysis agent
             context=[get_contract_code, green_functions],
         )
-        self.add_task(analyze_green_contracts)
+        self.add_task(analyze_green_functions)
 
-        analyze_yellow_contracts = Task(
+        analyze_yellow_functions = Task(
             description=dedent(
                 f"""
                 Analyze the YELLOW functions for proper authorization and access control and consider the following:
@@ -312,7 +438,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
             expected_output=dedent(
                 f"""
                 An analysis of YELLOW functions with any reported issues and recommended fixes.
-                Do not include any contract code, only the analysis and recommendations.
+                Do not include any new or modified contract code, only the analysis and recommendations.
                 This should follow the strict Markdown format defined below:
                 {taskReportFormat}
                 """
@@ -320,9 +446,9 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
             agent=self.agents[1],  # contract analysis agent
             context=[get_contract_code, yellow_functions],
         )
-        self.add_task(analyze_yellow_contracts)
+        self.add_task(analyze_yellow_functions)
 
-        analyze_orange_contracts = Task(
+        analyze_orange_functions = Task(
             description=dedent(
                 f"""
                 Analyze the ORANGE functions for proper authorization, access control, and security vulnerabilities and consider the following:
@@ -334,7 +460,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
             expected_output=dedent(
                 f"""
                 An analysis of ORANGE functions with any reported issues and recommended fixes.
-                Do not include any contract code, only the analysis and recommendations.
+                Do not include any new or modified contract code, only the analysis and recommendations.
                 This should follow the strict Markdown format defined below:
                 {taskReportFormat}
                 """
@@ -342,9 +468,9 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
             agent=self.agents[1],  # contract analysis agent
             context=[get_contract_code, orange_functions],
         )
-        self.add_task(analyze_orange_contracts)
+        self.add_task(analyze_orange_functions)
 
-        analyze_red_contracts = Task(
+        analyze_red_functions = Task(
             description=dedent(
                 f"""
                 Analyze the provided functions as RED functions for critical security issues and consider the following:
@@ -356,7 +482,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
             expected_output=dedent(
                 f"""
                 An analysis of RED functions with any reported issues and recommended fixes.
-                Do not include any contract code, only the analysis and recommendations.
+                Do not include any new or modified contract code, only the analysis and recommendations.
                 This should follow the strict Markdown format defined below:
                 {taskReportFormat}
                 """
@@ -364,12 +490,33 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
             agent=self.agents[1],  # contract analysis agent
             context=[
                 get_contract_code,
-                trait_functions,
-                as_contract_functions,
+                red_functions,
+            ],
+        )
+        self.add_task(analyze_red_functions)
+
+        analyze_missing_functions = Task(
+            description=dedent(
+                f"""
+                Analyze the missing functions for potential risks and consider the following:
+                - Missing functions were not categorized and should be reviewed thoroughly for potential security vulnerabilities.
+                """
+            ),
+            expected_output=dedent(
+                f"""
+                An analysis of missing functions with any reported issues and recommended fixes.
+                Do not include any new or modified contract code, only the analysis and recommendations.
+                This should follow the strict Markdown format defined below:
+                {taskReportFormat}
+                """
+            ),
+            agent=self.agents[1],  # contract analysis agent
+            context=[
+                get_contract_code,
                 missing_functions,
             ],
         )
-        self.add_task(analyze_red_contracts)
+        self.add_task(analyze_missing_functions)
 
         #
         # STAGE 3 - ANALYZE COMMON ISSUES
@@ -386,7 +533,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
             expected_output=dedent(
                 f"""
                 An analysis of complex logic segments with any reported issues and recommended fixes.
-                Do not include any contract code, only the analysis and recommendations.
+                Do not include any new or modified contract code, only the analysis and recommendations.
                 This should follow the strict Markdown format defined below:
                 {taskReportFormat}
                 """
@@ -407,7 +554,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
             expected_output=dedent(
                 f"""
                 An analysis of fee validation and token transfer logic with any reported issues and recommended fixes.
-                Do not include any contract code, only the analysis and recommendations.
+                Do not include any new or modified contract code, only the analysis and recommendations.
                 This should follow the strict Markdown format defined below:
                 {taskReportFormat}
                 """
@@ -428,7 +575,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
             expected_output=dedent(
                 f"""
                 An analysis of input validation logic with any reported issues and recommended fixes.
-                Do not include any contract code, only the analysis and recommendations.
+                Do not include any new or modified contract code, only the analysis and recommendations.
                 This should follow the strict Markdown format defined below:
                 {taskReportFormat}
                 """
@@ -449,7 +596,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
             expected_output=dedent(
                 f"""
                 An analysis of pause and resume mechanisms with any reported issues and recommended fixes.
-                Do not include any contract code, only the analysis and recommendations.
+                Do not include any new or modified contract code, only the analysis and recommendations.
                 This should follow the strict Markdown format defined below:
                 {taskReportFormat}
                 """
@@ -459,16 +606,38 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         )
         self.add_task(review_pause_resume)
 
+        review_edge_cases = Task(
+            description=dedent(
+                f"""
+                Review the contract for potential edge cases and consider the following:
+                - Edge cases should be identified and tested to ensure the contract behaves as expected.
+                - Potential vulnerabilities should be identified and addressed.
+                """
+            ),
+            expected_output=dedent(
+                f"""
+                An analysis of edge cases with any reported issues and recommended fixes.
+                Do not include any new or modified contract code, only the analysis and recommendations.
+                This should follow the strict Markdown format defined below:
+                {taskReportFormat}
+                """
+            ),
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code, review_complex_logic],
+        )
+        self.add_task(review_edge_cases)
+
         #
         # STAGE 4 - ASSEMBLE THE FINAL ANALYSIS
         #
 
-        # compile analysis information
+        # compile color analysis info
+        # TODO: can split and make async for each section
         compile_analysis = Task(
-            description="Compile the findings from the contract analysis into a comprehensive audit report.",
+            description="Compile the findings from the color analysis into a comprehensive audit report.",
             expected_output=dedent(
                 f"""
-                A detailed audit report summarizing the findings from the contract analysis.
+                A detailed audit report summarizing the findings from the color analysis.
                 This should follow the strict Markdown format defined below:
                 {analysisFormat}
                 """
@@ -477,13 +646,15 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
             context=[
                 general_concept,
                 green_functions,
+                analyze_green_functions,
                 yellow_functions,
+                analyze_yellow_functions,
                 orange_functions,
+                analyze_orange_functions,
+                red_functions,
+                analyze_red_functions,
                 missing_functions,
-                analyze_green_contracts,
-                analyze_yellow_contracts,
-                analyze_orange_contracts,
-                analyze_red_contracts,
+                analyze_missing_functions,
             ],
         )
         self.add_task(compile_analysis)
@@ -504,6 +675,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 review_fee_validation,
                 review_input_validation,
                 review_pause_resume,
+                review_edge_cases,
             ],
         )
         self.add_task(compile_review)
@@ -515,7 +687,8 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 f"""
                 The finalized audit report ready for delivery to the contract developers.
                 This should be a well-structured and detailed report that includes all the findings and recommendations.
-                The report format should match the provided template.
+                The report format should match the provided template:
+                # Report for {contract_identifier}
                 {analysisFormat}
                 {reviewFormat}
                 ## Additional Comments
