@@ -787,7 +787,7 @@ class AgentTools:
         if isinstance(contract_name, dict) and "contract_name" in contract_name:
             contract_name = contract_name["contract_name"]
         return BunScriptRunner.bun_run(
-            "stacks-contracts", "get-contract.ts", contract_name
+            "stacks-contracts", "get-contract-source-code.ts", contract_name
         )
 
     @classmethod
