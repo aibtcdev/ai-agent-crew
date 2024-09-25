@@ -355,6 +355,22 @@ class AgentTools:
 #########################
 
 
+def get_network_from_address(address):
+    if address.startswith("SP") or address.startswith("SM"):
+        return "mainnet"
+    elif address.startswith("ST") or address.startswith("SN"):
+        return "testnet"
+    return "testnet"
+
+
+def get_api_url(network):
+    if network == "mainnet":
+        return "https://api.mainnet.hiro.so"
+    elif network == "testnet":
+        return "https://api.testnet.hiro.so"
+    return "https://api.testnet.hiro.so"
+
+
 def parse_contract_identifier(identifier):
     parts = identifier.split(".")
     if len(parts) == 2:
@@ -363,7 +379,9 @@ def parse_contract_identifier(identifier):
 
 
 def fetch_contract_source(contract_address, contract_name):
-    url = f"https://api.hiro.so/v2/contracts/source/{contract_address}/{contract_name}"
+    network = get_network_from_address(contract_address)
+    api_url = get_api_url(network)
+    url = f"{api_url}/v2/contracts/source/{contract_address}/{contract_name}"
     response = requests.get(url)
 
     if response.status_code == 200:
@@ -374,9 +392,9 @@ def fetch_contract_source(contract_address, contract_name):
 
 
 def fetch_contract_functions(contract_address, contract_name):
-    url = (
-        f"https://api.hiro.so/v2/contracts/interface/{contract_address}/{contract_name}"
-    )
+    network = get_network_from_address(contract_address)
+    api_url = get_api_url(network)
+    url = f"{api_url}/v2/contracts/interface/{contract_address}/{contract_name}"
     response = requests.get(url)
 
     if response.status_code == 200:
