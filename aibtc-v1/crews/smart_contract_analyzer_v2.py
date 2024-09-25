@@ -18,6 +18,7 @@ clarityHints = """
 - `as-contract` is used to switch calling context from user to contract
 - `contract-call?` is used to interact with other contracts
 - `try!`, `unwrap!`, `unwrap-err!` are used to handle control flow
+- built-in Clarity functions do not need to be reviewed by themselves
 """
 
 taskListFormat = """
@@ -250,7 +251,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[1],  # contract analysis agent
+            agent=self.agents[2],  # contract analysis agent
             context=[sanitize_contract_code],
         )
         self.add_task(general_concept)
@@ -265,7 +266,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskListFormat}
                 """
             ),
-            agent=self.agents[1],  # contract analysis agent
+            agent=self.agents[2],  # contract analysis agent
             context=[sanitize_contract_code],
         )
         self.add_task(trait_functions)
@@ -280,7 +281,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskListFormat}
                 """
             ),
-            agent=self.agents[1],  # contract analysis agent
+            agent=self.agents[2],  # contract analysis agent
             context=[sanitize_contract_code],
         )
         self.add_task(as_contract_functions)
@@ -300,7 +301,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskListFormat}
                 """
             ),
-            agent=self.agents[1],  # contract analysis agent
+            agent=self.agents[2],  # contract analysis agent
             context=[sanitize_contract_code],
         )
         self.add_task(green_functions)
@@ -320,7 +321,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskListFormat}
                 """
             ),
-            agent=self.agents[1],  # contract analysis agent
+            agent=self.agents[2],  # contract analysis agent
             context=[sanitize_contract_code],
         )
         self.add_task(yellow_functions)
@@ -340,7 +341,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskListFormat}
                 """
             ),
-            agent=self.agents[1],  # contract analysis agent
+            agent=self.agents[2],  # contract analysis agent
             context=[sanitize_contract_code],
         )
         self.add_task(orange_functions)
@@ -360,7 +361,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskListFormat}
                 """
             ),
-            agent=self.agents[1],  # contract analysis agent
+            agent=self.agents[2],  # contract analysis agent
             context=[sanitize_contract_code],
         )
         self.add_task(red_functions)
@@ -380,7 +381,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskListFormat}
                 """
             ),
-            agent=self.agents[1],  # contract analysis agent
+            agent=self.agents[2],  # contract analysis agent
             context=[
                 sanitize_contract_code,
                 green_functions,
@@ -412,7 +413,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {codeReferences}
                 """
             ),
-            agent=self.agents[1],  # contract analysis agent
+            agent=self.agents[2],  # contract analysis agent
             context=[sanitize_contract_code, trait_functions],
         )
         self.add_task(analyze_trait_functions)
@@ -434,7 +435,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {codeReferences}
                 """
             ),
-            agent=self.agents[1],  # contract analysis agent
+            agent=self.agents[2],  # contract analysis agent
             context=[sanitize_contract_code, as_contract_functions],
         )
         self.add_task(analyze_as_contract_functions)
@@ -455,7 +456,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[1],  # contract analysis agent
+            agent=self.agents[2],  # contract analysis agent
             context=[sanitize_contract_code, green_functions],
         )
         self.add_task(analyze_green_functions)
@@ -477,7 +478,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[1],  # contract analysis agent
+            agent=self.agents[2],  # contract analysis agent
             context=[sanitize_contract_code, yellow_functions],
         )
         self.add_task(analyze_yellow_functions)
@@ -499,7 +500,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[1],  # contract analysis agent
+            agent=self.agents[2],  # contract analysis agent
             context=[sanitize_contract_code, orange_functions],
         )
         self.add_task(analyze_orange_functions)
@@ -521,7 +522,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[1],  # contract analysis agent
+            agent=self.agents[2],  # contract analysis agent
             context=[
                 sanitize_contract_code,
                 red_functions,
@@ -544,7 +545,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[1],  # contract analysis agent
+            agent=self.agents[2],  # contract analysis agent
             context=[
                 sanitize_contract_code,
                 missing_functions,
@@ -572,7 +573,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[1],  # contract analysis agent
+            agent=self.agents[2],  # contract analysis agent
             context=[sanitize_contract_code],
         )
         self.add_task(review_complex_logic)
@@ -593,7 +594,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[1],  # contract analysis agent
+            agent=self.agents[2],  # contract analysis agent
             context=[sanitize_contract_code],
         )
         self.add_task(review_fee_validation)
@@ -614,7 +615,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[1],  # contract analysis agent
+            agent=self.agents[2],  # contract analysis agent
             context=[sanitize_contract_code],
         )
         self.add_task(review_input_validation)
@@ -635,7 +636,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[1],  # contract analysis agent
+            agent=self.agents[2],  # contract analysis agent
             context=[sanitize_contract_code],
         )
         self.add_task(review_pause_resume)
@@ -656,7 +657,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[1],  # contract analysis agent
+            agent=self.agents[2],  # contract analysis agent
             context=[sanitize_contract_code, review_complex_logic],
         )
         self.add_task(review_edge_cases)
@@ -679,7 +680,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[1],  # contract analysis agent
+            agent=self.agents[2],  # contract analysis agent
             context=[sanitize_contract_code],
         )
         self.add_task(review_security_vulnerabilities)
@@ -699,7 +700,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {analysisFormat}
                 """
             ),
-            agent=self.agents[2],  # contract report writer
+            agent=self.agents[3],  # contract report writer
             context=[
                 general_concept,
                 green_functions,
@@ -726,7 +727,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {reviewFormat}
                 """
             ),
-            agent=self.agents[2],  # contract report writer
+            agent=self.agents[3],  # contract report writer
             context=[
                 review_complex_logic,
                 review_fee_validation,
@@ -754,7 +755,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 ## Additional Comments
                 """
             ),
-            agent=self.agents[2],  # contract report writer
+            agent=self.agents[3],  # contract report writer
             context=[compile_analysis, compile_review],
         )
         self.add_task(final_report)
