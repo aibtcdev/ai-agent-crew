@@ -149,9 +149,9 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
             goal="To retrieve the contract code for analysis.",
             backstory=dedent(
                 """
-                You are a contract retrieval agent with expertise in fetching contract code and functions for analysis.,
-                Your role is crucial in providing the necessary data for the audit team to perform their tasks effectively.,
-                You always use the fully qualified contract name (ADDRESS.CONTRACT_NAME) to ensure accurate retrieval.,
+                You are a contract retrieval agent with expertise in fetching contract code and functions for analysis.
+                Your role is crucial in providing the necessary data for the audit team to perform their tasks effectively.
+                You always use the fully qualified contract name (ADDRESS.CONTRACT_NAME) to ensure accurate retrieval.
                 """
             ),
             tools=[AgentTools.get_contract_source_code],
@@ -162,23 +162,23 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         self.add_agent(contract_retrieval_agent)
 
         # contract sanitizer agent
-        contract_sanitizer_agent = Agent(
-            role="Contract Sanitizer",
-            goal="To review the contract code and help reduce the size of the context for the contract without removing any pertinent information.",
-            backstory=dedent(
-                """
-                You are an expert in detecting a specific pattern within contracts where the contract calls it's own functions repeatedly.
-                For example, a contract that airdrops an FT or NFT to a list of users by calling it's own mint function.
-                If you detect this pattern, you will replace the all but the first and last contract call lines with a single comment indicating the change.
-                If you do not detect this pattern or are unsure, you return only the raw contract code without any modifications.
-                """
-            ),
-            tools=[],
-            verbose=True,
-            allow_delegation=False,
-            llm=llm,
-        )
-        self.add_agent(contract_sanitizer_agent)
+        # contract_sanitizer_agent = Agent(
+        #    role="Contract Sanitizer",
+        #    goal="To review the contract code and help reduce the size of the context for the contract without removing any pertinent information.",
+        #    backstory=dedent(
+        #        """
+        #        You are an expert in detecting a specific pattern within contracts where the contract calls it's own functions repeatedly.
+        #        For example, a contract that airdrops an FT or NFT to a list of users by calling it's own mint function.
+        #        If you detect this pattern, you will replace the all but the first and last contract call lines with a single comment indicating the change.
+        #        If you do not detect this pattern or are unsure, you return only the raw contract code without any modifications.
+        #        """
+        #    ),
+        #    tools=[],
+        #    verbose=True,
+        #    allow_delegation=False,
+        #    llm=llm,
+        # )
+        # self.add_agent(contract_sanitizer_agent)
 
         # contract analysis agent
         contract_analysis_agent = Agent(
@@ -188,6 +188,9 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 f"""
                 You are a contract analysis agent with expertise in dissecting smart contract codebases and identifying potential risks. 
                 Your role is critical in assessing the security and functionality of the contracts under audit.
+                You are an expert in detecting a specific pattern within contracts where the contract calls it's own functions repeatedly.
+                Example 1: A contract that airdrops an FT or NFT to a list of users by calling it's own mint function.
+                Example 2: A contract that provides a long list of users to one of its own functions to perform an action.
                 {clarityHints}
                 """
             ),
@@ -225,21 +228,28 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
 
         # get the contract code
         get_contract_code = Task(
-            description=f"Retrieve the contract code for analysis. User Input: {contract_identifier}",
-            expected_output="The contract code for analysis in raw format with no modifications or additional output.",
+            description=dedent(
+                f"""
+                Retrieve the contract code for further analysis based on the provided user input using your tools: {contract_identifier}
+                If you detect a specific pattern within the contract where the contract calls its own functions repeatedly, you will sanitize the code.
+                If you sanitize the code, you will include a single comment indicating the change in place of the removed lines and preserve the first and last line for context.
+                If you do not detect this pattern or are unsure, you will return only the raw contract code without any modifications.
+                """
+            ),
+            expected_output="The contract code for further analysis in raw format with no additional output.",
             agent=self.agents[0],  # contract retrieval agent
             context=[],
         )
         self.add_task(get_contract_code)
 
         # sanitize the contract code
-        sanitize_contract_code = Task(
-            description="Sanitize the contract code to reduce the size of the context.",
-            expected_output="The contract code with the specific pattern removed or the raw contract code if the pattern is not detected.",
-            agent=self.agents[1],  # contract sanitizer agent
-            context=[get_contract_code],
-        )
-        self.add_task(sanitize_contract_code)
+        # sanitize_contract_code = Task(
+        #    description="Sanitize the contract code to reduce the size of the context.",
+        #    expected_output="The contract code with the specific pattern removed or the raw contract code if the pattern is not detected.",
+        #    agent=self.agents[1],  # contract sanitizer agent
+        #    context=[get_contract_code],
+        # )
+        # self.add_task(sanitize_contract_code)
 
         # what is the general purpose of the contract
         general_concept = Task(
@@ -251,8 +261,8 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[2],  # contract analysis agent
-            context=[sanitize_contract_code],
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code],
         )
         self.add_task(general_concept)
 
@@ -266,8 +276,8 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskListFormat}
                 """
             ),
-            agent=self.agents[2],  # contract analysis agent
-            context=[sanitize_contract_code],
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code],
         )
         self.add_task(trait_functions)
 
@@ -281,8 +291,8 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskListFormat}
                 """
             ),
-            agent=self.agents[2],  # contract analysis agent
-            context=[sanitize_contract_code],
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code],
         )
         self.add_task(as_contract_functions)
 
@@ -301,8 +311,8 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskListFormat}
                 """
             ),
-            agent=self.agents[2],  # contract analysis agent
-            context=[sanitize_contract_code],
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code],
         )
         self.add_task(green_functions)
 
@@ -321,8 +331,8 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskListFormat}
                 """
             ),
-            agent=self.agents[2],  # contract analysis agent
-            context=[sanitize_contract_code],
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code],
         )
         self.add_task(yellow_functions)
 
@@ -341,8 +351,8 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskListFormat}
                 """
             ),
-            agent=self.agents[2],  # contract analysis agent
-            context=[sanitize_contract_code],
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code],
         )
         self.add_task(orange_functions)
 
@@ -361,8 +371,8 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskListFormat}
                 """
             ),
-            agent=self.agents[2],  # contract analysis agent
-            context=[sanitize_contract_code],
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code],
         )
         self.add_task(red_functions)
 
@@ -381,9 +391,9 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskListFormat}
                 """
             ),
-            agent=self.agents[2],  # contract analysis agent
+            agent=self.agents[1],  # contract analysis agent
             context=[
-                sanitize_contract_code,
+                get_contract_code,
                 green_functions,
                 yellow_functions,
                 orange_functions,
@@ -413,8 +423,8 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {codeReferences}
                 """
             ),
-            agent=self.agents[2],  # contract analysis agent
-            context=[sanitize_contract_code, trait_functions],
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code, trait_functions],
         )
         self.add_task(analyze_trait_functions)
 
@@ -435,8 +445,8 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {codeReferences}
                 """
             ),
-            agent=self.agents[2],  # contract analysis agent
-            context=[sanitize_contract_code, as_contract_functions],
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code, as_contract_functions],
         )
         self.add_task(analyze_as_contract_functions)
 
@@ -456,8 +466,8 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[2],  # contract analysis agent
-            context=[sanitize_contract_code, green_functions],
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code, green_functions],
         )
         self.add_task(analyze_green_functions)
 
@@ -478,8 +488,8 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[2],  # contract analysis agent
-            context=[sanitize_contract_code, yellow_functions],
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code, yellow_functions],
         )
         self.add_task(analyze_yellow_functions)
 
@@ -500,8 +510,8 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[2],  # contract analysis agent
-            context=[sanitize_contract_code, orange_functions],
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code, orange_functions],
         )
         self.add_task(analyze_orange_functions)
 
@@ -522,9 +532,9 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[2],  # contract analysis agent
+            agent=self.agents[1],  # contract analysis agent
             context=[
-                sanitize_contract_code,
+                get_contract_code,
                 red_functions,
             ],
         )
@@ -545,9 +555,9 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[2],  # contract analysis agent
+            agent=self.agents[1],  # contract analysis agent
             context=[
-                sanitize_contract_code,
+                get_contract_code,
                 missing_functions,
             ],
         )
@@ -573,8 +583,8 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[2],  # contract analysis agent
-            context=[sanitize_contract_code],
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code],
         )
         self.add_task(review_complex_logic)
 
@@ -594,8 +604,8 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[2],  # contract analysis agent
-            context=[sanitize_contract_code],
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code],
         )
         self.add_task(review_fee_validation)
 
@@ -615,8 +625,8 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[2],  # contract analysis agent
-            context=[sanitize_contract_code],
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code],
         )
         self.add_task(review_input_validation)
 
@@ -636,8 +646,8 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[2],  # contract analysis agent
-            context=[sanitize_contract_code],
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code],
         )
         self.add_task(review_pause_resume)
 
@@ -657,8 +667,8 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[2],  # contract analysis agent
-            context=[sanitize_contract_code, review_complex_logic],
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code, review_complex_logic],
         )
         self.add_task(review_edge_cases)
 
@@ -680,8 +690,8 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {taskReportFormat}
                 """
             ),
-            agent=self.agents[2],  # contract analysis agent
-            context=[sanitize_contract_code],
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code],
         )
         self.add_task(review_security_vulnerabilities)
 
@@ -700,7 +710,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {analysisFormat}
                 """
             ),
-            agent=self.agents[3],  # contract report writer
+            agent=self.agents[2],  # contract report writer
             context=[
                 general_concept,
                 green_functions,
@@ -727,7 +737,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 {reviewFormat}
                 """
             ),
-            agent=self.agents[3],  # contract report writer
+            agent=self.agents[2],  # contract report writer
             context=[
                 review_complex_logic,
                 review_fee_validation,
@@ -755,7 +765,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 ## Additional Comments
                 """
             ),
-            agent=self.agents[3],  # contract report writer
+            agent=self.agents[2],  # contract report writer
             context=[compile_analysis, compile_review],
         )
         self.add_task(final_report)
