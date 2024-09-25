@@ -10,8 +10,9 @@ clarityHints = """
 ### Clarity Hints
 
 - all Clarity code blocks should start with ```clarity
-- reentrancy is not possible at the language level, transactions are atomic
-- traits are a defined interface that can be implemented by contracts
+- transactions are atomic, state changes do not happen unless the contract succeeds
+- reentrancy is not possible at the language level
+- traits are a defined interface that can be implemented or used by contracts
 - `contract-caller` represents the principal that called the contract
 - `tx-sender` represents the principal that initiated the transaction and can be another contract
 - `as-contract` is used to switch calling context from user to contract
@@ -129,6 +130,10 @@ reviewFormat = """
 ### Edge Cases
 
 {{analysis of edge cases}}
+
+### Security Vulnerabilities
+
+{{analysis of security vulnerabilities}}
 """
 
 
@@ -178,9 +183,10 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
             role="Contract Report Writer",
             goal="To compile the findings from the contract analysis into a comprehensive audit report.",
             backstory=dedent(
-                """
+                f"""
                 You are a contract report writer with experience in summarizing complex technical information into clear and concise reports.,
                 Your role is essential in documenting the audit results and recommendations for the contract developers.,
+                {clarityHints}
                 """
             ),
             tools=[],
@@ -627,6 +633,29 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
         )
         self.add_task(review_edge_cases)
 
+        review_security_vulnerabilities = Task(
+            description=dedent(
+                f"""
+                Review the contract for potential security vulnerabilities and consider the following:
+                - does this contract have any potential unintended side effects?
+                - does this contract have a potential malicious outcome?
+                - does this contract have any vulnerabilities that could be exploited by a user?
+                - does this contract have any vulnerabilities that could be exploited by another contract?
+                """
+            ),
+            expected_output=dedent(
+                f"""
+                An analysis of security vulnerabilities with any reported issues and recommended fixes.
+                Do not include any new or modified contract code, only the analysis and recommendations.
+                This should follow the strict Markdown format defined below:
+                {taskReportFormat}
+                """
+            ),
+            agent=self.agents[1],  # contract analysis agent
+            context=[get_contract_code],
+        )
+        self.add_task(review_security_vulnerabilities)
+
         #
         # STAGE 4 - ASSEMBLE THE FINAL ANALYSIS
         #
@@ -676,6 +705,7 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 review_input_validation,
                 review_pause_resume,
                 review_edge_cases,
+                review_security_vulnerabilities,
             ],
         )
         self.add_task(compile_review)
@@ -691,6 +721,8 @@ class SmartContractAnalyzerV2(AIBTC_Crew):
                 # Report for {contract_identifier}
                 {analysisFormat}
                 {reviewFormat}
+                ## Recommondation
+                {{is contract safe to interact with and use?}}
                 ## Additional Comments
                 """
             ),
