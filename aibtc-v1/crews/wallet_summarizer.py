@@ -24,6 +24,7 @@ class WalletSummaryCrew(AIBTC_Crew):
             tools=[
                 AgentTools.get_address_balance_detailed,
                 AgentTools.get_address_transactions,
+                AgentTools.get_bns_address,
             ],
             backstory=dedent(
                 """
@@ -212,6 +213,12 @@ class AgentTools:
         return BunScriptRunner.bun_run(
             "stacks-wallet", "get-transactions-by-address.ts", address
         )
+
+    @staticmethod
+    @tool("Translate BNS Name to Address")
+    def get_bns_address(name: str):
+        """Get the address that is tied to a bns name."""
+        return BunScriptRunner.bun_run("stacks-bns", "get-address-by-bns.ts", name)
 
     @classmethod
     def get_all_tools(cls):
