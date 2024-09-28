@@ -2,6 +2,7 @@ anthropic
 chromadb
 crewai
 crewai_tools
+fastapi
 langchain
 langchain_ollama
 langchain_openai
@@ -12,3 +13,4 @@ python-dotenv
 PyYAML
 streamlit
 streamlit-mermaid
+uvicorn

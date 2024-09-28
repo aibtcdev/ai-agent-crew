@@ -98,8 +98,8 @@ class ClarityCodeGeneratorCrew(AIBTC_Crew):
         )
         self.add_task(compile_clarity_code_task)
 
-    @staticmethod
-    def get_task_inputs():
+    @classmethod
+    def get_task_inputs(cls):
         return ["user_input"]
 
     @classmethod
@@ -142,7 +142,7 @@ class ClarityCodeGeneratorCrew(AIBTC_Crew):
                 clarity_code_generator_crew_class.setup_agents(llm)
                 clarity_code_generator_crew_class.setup_tasks(user_input)
                 clarity_code_generator_crew = (
-                    clarity_code_generator_crew_class.create_crew()
+                    clarity_code_generator_crew_class.create_crew(callbacks=True)
                 )
 
                 with st.spinner("Generating Clarity code..."):

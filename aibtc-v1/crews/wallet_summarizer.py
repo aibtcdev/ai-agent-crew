@@ -119,8 +119,8 @@ class WalletSummaryCrew(AIBTC_Crew):
         )
         self.add_task(analyze_historical_data_task)
 
-    @staticmethod
-    def get_task_inputs():
+    @classmethod
+    def get_task_inputs(cls):
         return ["address"]
 
     @classmethod
@@ -153,7 +153,9 @@ class WalletSummaryCrew(AIBTC_Crew):
                 wallet_summary_crew_class = WalletSummaryCrew()
                 wallet_summary_crew_class.setup_agents(llm)
                 wallet_summary_crew_class.setup_tasks(address)
-                wallet_summary_crew = wallet_summary_crew_class.create_crew()
+                wallet_summary_crew = wallet_summary_crew_class.create_crew(
+                    callbacks=True
+                )
 
                 with st.spinner("Analyzing..."):
                     result = wallet_summary_crew.kickoff()
