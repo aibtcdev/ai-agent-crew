@@ -82,13 +82,13 @@ class TradingAnalyzerCrew(AIBTC_Crew):
     def render_crew(self):
         st.subheader("Crypto Trading Analysis")
         st.markdown(
-            "This tool will analyze cryptocurrency price history and provide trading signals."
+            "This tool will analyze Stacks cryptocurrency price history and provide trading signals."
         )
 
         with st.form("crypto_trading_form"):
             crypto_symbol = st.text_input(
                 "Cryptocurrency Symbol",
-                help="Enter the symbol of the cryptocurrency (e.g., BTC, ETH)",
+                help="Enter the symbol of the cryptocurrency (e.g., ALEX, WELSH, DIKO)",
             )
             submitted = st.form_submit_button("Analyze")
 
@@ -214,3 +214,14 @@ class AgentTools:
         )
 
         return f"Token: {data['token']}\n{formatted_volume}"
+
+    @classmethod
+    def get_all_tools(cls):
+        members = inspect.getmembers(cls)
+        tools = [
+            member
+            for name, member in members
+            if isinstance(member, Tool)
+            or (hasattr(member, "__wrapped__") and isinstance(member.__wrapped__, Tool))
+        ]
+        return tools
