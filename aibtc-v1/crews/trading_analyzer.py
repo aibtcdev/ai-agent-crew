@@ -124,6 +124,13 @@ class TradingAnalyzerCrew(AIBTC_Crew):
                 result_str = str(result.raw)
                 st.markdown(result_str)
 
+                # Display disclaimer
+                st.markdown(
+                    """### Disclaimer
+The information and recommendations provided on this website are for demonstration purposes only and do not constitute financial advice. Our multi-agent AI system analyzes historical cryptocurrency data to generate buy, sell, or hold suggestions. However, artificial intelligence can produce unexpected or inaccurate results, including hallucinations. These recommendations should not be relied upon for making trading decisions. Always consult with a qualified financial advisor before making any investment decisions.
+"""
+                )
+
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
                 st.write("Please check your inputs and try again.")
