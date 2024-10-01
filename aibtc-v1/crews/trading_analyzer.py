@@ -10,7 +10,7 @@ import requests
 # Custom Crew Class for Cryptocurrency Trading
 class TradingAnalyzerCrew(AIBTC_Crew):
     def __init__(self):
-        super().__init__("Trading")
+        super().__init__("Trading Analyzer")
 
     def setup_agents(self, llm):
         # Agent for pulling market data
