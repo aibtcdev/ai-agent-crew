@@ -67,7 +67,7 @@ h1, h2, h3, h4, h5, h6, p, a, span, div, button, input, select, textarea {
 */
 
 /* set max page width */
-.main .block-container {
+.stMainBlockContainer {
     max-width: 800px;
     padding-top: 2rem;
     padding-right: 1rem;
