@@ -5,11 +5,14 @@ import shutil
 
 class ClarinetInterface:
     def __init__(self):
-        project_root = self.find_project_root()
-        self.working_dir = os.path.join(
-            project_root, "aibtc-v1", "crews", "working_dir"
-        )
         self.env = os.environ.copy()
+        self.clarinet_binary = None
+        self.project_dir = None
+
+    def initialize_clarinet(self):
+        # Find project root
+        project_root = self.find_project_root()
+        # Attempt to find Clarinet binary
         self.clarinet_binary = shutil.which("clarinet")
 
         if self.clarinet_binary:
@@ -23,7 +26,6 @@ class ClarinetInterface:
                 raise FileNotFoundError(
                     f"Clarinet binary not found at {self.clarinet_binary}. Please install Clarinet."
                 )
-
             print(f"Using local Clarinet binary at {self.clarinet_binary}")
 
             # If we're on Replit, set LD_LIBRARY_PATH
@@ -60,6 +62,9 @@ class ClarinetInterface:
         self.CLARINET_BIN_DIR = os.path.join(self.CLARINET_SETUP_DIR, "bin")
         self.CLARINET_BIN_PATH = os.path.join(self.CLARINET_BIN_DIR, "clarinet")
         self.CLARINET_DEPS_DIR = os.path.join(self.CLARINET_SETUP_DIR, "glibc-2.34")
+        self.WORKING_DIR = os.path.join(
+            project_root, "aibtc-v1", "crews", "working_dir"
+        )
 
     def update_environment(self):
         # Update PATH and LD_LIBRARY_PATH for the local Clarinet binary
@@ -70,10 +75,18 @@ class ClarinetInterface:
             f"{self.CLARINET_DEPS_DIR}:/usr/lib/x86_64-linux-gnu:{ld_library_path}"
         )
 
+    def create_project(self, project_name):
+        # Set the project directory
+        self.project_dir = os.path.join(self.WORKING_DIR, project_name)
+        # Ensure the working directory exists
+        os.makedirs(self.WORKING_DIR, exist_ok=True)
+        cmd = [self.clarinet_binary, "new", project_name]
+        return self.run_command(cmd, cwd=self.WORKING_DIR)
+
     def run_command(self, command, cwd=None):
         result = subprocess.run(
-            [self.clarinet_binary] + command,
-            cwd=cwd or self.CLARINET_WORKING_DIR,
+            command,
+            cwd=cwd or self.project_dir,
             env=self.env,
             capture_output=True,
             text=True,
@@ -84,26 +97,38 @@ class ClarinetInterface:
             "returncode": result.returncode,
         }
 
-    def create_project(self, project_name):
-        cmd = ["new", project_name]
+    def add_contract(self, contract_name):
+        cmd = [self.clarinet_binary, "contract", "new", contract_name]
         return self.run_command(cmd)
 
-    def add_contract(self, contract_name):
-        cmd = ["contract", "new", contract_name]
-        return self.run_command(cmd)
+    def update_contract(self, contract_name, contract_code):
+        contract_file_path = os.path.join(
+            self.project_dir, "contracts", f"{contract_name}.clar"
+        )
+
+        # Write the contract code to the file (overwrite if exists)
+        try:
+            with open(contract_file_path, "w") as f:
+                f.write(contract_code)
+        except Exception as e:
+            return {
+                "stdout": "",
+                "stderr": f"Error writing contract code for contract name {contract_name}: {e}",
+                "returncode": 1,
+            }
 
     def remove_contract(self, contract_name):
-        cmd = ["contract", "rm", contract_name]
-        return self.run_command(cmd)
-
-    def add_requirement(self, contract_id):
-        cmd = ["requirements", "add", contract_id]
+        cmd = [self.clarinet_binary, "contract", "rm", contract_name]
         return self.run_command(cmd)
 
     def check_all_contracts(self):
-        cmd = ["check"]
+        cmd = [self.clarinet_binary, "check"]
         return self.run_command(cmd)
 
     def check_contract(self, contract_name):
-        cmd = ["check", contract_name]
+        cmd = [self.clarinet_binary, "check", contract_name]
+        return self.run_command(cmd)
+
+    def add_requirement(self, contract_id):
+        cmd = [self.clarinet_binary, "requirements", "add", contract_id]
         return self.run_command(cmd)
