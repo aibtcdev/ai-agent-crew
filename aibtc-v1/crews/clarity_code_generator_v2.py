@@ -4,6 +4,7 @@ import streamlit as st
 from crewai import Agent, Task
 from crewai_tools import tool, Tool
 from utils.clarinet import ClarinetInterface
+from utils.clarity import clarityHints
 from utils.crews import AIBTC_Crew, display_token_usage
 from utils.scripts import get_timestamp
 
@@ -50,8 +51,9 @@ class ClarityCodeGeneratorCrewV2(AIBTC_Crew):
             backstory=(
                 "You are an expert in Clarity, a smart contract language for the Stacks blockchain. "
                 "Your goal is to write secure, efficient, and functional Clarity code based on specific user requirements. "
-                "You should tailor your code generation to meet the exact needs described in the user input."
-                "Then, store the generated code using your tools to create a new smart contract."
+                "You should tailor your code generation to meet the exact needs described in the user input. "
+                "Then, store the generated code using your tools to create a new smart contract. "
+                f"Remember to follow the Clarity hints for best practices:\n{clarityHints}"
             ),
             tools=[AgentTools.add_new_smart_contract],
             allow_delegation=False,
