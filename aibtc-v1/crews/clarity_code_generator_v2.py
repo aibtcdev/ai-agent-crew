@@ -3,8 +3,9 @@ import os
 import streamlit as st
 from crewai import Agent, Task
 from crewai_tools import tool, Tool
+from textwrap import dedent
 from utils.clarinet import ClarinetInterface
-from utils.clarity import clarityHints
+from utils.clarity import clarityFunctionsList, clarityHints, clarityKeywordsList
 from utils.crews import AIBTC_Crew, display_token_usage
 from utils.scripts import get_timestamp
 
@@ -17,7 +18,7 @@ class ClarityCodeGeneratorCrewV2(AIBTC_Crew):
         clarity_environment_maintainer = Agent(
             role="Clarity Environment Maintainer",
             goal="Ensure the Clarity environment is set up correctly and ready for code generation and review.",
-            backstory=(
+            backstory=dedent(
                 "You are responsible for maintaining the Clarity environment, ensuring that all tools and dependencies are correctly installed and configured. "
                 "Your goal is to provide a stable and reliable environment for generating and reviewing Clarity code."
             ),
@@ -32,7 +33,7 @@ class ClarityCodeGeneratorCrewV2(AIBTC_Crew):
         clarity_project_manager = Agent(
             role="Clarity Project Manager",
             goal="Create a new Clarinet project and add the generated Clarity code to it.",
-            backstory=(
+            backstory=dedent(
                 "You are a skilled project manager with expertise in setting up Clarinet projects for smart contract development.",
             ),
             tools=[
@@ -48,14 +49,15 @@ class ClarityCodeGeneratorCrewV2(AIBTC_Crew):
         clarity_code_generator = Agent(
             role="Clarity Code Generator",
             goal="Generate Clarity code for a smart contract on the Stacks blockchain based on user input requirements.",
-            backstory=(
+            backstory=dedent(
                 "You are an expert in Clarity, a smart contract language for the Stacks blockchain. "
                 "Your goal is to write secure, efficient, and functional Clarity code based on specific user requirements. "
                 "You should tailor your code generation to meet the exact needs described in the user input. "
-                "Then, store the generated code using your tools to create a new smart contract. "
                 f"Remember to follow the Clarity hints for best practices:\n{clarityHints}"
+                f"{clarityKeywordsList}"
+                f"{clarityFunctionsList}"
             ),
-            tools=[AgentTools.add_new_smart_contract],
+            tools=[AgentTools.add_new_smart_contract, AgentTools.update_smart_contract],
             allow_delegation=False,
             memory=True,
             verbose=True,
@@ -66,14 +68,15 @@ class ClarityCodeGeneratorCrewV2(AIBTC_Crew):
         clarity_code_reviewer = Agent(
             role="Clarity Code Reviewer",
             goal="Review the generated Clarity code, create a Clarinet project, and check its syntax.",
-            backstory=(
+            backstory=dedent(
                 "You are a meticulous Clarity code reviewer known for ensuring smart contract security and code quality on the Stacks blockchain. "
-                "Your goal is to analyze the generated code by checking the syntax, providing detailed feedback on any issues found."
-                "If you encounter issues, provide relevant context and ask the Clarity Code Generator co-worker to provide updated code."
+                "Your goal is to analyze the generated code by checking the syntax, providing detailed feedback on any issues found. "
+                "If you encounter issues, provide detailed context and ask the Clarity Code Generator to update the contract. "
+                "Do not continue until the code passes the syntax check. "
+                f"Remember to follow the Clarity hints for best practices:\n{clarityHints}"
             ),
             tools=[
                 AgentTools.check_all_smart_contract_syntax,
-                AgentTools.update_contract,
             ],
             allow_delegation=True,
             memory=True,
@@ -85,10 +88,11 @@ class ClarityCodeGeneratorCrewV2(AIBTC_Crew):
         clarity_code_reporter = Agent(
             role="Clarity Code Reporter",
             goal="Create a detailed report on the code quality, syntax check results, and any issues found.",
-            backstory=(
+            backstory=dedent(
                 "You are a skilled Clarity code reporter, responsible for creating detailed reports on the quality and syntax of Clarity code. "
                 "Your goal is to provide a comprehensive analysis of the code review results, highlighting any issues found and suggesting improvements."
                 "You ensure that the output clearly presents both the code and its review in a user-friendly Markdown format."
+                f"Remember to follow the Clarity hints for best practices:\n{clarityHints}"
             ),
             tools=[],
             allow_delegation=False,
@@ -124,14 +128,19 @@ class ClarityCodeGeneratorCrewV2(AIBTC_Crew):
         )
         self.add_task(generate_clarity_code)
 
+        # TODO: check for and add requirements
+        # needs to be able to get all requirements currently in project
+        # needs to be able to add requirements if needed before syntax check
+        # might also be callable from reviewer if issue found in syntax check
+
         review_clarity_code = Task(
             description=(
                 "Review the generated Clarity code by checking its syntax using your tools. "
                 "Provide a detailed report on the code quality, syntax check results, and any issues found. "
                 f"Consider how well the code meets the original user requirements: {user_input}. "
-                "If you encounter issues, provide relevant context and ask the Clarity Code Generator co-worker to provide updated code."
+                "Delegate to the Clarity Code Generator until the code passes the syntax check."
             ),
-            expected_output="A detailed report on the code quality, syntax check results, and any issues found.",
+            expected_output="Once the syntax check passes, a detailed report on the code quality, syntax check results, and any issues found.",
             agent=self.agents[3],  # clarity_code_reviewer
             context=[generate_clarity_code],
         )
@@ -255,7 +264,7 @@ class AgentTools:
             )
         result = AgentTools.clarinet_interface.create_project(project_name)
         if result["returncode"] != 0:
-            return f"Error creating Clarinet project: {result['stderr']}"
+            return f"Error creating Clarinet project: {result['stdout'] + result['stderr']}"
         return f"Successfully created new Clarinet project: {project_name}\n{result['stdout']}"
 
     @staticmethod

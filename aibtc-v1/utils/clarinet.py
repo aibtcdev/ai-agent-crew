@@ -8,10 +8,20 @@ class ClarinetInterface:
         self.env = os.environ.copy()
         self.clarinet_binary = None
         self.project_dir = None
+        self.working_dir = None
 
     def initialize_clarinet(self):
         # Find project root
         project_root = self.find_project_root()
+        if project_root is None:
+            raise FileNotFoundError("Could not find project root directory")
+
+        # Setup working directory
+        self.working_dir = os.path.join(
+            project_root, "aibtc-v1", "crews", "working_dir"
+        )
+        os.makedirs(self.working_dir, exist_ok=True)
+
         # Attempt to find Clarinet binary
         self.clarinet_binary = shutil.which("clarinet")
 
@@ -48,13 +58,14 @@ class ClarinetInterface:
                 )
 
     def find_project_root(self):
-        current_dir = os.path.abspath(self.working_dir)
+        current_dir = os.getcwd()
         while True:
             if os.path.exists(os.path.join(current_dir, "ai-agent-crew")):
-                return os.path.join(current_dir, "ai-agent-crew")
+                return current_dir  # Found the project root
             parent_dir = os.path.dirname(current_dir)
             if parent_dir == current_dir:
-                raise FileNotFoundError("Could not find project root directory")
+                # Reached the root directory without finding the project root
+                return None
             current_dir = parent_dir
 
     def setup_paths(self, project_root):
@@ -62,9 +73,6 @@ class ClarinetInterface:
         self.CLARINET_BIN_DIR = os.path.join(self.CLARINET_SETUP_DIR, "bin")
         self.CLARINET_BIN_PATH = os.path.join(self.CLARINET_BIN_DIR, "clarinet")
         self.CLARINET_DEPS_DIR = os.path.join(self.CLARINET_SETUP_DIR, "glibc-2.34")
-        self.WORKING_DIR = os.path.join(
-            project_root, "aibtc-v1", "crews", "working_dir"
-        )
 
     def update_environment(self):
         # Update PATH and LD_LIBRARY_PATH for the local Clarinet binary
@@ -77,11 +85,12 @@ class ClarinetInterface:
 
     def create_project(self, project_name):
         # Set the project directory
-        self.project_dir = os.path.join(self.WORKING_DIR, project_name)
+        self.project_dir = os.path.join(self.working_dir, project_name)
         # Ensure the working directory exists
-        os.makedirs(self.WORKING_DIR, exist_ok=True)
+        os.makedirs(self.working_dir, exist_ok=True)
+        # Create the project
         cmd = [self.clarinet_binary, "new", project_name]
-        return self.run_command(cmd, cwd=self.WORKING_DIR)
+        return self.run_command(cmd, cwd=self.working_dir)
 
     def run_command(self, command, cwd=None):
         result = subprocess.run(
@@ -110,6 +119,11 @@ class ClarinetInterface:
         try:
             with open(contract_file_path, "w") as f:
                 f.write(contract_code)
+            return {
+                "stdout": f"Contract '{contract_name}' updated successfully.",
+                "stderr": "",
+                "returncode": 0,
+            }
         except Exception as e:
             return {
                 "stdout": "",
