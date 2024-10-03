@@ -3,10 +3,9 @@
 set -e
 
 # get the script location in ./clarinet folder
-CLARINET_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CLARINET_SETUP_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # set up environment
-CLARINET_SETUP_DIR="$CLARINET_SCRIPT_DIR/clarinet"
 CLARINET_BIN_DIR="$CLARINET_SETUP_DIR/bin"
 CLARINET_DEPS_DIR="$CLARINET_SETUP_DIR/glibc-2.34"
 
