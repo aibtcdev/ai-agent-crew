@@ -11,6 +11,8 @@ class ClarinetInterface:
         self.working_dir = None
 
     def initialize_clarinet(self):
+        # Setup Clarinet configuration
+        self.setup_clarinet_config()
         # Find project root
         project_root = self.find_project_root()
         if project_root is None:
@@ -63,6 +65,17 @@ class ClarinetInterface:
         project_root = os.path.dirname(os.path.dirname(clarinet_script_dir))
         print(f"Project root directory: {project_root}")
         return project_root
+
+    def setup_clarinet_config(self):
+        home_dir = os.path.expanduser("~")
+        clarinet_config_dir = os.path.join(home_dir, ".clarinet")
+        clarinetrc_path = os.path.join(clarinet_config_dir, "clarinetrc.toml")
+
+        os.makedirs(clarinet_config_dir, exist_ok=True)
+
+        if not os.path.exists(clarinetrc_path):
+            with open(clarinetrc_path, "w") as f:
+                f.write("enable_telemetry = true\nenable_hints = false\n")
 
     def setup_paths(self, project_root):
         self.CLARINET_SETUP_DIR = os.path.join(project_root, "clarinet")
