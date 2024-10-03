@@ -20,6 +20,10 @@ find_project_root() {
     return 1
 }
 
+# guessing the project root
+echo "Guessing the project root a different way..."
+echo "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 # find the project root
 PROJECT_ROOT=$(find_project_root)
 if [ $? -ne 0 ]; then
