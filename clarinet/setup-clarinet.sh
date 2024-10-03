@@ -8,7 +8,6 @@ find_project_root() {
     local current_dir
     current_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
     while [ "$current_dir" != "/" ]; do
-        echo "Clarinet setup checking $current_dir"
         if [ -d "$current_dir/ai-agent-crew" ]; then
             echo "$current_dir/ai-agent-crew"
             return 0
@@ -18,13 +17,13 @@ find_project_root() {
         fi
         current_dir="$(dirname "$current_dir")"
     done
-    echo "Error: Could not find project root directory" >&2
     return 1
 }
 
 # find the project root
 PROJECT_ROOT=$(find_project_root)
 if [ $? -ne 0 ]; then
+    echo "Error: Could not find project root directory" >&2
     exit 1
 fi
 echo "Project root found at $PROJECT_ROOT"

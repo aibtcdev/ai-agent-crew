@@ -60,7 +60,7 @@ class ClarinetInterface:
     def find_project_root(self):
         current_dir = os.getcwd()
         while True:
-            print("Checking", current_dir)
+            print("Checking for root dir:", current_dir)
             if os.path.exists(os.path.join(current_dir, "ai-agent-crew")):
                 print("Found project root at", current_dir)
                 return current_dir  # Found the project root
