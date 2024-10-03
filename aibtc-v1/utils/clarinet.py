@@ -59,7 +59,9 @@ class ClarinetInterface:
 
     def find_project_root(self):
         clarinet_script_dir = os.path.dirname(os.path.abspath(__file__))
+        print(f"Clarinet script directory: {clarinet_script_dir}")
         project_root = os.path.dirname(clarinet_script_dir)
+        print(f"Project root directory: {project_root}")
         return project_root
 
     def setup_paths(self, project_root):
