@@ -26,6 +26,7 @@ PROJECT_ROOT=$(find_project_root)
 if [ $? -ne 0 ]; then
     exit 1
 fi
+echo "Project root found at $PROJECT_ROOT"
 
 # set up environment
 CLARINET_SETUP_DIR="$PROJECT_ROOT/clarinet"
