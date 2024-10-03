@@ -18,7 +18,7 @@ class ClarinetInterface:
 
         # Setup working directory
         self.working_dir = os.path.join(
-            project_root, "aibtc-v1", "crews", "working_dir"
+            project_root, "ai-agent-crew", "aibtc-v1", "crews", "working_dir"
         )
         os.makedirs(self.working_dir, exist_ok=True)
 
@@ -61,10 +61,12 @@ class ClarinetInterface:
         current_dir = os.getcwd()
         while True:
             if os.path.exists(os.path.join(current_dir, "ai-agent-crew")):
+                print("Found project root at", current_dir)
                 return current_dir  # Found the project root
             parent_dir = os.path.dirname(current_dir)
             if parent_dir == current_dir:
                 # Reached the root directory without finding the project root
+                print("Could not find project root directory")
                 return None
             current_dir = parent_dir
 
