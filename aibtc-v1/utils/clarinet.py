@@ -71,7 +71,9 @@ class ClarinetInterface:
             current_dir = parent_dir
 
     def setup_paths(self, project_root):
-        self.CLARINET_SETUP_DIR = os.path.join(project_root, "clarinet")
+        self.CLARINET_SETUP_DIR = os.path.join(
+            project_root, "ai-agent-crew", "clarinet"
+        )
         self.CLARINET_BIN_DIR = os.path.join(self.CLARINET_SETUP_DIR, "bin")
         self.CLARINET_BIN_PATH = os.path.join(self.CLARINET_BIN_DIR, "clarinet")
         self.CLARINET_DEPS_DIR = os.path.join(self.CLARINET_SETUP_DIR, "glibc-2.34")
