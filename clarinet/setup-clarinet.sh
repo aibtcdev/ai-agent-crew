@@ -2,41 +2,13 @@
 
 set -e
 
-# helper to find the project root
-# so this works locally and on replit
-find_project_root() {
-    local current_dir
-    current_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-    while [ "$current_dir" != "/" ]; do
-        if [ -d "$current_dir/ai-agent-crew" ]; then
-            echo "$current_dir/ai-agent-crew"
-            return 0
-        elif [ -d "$current_dir/aibtc-v1" ]; then
-            echo "$current_dir"
-            return 0
-        fi
-        current_dir="$(dirname "$current_dir")"
-    done
-    return 1
-}
-
-# guessing the project root
-echo "Guessing the project root a different way..."
-echo "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-# find the project root
-PROJECT_ROOT=$(find_project_root)
-if [ $? -ne 0 ]; then
-    echo "Error: Could not find project root directory" >&2
-    exit 1
-fi
-echo "Project root found at $PROJECT_ROOT"
+# get the script location in ./clarinet folder
+CLARINET_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # set up environment
-CLARINET_SETUP_DIR="$PROJECT_ROOT/clarinet"
+CLARINET_SETUP_DIR="$CLARINET_SCRIPT_DIR/clarinet"
 CLARINET_BIN_DIR="$CLARINET_SETUP_DIR/bin"
 CLARINET_DEPS_DIR="$CLARINET_SETUP_DIR/glibc-2.34"
-CLARINET_CONFIG_FILE="$CLARINET_SETUP_DIR/clarinet-config"
 
 # create directories
 mkdir -p "$CLARINET_SETUP_DIR"

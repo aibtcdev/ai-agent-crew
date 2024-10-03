@@ -58,23 +58,12 @@ class ClarinetInterface:
                 )
 
     def find_project_root(self):
-        current_dir = os.getcwd()
-        while True:
-            print("Checking for root dir:", current_dir)
-            if os.path.exists(os.path.join(current_dir, "ai-agent-crew")):
-                print("Found project root at", current_dir)
-                return current_dir  # Found the project root
-            parent_dir = os.path.dirname(current_dir)
-            if parent_dir == current_dir:
-                # Reached the root directory without finding the project root
-                print("Could not find project root directory", current_dir)
-                return None
-            current_dir = parent_dir
+        clarinet_script_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(clarinet_script_dir)
+        return project_root
 
     def setup_paths(self, project_root):
-        self.CLARINET_SETUP_DIR = os.path.join(
-            project_root, "ai-agent-crew", "clarinet"
-        )
+        self.CLARINET_SETUP_DIR = os.path.join(project_root, "clarinet")
         self.CLARINET_BIN_DIR = os.path.join(self.CLARINET_SETUP_DIR, "bin")
         self.CLARINET_BIN_PATH = os.path.join(self.CLARINET_BIN_DIR, "clarinet")
         self.CLARINET_DEPS_DIR = os.path.join(self.CLARINET_SETUP_DIR, "glibc-2.34")
