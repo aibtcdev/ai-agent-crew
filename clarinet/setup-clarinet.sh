@@ -8,6 +8,7 @@ find_project_root() {
     local current_dir
     current_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
     while [ "$current_dir" != "/" ]; do
+        echo "Clarinet setup checking $current_dir"
         if [ -d "$current_dir/ai-agent-crew" ]; then
             echo "$current_dir/ai-agent-crew"
             return 0
