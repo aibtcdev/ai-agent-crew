@@ -5,6 +5,7 @@ myenv
 .flox
 .venv/
 shell.nix
+chroma
 
 # generated clarinet files/folders
 working_dir

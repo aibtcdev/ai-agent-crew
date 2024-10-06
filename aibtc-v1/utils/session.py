@@ -61,13 +61,17 @@ def init_session_state():
         if st.session_state.provider == "Ollama":
             st.session_state.embedder = {
                 "provider": "ollama",
-                "config": {"model": "mxbai-embed-large"},
+                "config": {"model": "nomic-embed-text"},
             }
         else:
             st.session_state.embedder = {
-                "provider": "openai",
-                "config": {"model": "text-embedding-3-small"},
+                "provider": "ollama",
+                "config": {"model": "nomic-embed-text"},
             }
+            # st.session_state.embedder = {
+            #     "provider": "openai",
+            #     "config": {"model": "text-embedding-3-small"},
+            # }
 
 
 def update_session_state(key, value):
@@ -78,7 +82,6 @@ def get_llm(provider, model, api_key, api_base):
     if provider == "Anthropic":
         return anthropic.Anthropic(api_key=api_key)
     elif provider == "Ollama":
-        # return ChatOllama(model=model, base_url=api_base)
         return LLM(model="ollama/llama3.2", base_url="http://localhost:11434")
     else:
         return ChatOpenAI(

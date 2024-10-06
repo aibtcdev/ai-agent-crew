@@ -1,19 +1,17 @@
-# app.py
-
+# Import necessary libraries
 import streamlit as st
 import ollama
 import time
 import crews.trading_analyzer as trading_analyzer
 from utils.session import init_session_state
 
-# initialize session state
+# Initialize session state
 init_session_state()
 
-
-# set up streamlit pag
+# Set up Streamlit page
 st.set_page_config(page_title="CrewAI Chatbot", layout="centered")
 
-# custom css styling
+# Load custom styles (same as before)
 custom_styles = """
 <style>
 /* load regular custom font */
@@ -153,13 +151,14 @@ button[data-baseweb="tab"] > div[data-testid="stMarkdownContainer"] > p {
 }
 </style>
 """
+
+
 st.write(custom_styles, unsafe_allow_html=True)
 
 # Initialize the Ollama client
 client = ollama.Client(
     host="localhost"
 )  # Adjust base_url if Ollama is hosted elsewhere
-
 
 # Placeholder for user session and chat history
 if "chat_history" not in st.session_state:
@@ -177,8 +176,17 @@ if "conversation_context" not in st.session_state:
 available_crews = {
     "Wallet Analysis": "Analyzes wallet activity and transaction patterns.",
     "Contract Scan": "Scans smart contracts for potential vulnerabilities.",
-    "Token Analyzer": "Analyzes token prices provides recommendation.",
+    "Token Analyzer": "Analyzes token prices and provides recommendations.",
 }
+
+# Initial welcome message
+INITIAL_WELCOME_MESSAGE = (
+    "Welcome to CrewAI Chatbot! I can help you run different CrewAIs. Here are the available options:\n\n"
+    "- **Wallet Analysis**: Analyzes wallet activity and transaction patterns.\n"
+    "- **Contract Scan**: Scans smart contracts for potential vulnerabilities.\n"
+    "- **Token Analyzer**: Analyzes token prices and provides recommendations.\n"
+    "\nYou can ask me more about any of these or tell me what you want to do, and I'll recommend a CrewAI to run."
+)
 
 
 def main():
@@ -210,19 +218,52 @@ def add_to_chat(speaker, message):
 
 
 def handle_conversation(user_input):
-    """Handles the conversation by sending the input to the Ollama client."""
-    messages = [{"role": "user", "content": user_input}]
+    """
+    Handles the conversation by sending the input to the LLM and letting it determine the action.
+    The LLM will suggest the CrewAI to run and any required parameters.
+    """
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are a chatbot that helps users interact with and run different CrewAIs based on their needs. "
+                "Given the user's input, determine which CrewAI is most relevant from the following options:\n"
+                "- Wallet Analysis: Analyzes wallet activity and transaction patterns.\n"
+                "- Contract Scan: Scans smart contracts for potential vulnerabilities.\n"
+                "- Token Analyzer: Analyzes token prices and provides recommendations.\n"
+                "\nIf the user's input indicates interest in one of these options, respond with the exact name of the relevant CrewAI, "
+                'followed by any required parameters in JSON format (e.g., {"param1": "value1", "param2": "value2"}). '
+                "If the user needs further assistance, provide guidance or ask clarifying questions."
+            ),
+        },
+        {"role": "user", "content": user_input},
+    ]
     response = client.chat(
         model="llama3.2", messages=messages
     )  # Adjust model as needed
-    return response["message"]["content"]
+
+    # Parse the LLM's response to extract the crew and parameters
+    try:
+        print(f"Response received: {response}")
+        response_content = response["message"]["content"]
+        # Assuming LLM returns something like: "CrewAI: Wallet Analysis, Parameters: {'address': 'wallet_address'}"
+        crew_name = None
+        parameters = {}
+        if "CrewAI" in response_content:
+            parts = response_content.split("Parameters:")
+            crew_name = parts[0].split("CrewAI:")[1].strip()
+            if len(parts) > 1:
+                parameters = eval(parts[1].strip())  # Convert to dictionary
+    except (KeyError, IndexError, SyntaxError) as e:
+        print(f"Error parsing LLM response: {e}")
+        print(f"Response received: {response}")
+        crew_name, parameters = None, {}
+
+    return crew_name, parameters, response["message"]["content"]
 
 
-def run_crew_ai(crew_name):
-    """Runs the selected CrewAI and simulates execution output."""
-    # Placeholder for CrewAI execution logic
-    llm = st.session_state.llm
-
+def run_crew_ai(crew_name, parameters=None):
+    """Runs the selected CrewAI and simulates execution output with optional parameters."""
     st.write("Step Progress:")
     st.session_state.crew_step_container = st.empty()
     st.write("Task Progress:")
@@ -232,16 +273,21 @@ def run_crew_ai(crew_name):
     st.session_state.crew_task_callback = []
 
     trading_class = trading_analyzer.TradingAnalyzerCrew()
+    llm = st.session_state.llm
+
     trading_class.setup_agents(llm)
-    trading_class.setup_tasks("welsh")
+    trading_class.setup_tasks(
+        "welsh"
+    )  # This should be dynamic based on crew_name and parameters
+
     crypto_trading_crew = trading_class.create_crew()
 
-    with st.spinner("Analyzing..."):
-        result = crypto_trading_crew.kickoff()
+    with st.spinner(f"Running {crew_name} CrewAI..."):
+        result = crypto_trading_crew.kickoff(
+            parameters
+        )  # Pass the parameters to the crew
 
-    st.success("Analysis complete!")
-
-    # display_token_usage(result.token_usage)
+    st.success(f"Execution complete for {crew_name}!")
 
     st.subheader("Analysis Results")
 
@@ -252,65 +298,43 @@ def run_crew_ai(crew_name):
     return f"Execution complete for {crew_name} CrewAI. Results: {result_str}"
 
 
-def match_crew(user_input):
-    """
-    Determines if the user input matches or refers to a CrewAI.
-    Returns the CrewAI name if a match is found, otherwise None.
-    """
-    # Check if user input contains any CrewAI name or keyword
-    for crew_name in available_crews.keys():
-        if crew_name.lower() in user_input.lower():
-            return crew_name
-
-    # Additional keyword-based matching logic (can be extended)
-    keywords = {
-        "wallet": "Wallet Analysis",
-        "contract": "Contract Scan",
-        "token": "Token Analyzer",
-    }
-
-    for keyword, crew_name in keywords.items():
-        if keyword.lower() in user_input.lower():
-            return crew_name
-
-    return None
+import logging
 
 
 def handle_user_input(user_input):
-    """
-    Directs the conversation flow based on user input.
-    Starts with guiding the user about available CrewAIs and progresses to execution.
-    """
-    # Check the current context of the conversation
+    """Directs the conversation flow based on user input and executes the necessary CrewAI."""
     context = st.session_state["conversation_context"]
 
     if context == "intro":
-        # Initial context: Introduce the available CrewAIs and guide the user
-        response = "Welcome to CrewAI Chatbot! I can help you run different CrewAIs. Here are the available options:\n\n"
-        for crew_name, description in available_crews.items():
-            response += f"- **{crew_name}**: {description}\n"
-        response += "\nYou can ask me more about any of these or tell me which one you'd like to run."
-        add_to_chat("Bot", response)
+        add_to_chat("Bot", INITIAL_WELCOME_MESSAGE)
         st.session_state["conversation_context"] = "awaiting_selection"
 
     elif context == "awaiting_selection":
-        # Determine if the user has selected a CrewAI
-        matched_crew = match_crew(user_input)
+        crew_name, parameters, response = handle_conversation(user_input)
 
-        if matched_crew:
-            # Execute the matched CrewAI and get the result
-            add_to_chat("Bot", f"Great! Executing the {matched_crew} CrewAI...")
-            crew_output = run_crew_ai(matched_crew)
-            add_to_chat("Bot", f"**{matched_crew} Output:**\n{crew_output}")
-            st.session_state["crew_selected"] = matched_crew
+        if crew_name:
+            add_to_chat(
+                "Bot",
+                f"Great! Executing the {crew_name} CrewAI with parameters: {parameters}...",
+            )
+            try:
+                crew_output = run_crew_ai(crew_name, parameters)
+                add_to_chat("Bot", f"**{crew_name} Output:**\n{crew_output}")
+            except Exception as e:
+                logging.error(f"Error executing CrewAI: {e}")
+                add_to_chat(
+                    "Bot", "There was an error executing the CrewAI. Please try again."
+                )
+            st.session_state["crew_selected"] = crew_name
             st.session_state["conversation_context"] = "crew_executed"
         else:
-            # Respond using LLM to provide further guidance
-            response = handle_conversation(user_input)
             add_to_chat("Bot", response)
+            # add_to_chat(
+            #     "Bot",
+            #     "I couldn't find a matching CrewAI for your request. Could you clarify or provide more details?",
+            # )
 
     elif context == "crew_executed":
-        # After executing a CrewAI, allow the user to ask questions or select another
         response = "I've executed the CrewAI you selected. Would you like to run another CrewAI or discuss the results?"
         add_to_chat("Bot", response)
         st.session_state["conversation_context"] = "awaiting_selection"
