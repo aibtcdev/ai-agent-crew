@@ -7,10 +7,8 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_ollama import ChatOllama
 from typing import Optional
+from crewai import Agent, LLM
 
-from crews.smart_contract_analyzer import SmartContractAnalyzerCrew
-from crews.wallet_summarizer import WalletSummaryCrew
-from crews.clarity_code_generator import ClarityCodeGeneratorCrew
 from utils.crews import AIBTC_Crew
 
 
@@ -60,6 +58,16 @@ def init_session_state():
             st.session_state.api_key,
             st.session_state.api_base,
         )
+        if st.session_state.provider == "Ollama":
+            st.session_state.embedder = {
+                "provider": "ollama",
+                "config": {"model": "mxbai-embed-large"},
+            }
+        else:
+            st.session_state.embedder = {
+                "provider": "openai",
+                "config": {"model": "text-embedding-3-small"},
+            }
 
 
 def update_session_state(key, value):
@@ -70,7 +78,8 @@ def get_llm(provider, model, api_key, api_base):
     if provider == "Anthropic":
         return anthropic.Anthropic(api_key=api_key)
     elif provider == "Ollama":
-        return ChatOllama(model=model, base_url=api_base)
+        # return ChatOllama(model=model, base_url=api_base)
+        return LLM(model="ollama/llama3.2", base_url="http://localhost:11434")
     else:
         return ChatOpenAI(
             model=model,

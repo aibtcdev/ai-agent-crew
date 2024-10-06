@@ -23,6 +23,7 @@ class AIBTC_Crew:
             process=Process.sequential,
             verbose=True,
             memory=True,
+            embedder=st.session_state.embedder,
             step_callback=crew_step_callback,
             task_callback=crew_task_callback,
         )

@@ -50,15 +50,46 @@ class TradingAnalyzerCrew(AIBTC_Crew):
 
     def setup_tasks(self, crypto_symbol):
         # Task to retrieve historical price data
+        retrieve_token_info_task = Task(
+            description=f"Collect information for token {crypto_symbol} from the Stacks blockchain.",
+            expected_output=(
+                "Simple output that has the desired token address to be used for getting price and pool_id for getting the volume in the next tasks."
+            ),
+            agent=self.agents[0],  # market_data_agent
+        )
+        self.add_task(retrieve_token_info_task)
+
+        # Task to retrieve historical price data
         retrieve_price_history_task = Task(
             description=f"Collect historical price data for {crypto_symbol} at a per-block level on the Stacks blockchain. "
             f"Data should include prices from at least one primary DEX (e.g., ALEX) and should cover the last 100 blocks.",
             expected_output=(
-                "A structured dataset containing price history, including fields like block height, price and volume. The dataset should be free of gaps and anomalies, ensuring completeness for accurate analysis."
+                "A structured dataset containing token price history, including fields block height and price. The dataset should be free of gaps and anomalies, ensuring completeness for accurate analysis."
             ),
             agent=self.agents[0],  # market_data_agent
         )
         self.add_task(retrieve_price_history_task)
+
+        # Task to retrieve historical volume data
+        retrieve_volume_history_task = Task(
+            description=f"Collect historical volume data for {crypto_symbol} at a per-block level on the Stacks blockchain. "
+            f"Data should include volume from at least one primary DEX (e.g., ALEX) and should cover the last 100 blocks.",
+            expected_output=(
+                "A structured dataset containing volume history, including fields block height and volume. The dataset should be free of gaps and anomalies, ensuring completeness for accurate analysis."
+            ),
+            agent=self.agents[0],  # market_data_agent
+        )
+        self.add_task(retrieve_volume_history_task)
+
+        # Task to retrieve historical volume data
+        merge_data_task = Task(
+            description="Merges data from the two previous tasks into a single dataset.",
+            expected_output=(
+                "A structured dataset containing volume history, including fields block height, volume, and price. The dataset should be free of gaps and anomalies, ensuring completeness for accurate analysis."
+            ),
+            agent=self.agents[0],  # market_data_agent
+        )
+        self.add_task(merge_data_task)
 
         # Task to analyze the price data with a trading strategy
         analyze_strategy_task = Task(
