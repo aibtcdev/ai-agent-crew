@@ -7,6 +7,7 @@ from utils.callbacks import crew_step_callback, crew_task_callback
 class AIBTC_Crew:
     def __init__(self, name: str):
         self.name = name
+        self.description = ""
         self.agents: List[Agent] = []
         self.tasks: List[Task] = []
 

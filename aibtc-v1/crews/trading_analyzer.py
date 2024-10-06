@@ -11,6 +11,7 @@ import requests
 class TradingAnalyzerCrew(AIBTC_Crew):
     def __init__(self):
         super().__init__("Trading Analyzer")
+        self.description = "This crew analyzes Stacks cryptocurrency price history and provides trading signals."
 
     def setup_agents(self, llm):
         # Agent for pulling market data
@@ -215,14 +216,9 @@ class AgentTools:
 
         data = response.json()
 
-        formatted_swaps = "\n---\n".join(
+        formatted_swaps = "\n".join(
             dedent(
-                f"""
-            pool_id: {swap['id']}
-            quote: {swap['quote']}
-            symbol: {swap['quoteSymbol']}
-            token_address: {swap['quoteId']}
-            """
+                f"""Pool ID: {swap['id']}, Quote: {swap['quote']}, Symbol: {swap['quoteSymbol']}, Address: {swap['quoteId']}"""
             ).strip()
             for swap in data
         )

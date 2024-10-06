@@ -120,11 +120,13 @@ def generate_crew_mapping():
                     try:
                         instance = obj()
                         crew_name = instance.name
+                        crew_description = instance.description
                     except Exception as e:
                         print(f"Error creating instance of {name}: {e}")
                         crew_name = name.replace("Crew", "").replace("_", " ")
 
                     crew_mapping[crew_name] = {
+                        "description": crew_description,
                         "class": obj,
                         "task_inputs": getattr(obj, "get_task_inputs", lambda: []),
                     }

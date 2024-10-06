@@ -2,8 +2,9 @@
 import streamlit as st
 import ollama
 import time
-import crews.trading_analyzer as trading_analyzer
+import logging
 from utils.session import init_session_state
+from crews.trading_analyzer import TradingAnalyzerCrew
 
 # Initialize session state
 init_session_state()
@@ -11,188 +12,61 @@ init_session_state()
 # Set up Streamlit page
 st.set_page_config(page_title="CrewAI Chatbot", layout="centered")
 
-# Load custom styles (same as before)
-custom_styles = """
-<style>
-/* load regular custom font */
-@font-face {
-  font-family: 'DM Sans 9pt';
-  src: url('https://aibtc.dev/fonts/DMSans-9ptRegular.woff2') format('woff2'),
-       url('https://aibtc.dev/fonts/DMSans-9ptRegular.woff') format('woff');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
 
-/* load italic custom font */
-@font-face {
-  font-family: 'DM Sans 9pt';
-  src: url('https://aibtc.dev/fonts/DMSans-9ptItalic.woff2') format('woff2'),
-       url('https://aibtc.dev/fonts/DMSans-9ptItalic.woff') format('woff');
-  font-weight: normal;
-  font-style: italic;
-  font-display: swap;
-}
+# Load custom styles
+def load_custom_styles():
+    custom_styles = """
+    <style>
+    /* Custom styles here */
+    </style>
+    """
+    st.write(custom_styles, unsafe_allow_html=True)
 
-/* set font for the entire document */
-html, body {
-  font-family: 'DM Sans 9pt', 'DM Sans', sans-serif !important;
-}
-
-/* set font for common elements */
-h1, h2, h3, h4, h5, h6, p, a, span, div, button, input, select, textarea {
-  font-family: 'DM Sans 9pt', 'DM Sans', 'Source Sans Pro', sans-serif !important;
-}
-
-/* set page bg pattern same as main site */
-/* DISABLED FOR NOW
-.stAppViewMain {
-    background-image: url('https://aibtc.dev/logos/aibtcdev-pattern-1-640px.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-}
-@media (min-width: 640px) {
-    .stAppViewMain {
-        background-image: url('https://aibtc.dev/logos/aibtcdev-pattern-1-1280px.png');
-    }
-}
-@media (min-width: 1280px) {
-    .stAppViewMain {
-        background-image: url('https://aibtc.dev/logos/aibtcdev-pattern-1-1920px.png');
-    }
-}
-*/
-
-/* set max page width */
-.stMainBlockContainer {
-    max-width: 800px;
-    padding-top: 2rem;
-    padding-right: 1rem;
-    padding-left: 1rem;
-    padding-bottom: 3rem;
-    margin: 0 auto;
-    background-color: black;
-}
-
-/* hide navigation menu */
-header[data-testid="stHeader"] {
-    display: none;
-    visibility: hidden;
-}
-
-/* custom tab styling */
-button[data-baseweb="tab"] {
-    margin: 0;
-    width: 100%;
-}
-button[data-baseweb="tab"] > div[data-testid="stMarkdownContainer"] > p {
-  font-size: 24px !important;
-  font-weight: bold !important;
-}
-
-/* custom text input styling */
-.stTextInput > div > div > input {
-    background-color: #000000;
-}
-
-/* custom select box styling */
-
-/* select box label */
-.stSelectbox label > div > p {
-    font-size: 1.5rem !important;
-    font-weight: bold !important;
-    color: white !important;
-}
-
-/* select box container */
-.stSelectbox [data-baseweb="select"] {
-    background-color: #000000 !important;
-}
-
-/* select box selected item when closed */
-.stSelectbox [data-baseweb="select"] > div {
-    background-color: #000000 !important;
-    color: white !important;
-    font-size: 1rem !important;
-}
-
-/* select box dropdown options container */
-.stSelectbox [role="listbox"] {
-    background-color: #000000 !important;
-}
-
-/* icon link styles */
-.icon-links {
-    display: flex;
-    justify-content: space-evenly;
-    gap: 10px;
-    margin: 0 auto;
-}
-.icon-link {
-    background-color: #58595B;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.3s;
-    color: white;
-    text-decoration: none;
-}
-.icon-link:hover {
-    background-color: #F2F2F2;
-}
-.icon-link svg {
-    width: 20px;
-    height: 20px;
-}
-</style>
-"""
-
-
-st.write(custom_styles, unsafe_allow_html=True)
 
 # Initialize the Ollama client
-client = ollama.Client(
-    host="localhost"
-)  # Adjust base_url if Ollama is hosted elsewhere
+client = ollama.Client(host="localhost")
+
 
 # Placeholder for user session and chat history
-if "chat_history" not in st.session_state:
-    st.session_state["chat_history"] = []
+def initialize_session_state():
+    if "chat_history" not in st.session_state:
+        st.session_state["chat_history"] = []
+        # Add the initial welcome message to the chat history
+        add_to_chat("Bot", INITIAL_WELCOME_MESSAGE)
+        st.session_state["conversation_context"] = "awaiting_selection"
+    if "crew_selected" not in st.session_state:
+        st.session_state["crew_selected"] = None
+    if "conversation_context" not in st.session_state:
+        st.session_state["conversation_context"] = "awaiting_selection"
 
-if "crew_selected" not in st.session_state:
-    st.session_state["crew_selected"] = None
 
-if "conversation_context" not in st.session_state:
-    st.session_state["conversation_context"] = (
-        "intro"  # Start with the introduction context
-    )
+# map looks like the following
+# crew_mapping[crew_name] = {
+#     "description": crew_description,
+#     "class": obj,
+#     "task_inputs": getattr(obj, "get_task_inputs", lambda: []),
+# }
+AVAILABLE_CREWS = st.session_state.crew_mapping
 
-# List of available CrewAIs and their descriptions
-available_crews = {
-    "Wallet Analysis": "Analyzes wallet activity and transaction patterns.",
-    "Contract Scan": "Scans smart contracts for potential vulnerabilities.",
-    "Token Analyzer": "Analyzes token prices and provides recommendations.",
-}
 
-# Initial welcome message
-INITIAL_WELCOME_MESSAGE = (
-    "Welcome to CrewAI Chatbot! I can help you run different CrewAIs. Here are the available options:\n\n"
-    "- **Wallet Analysis**: Analyzes wallet activity and transaction patterns.\n"
-    "- **Contract Scan**: Scans smart contracts for potential vulnerabilities.\n"
-    "- **Token Analyzer**: Analyzes token prices and provides recommendations.\n"
-    "\nYou can ask me more about any of these or tell me what you want to do, and I'll recommend a CrewAI to run."
-)
+# Dynamically generate the initial welcome message
+def generate_initial_welcome_message():
+    message = "Welcome to CrewAI Chatbot! I can help you run different CrewAIs. Here are the available options:\n\n"
+    for crew_name, crew_info in AVAILABLE_CREWS.items():
+        message += f"- **{crew_name}**: {crew_info['description']}\n"
+    message += "\nYou can ask me more about any of these or tell me what you want to do, and I'll recommend a CrewAI to run."
+    return message
+
+
+INITIAL_WELCOME_MESSAGE = generate_initial_welcome_message()
 
 
 def main():
     st.title("AIBTC.DEV Chatbot")
+    load_custom_styles()
+    initialize_session_state()
 
-    # Display chat history using Streamlit's `st.chat_message` for better UI
+    # Display chat history
     for speaker, message in st.session_state["chat_history"]:
         with st.chat_message(speaker.lower()):
             st.markdown(message)
@@ -200,15 +74,9 @@ def main():
     # Text input box for user interaction
     user_input = st.chat_input("Type your message here...")
 
-    # Check if user input exists and process it immediately
     if user_input:
-        # Add user input to chat history and update UI immediately
         add_to_chat("User", user_input)
-
-        # Handle the conversation or execute a CrewAI based on user input
         handle_user_input(user_input)
-
-        # Trigger re-render to display the bot response immediately
         st.rerun()
 
 
@@ -222,18 +90,23 @@ def handle_conversation(user_input):
     Handles the conversation by sending the input to the LLM and letting it determine the action.
     The LLM will suggest the CrewAI to run and any required parameters.
     """
+    # Dynamically generate the options for the LLM prompt
+    options = "\n".join(
+        [f"- {name}: {info['description']}" for name, info in AVAILABLE_CREWS.items()]
+    )
+
     messages = [
         {
             "role": "system",
             "content": (
-                "You are a chatbot that helps users interact with and run different CrewAIs based on their needs. "
-                "Given the user's input, determine which CrewAI is most relevant from the following options:\n"
-                "- Wallet Analysis: Analyzes wallet activity and transaction patterns.\n"
-                "- Contract Scan: Scans smart contracts for potential vulnerabilities.\n"
-                "- Token Analyzer: Analyzes token prices and provides recommendations.\n"
-                "\nIf the user's input indicates interest in one of these options, respond with the exact name of the relevant CrewAI, "
-                'followed by any required parameters in JSON format (e.g., {"param1": "value1", "param2": "value2"}). '
-                "If the user needs further assistance, provide guidance or ask clarifying questions."
+                "You are a specialized assistant designed to help users select the most appropriate CrewAI for their needs. "
+                "Your task is to analyze the user's input and determine which CrewAI is most relevant from the following options:\n"
+                f"{options}\n"
+                "\nYour response should strictly include the exact name of the relevant CrewAI, "
+                "followed by any required parameters"
+                "example would be Wallet Analysis || SP2SDRD31DZD2477M39Q0GTH18G0WJH4J984JKQE8"
+                "Do not provide any additional information, explanations, or suggestions. "
+                "If the user's input is unclear, ask a clarifying question to gather more information."
             ),
         },
         {"role": "user", "content": user_input},
@@ -246,14 +119,14 @@ def handle_conversation(user_input):
     try:
         print(f"Response received: {response}")
         response_content = response["message"]["content"]
-        # Assuming LLM returns something like: "CrewAI: Wallet Analysis, Parameters: {'address': 'wallet_address'}"
+        # Assuming LLM returns something like: "Wallet Analysis || SP2SDRD31DZD2477M39Q0GTH18G0WJH4J984JKQE8"
         crew_name = None
         parameters = {}
-        if "CrewAI" in response_content:
-            parts = response_content.split("Parameters:")
-            crew_name = parts[0].split("CrewAI:")[1].strip()
+        if "||" in response_content:
+            parts = response_content.split("||")
+            crew_name = parts[0].strip()
             if len(parts) > 1:
-                parameters = eval(parts[1].strip())  # Convert to dictionary
+                parameters = parts[1].strip()  # Convert to dictionary
     except (KeyError, IndexError, SyntaxError) as e:
         print(f"Error parsing LLM response: {e}")
         print(f"Response received: {response}")
@@ -272,44 +145,34 @@ def run_crew_ai(crew_name, parameters=None):
     st.session_state.crew_step_callback = []
     st.session_state.crew_task_callback = []
 
-    trading_class = trading_analyzer.TradingAnalyzerCrew()
-    llm = st.session_state.llm
+    # Dynamically select the crew class based on crew_name
+    crew_class = AVAILABLE_CREWS.get(crew_name, {}).get("class", None)
 
-    trading_class.setup_agents(llm)
-    trading_class.setup_tasks(
-        "welsh"
-    )  # This should be dynamic based on crew_name and parameters
+    if crew_class:
+        print(parameters)
+        crew_instance = crew_class()
+        llm = st.session_state.llm
+        crew_instance.setup_agents(llm)
+        crew_instance.setup_tasks(parameters)
+        crew = crew_instance.create_crew()
 
-    crypto_trading_crew = trading_class.create_crew()
+        with st.spinner(f"Running {crew_name} CrewAI..."):
+            result = crew.kickoff()
 
-    with st.spinner(f"Running {crew_name} CrewAI..."):
-        result = crypto_trading_crew.kickoff(
-            parameters
-        )  # Pass the parameters to the crew
+        st.success(f"Execution complete for {crew_name}!")
 
-    st.success(f"Execution complete for {crew_name}!")
-
-    st.subheader("Analysis Results")
-
-    # Display results
-    result_str = str(result.raw)
-
-    time.sleep(2)  # Simulate execution time
-    return f"Execution complete for {crew_name} CrewAI. Results: {result_str}"
-
-
-import logging
+        st.subheader("Analysis Results")
+        result_str = str(result.raw)
+        return f"Execution complete for {crew_name} CrewAI. Results: {result_str}"
+    else:
+        return f"CrewAI {crew_name} is not implemented yet."
 
 
 def handle_user_input(user_input):
     """Directs the conversation flow based on user input and executes the necessary CrewAI."""
     context = st.session_state["conversation_context"]
 
-    if context == "intro":
-        add_to_chat("Bot", INITIAL_WELCOME_MESSAGE)
-        st.session_state["conversation_context"] = "awaiting_selection"
-
-    elif context == "awaiting_selection":
+    if context == "awaiting_selection":
         crew_name, parameters, response = handle_conversation(user_input)
 
         if crew_name:
@@ -329,10 +192,6 @@ def handle_user_input(user_input):
             st.session_state["conversation_context"] = "crew_executed"
         else:
             add_to_chat("Bot", response)
-            # add_to_chat(
-            #     "Bot",
-            #     "I couldn't find a matching CrewAI for your request. Could you clarify or provide more details?",
-            # )
 
     elif context == "crew_executed":
         response = "I've executed the CrewAI you selected. Would you like to run another CrewAI or discuss the results?"
