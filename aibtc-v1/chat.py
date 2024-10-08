@@ -100,6 +100,8 @@ def run_crew_ai(crew_name: str, parameters: str) -> str:
     st.session_state.crew_step_container = st.empty()
     st.write("Task Progress:")
     st.session_state.crew_task_container = st.empty()
+    st.session_state.crew_step_callback = []
+    st.session_state.crew_task_callback = []
 
     crew_class = AVAILABLE_CREWS.get(crew_name, {}).get("class")
     if not crew_class:
