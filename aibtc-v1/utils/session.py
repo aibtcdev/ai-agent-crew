@@ -40,55 +40,34 @@ def init_session_state():
 
     # Initialize other session state variables
     defaults = {
-        "provider": env_vars.get("LLM_PROVIDER", "OpenAI"),
         "api_key": env_vars.get("OPENAI_API_KEY", ""),
         "api_base": env_vars.get("OPENAI_API_BASE", "https://api.openai.com/v1"),
         "model": env_vars.get("OPENAI_MODEL_NAME", "gpt-4o-mini"),
+        "embedder_provider": env_vars.get("OPENAI_EMBEDDER_PROVIDER", "openai"),
+        "embedder_model": env_vars.get(
+            "OPENAI_EMBEDDER_MODEL", "text-embedding-3-small"
+        ),
     }
 
     for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
 
-    # Initialize the LLM
+    # Initialize the LLMs
     if "llm" not in st.session_state:
-        st.session_state.llm = get_llm(
-            st.session_state.provider,
-            st.session_state.model,
-            st.session_state.api_key,
-            st.session_state.api_base,
+        st.session_state.llm = LLM(
+            model=st.session_state.model,
+            api_key=st.session_state.api_key,
+            base_url=st.session_state.api_base,
         )
-        if st.session_state.provider == "Ollama":
-            st.session_state.embedder = {
-                "provider": "ollama",
-                "config": {"model": "nomic-embed-text"},
-            }
-        else:
-            st.session_state.embedder = {
-                "provider": "ollama",
-                "config": {"model": "nomic-embed-text"},
-            }
-            # st.session_state.embedder = {
-            #     "provider": "openai",
-            #     "config": {"model": "text-embedding-3-small"},
-            # }
+        st.session_state.embedder = {
+            "provider": st.session_state.embedder_provider,
+            "config": {"model": st.session_state.embedder_model},
+        }
 
 
 def update_session_state(key, value):
     st.session_state[key] = value
-
-
-def get_llm(provider, model, api_key, api_base):
-    if provider == "Anthropic":
-        return anthropic.Anthropic(api_key=api_key)
-    elif provider == "Ollama":
-        return LLM(model="ollama/llama3.2", base_url="http://localhost:11434")
-    else:
-        return ChatOpenAI(
-            model=model,
-            openai_api_key=api_key,
-            openai_api_base=api_base,
-        )
 
 
 def generate_crew_mapping():

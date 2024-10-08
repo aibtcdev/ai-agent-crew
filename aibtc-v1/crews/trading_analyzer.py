@@ -74,7 +74,7 @@ class TradingAnalyzerCrew(AIBTC_Crew):
         # Task to retrieve historical volume data
         retrieve_volume_history_task = Task(
             description=f"Collect historical volume data for {crypto_symbol} at a per-block level on the Stacks blockchain. "
-            f"Data should include volume from at least one primary DEX (e.g., ALEX) and should cover the last 100 blocks.",
+            f"Data should include the token pool volume using the tool `Get Token Pool Volume` using the pool_id from the first task and should cover the last 100 blocks.",
             expected_output=(
                 "A structured dataset containing volume history, including fields block height and volume. The dataset should be free of gaps and anomalies, ensuring completeness for accurate analysis."
             ),

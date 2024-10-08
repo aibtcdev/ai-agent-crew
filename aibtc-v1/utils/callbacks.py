@@ -39,7 +39,7 @@ def crew_step_callback(step: Union[Dict[str, Any], AgentAction]):
         st.session_state.crew_step_callback = []
     st.session_state.crew_step_callback.append(step)
     with st.session_state.crew_step_container.container():
-        with st.expander("Completed Steps", expanded=True):
+        with st.expander("Completed Steps", expanded=False):
             for i, step_data in enumerate(st.session_state.crew_step_callback):
                 st.markdown(f"#### Step {i+1}")
                 if isinstance(step_data, dict) and "task_output" in step_data:
