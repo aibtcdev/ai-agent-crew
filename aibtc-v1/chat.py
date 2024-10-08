@@ -1,9 +1,7 @@
 import streamlit as st
-import ollama
 import logging
 from typing import Dict, Any
 from utils.session import init_session_state
-from crews.trading_analyzer import TradingAnalyzerCrew
 
 # Initialize session state
 init_session_state()
@@ -39,8 +37,10 @@ INITIAL_WELCOME_MESSAGE = generate_initial_welcome_message()
 
 
 def initialize_session_state():
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = [("Bot", INITIAL_WELCOME_MESSAGE)]
+    if st.session_state.messages == []:
+        st.session_state.messages = [
+            {"role": "Bot", "content": INITIAL_WELCOME_MESSAGE}
+        ]
     if "crew_selected" not in st.session_state:
         st.session_state.crew_selected = None
     if "conversation_context" not in st.session_state:
@@ -56,7 +56,8 @@ def initialize_session_state():
 
 
 def add_to_chat(speaker: str, message: str):
-    st.session_state.chat_history.append((speaker, message))
+    st.chat_message(speaker).write(message)
+    st.session_state.messages.append({"role": speaker, "content": message})
 
 
 def handle_conversation(user_input: str) -> tuple:
@@ -122,7 +123,6 @@ def handle_user_input(user_input: str):
 
     if context == "awaiting_selection":
         crew_name, parameters, response = handle_conversation(user_input)
-
         print(crew_name)
         if crew_name:
             add_to_chat(
@@ -155,16 +155,14 @@ def main():
     load_custom_styles()
     initialize_session_state()
 
-    for speaker, message in st.session_state.chat_history:
-        with st.chat_message(speaker.lower()):
-            st.markdown(message)
+    for msg in st.session_state.messages:
+        st.chat_message(msg["role"]).write(msg["content"])
 
     user_input = st.chat_input("Type your message here...")
 
     if user_input:
         add_to_chat("User", user_input)
         handle_user_input(user_input)
-        st.rerun()
 
 
 if __name__ == "__main__":
