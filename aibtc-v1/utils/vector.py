@@ -6,38 +6,34 @@ from dotenv import load_dotenv
 from langchain_community.vectorstores import Chroma
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-import ollama
+from litellm import embedding
 from chromadb import Client as ChromaClient
 from chromadb.config import Settings
 import chromadb
+import streamlit as st
 
 load_dotenv()
 
 
-class OllamaEmbeddings:
-    """A class to get embeddings from the local Ollama model using the Ollama library."""
+class AIBTCEmbeddings:
+    """A class to get embeddings using LiteLLM."""
 
-    def __init__(self, model_name="mxbai-embed-large"):
-        self.model_name = model_name
-        self.client = ollama.Client()  # Initialize the Ollama client
+    def __init__(self):
+        self.model_name = os.getenv("OPENAI_EMBEDDER_MODEL", "text-embedding-3-small")
 
     def get_embedding(self, text):
-        """Retrieve embeddings for a given text using the Ollama library."""
-        response = self.client.embed(model=self.model_name, input=text)
-
-        # Ensure the response contains valid embeddings
-        if not response or "embeddings" not in response:
+        """Retrieve embeddings for a given text using LiteLLM."""
+        response = embedding(model=self.model_name, input=[text])
+        if not response or "data" not in response or not response["data"]:
             raise Exception(f"Failed to get embeddings: {response}")
-
-        # The embeddings are inside the 'embeddings' key, which is a list of lists.
-        return response["embeddings"][0]  # Extract the first embedding list
+        return response["data"][0]["embedding"]
 
     def embed_documents(self, texts):
-        """Embed a list of texts (documents) using Ollama."""
+        """Embed a list of texts (documents) using LiteLLM."""
         return [self.get_embedding(text) for text in texts]
 
     def embed_query(self, query):
-        """Embed a single query string using Ollama."""
+        """Embed a single query string using LiteLLM."""
         return self.get_embedding(query)
 
 
@@ -63,10 +59,8 @@ def fetch_clarity_book_content(website_url: str):
     return full_content
 
 
-def create_vector_store(
-    urls, ollama_model_name="mxbai-embed-large", chunk_size=1000, chunk_overlap=200
-):
-    """Create a vector store from a list of URLs using Ollama embeddings."""
+def create_vector_store(urls, chunk_size=1000, chunk_overlap=200):
+    """Create a vector store from a list of URLs using LiteLLM embeddings."""
     documents = []
     for url in urls:
         content = fetch_clarity_book_content(url)
@@ -78,11 +72,11 @@ def create_vector_store(
     )
     splits = text_splitter.split_documents(documents)
 
-    # Initialize OllamaEmbeddings with the specified model
-    ollama_embeddings = OllamaEmbeddings(model_name=ollama_model_name)
+    # Initialize AIBTCEmbeddings
+    aibtc_embeddings = AIBTCEmbeddings()
 
     # Create embeddings for each document chunk
-    embeddings = ollama_embeddings.embed_documents([doc.page_content for doc in splits])
+    embeddings = aibtc_embeddings.embed_documents([doc.page_content for doc in splits])
 
     # Create a new Chroma client
     chroma_client = chromadb.PersistentClient(path="./chroma")
