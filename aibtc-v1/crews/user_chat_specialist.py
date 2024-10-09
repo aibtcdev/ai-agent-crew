@@ -25,6 +25,7 @@ def add_to_chat(speaker: str, message: str):
 
 def chat_tool_callback(action: AgentAction):
     """Callback function to display any tool output from the crew."""
+    st.session_state.status_container.update(label=f"Executed {action.tool}...")
     add_to_chat(
         "assistant",
         f"**Used tool:** {action.tool} with input: {action.tool_input}",
@@ -50,6 +51,7 @@ def chat_task_callback(task: TaskOutput):
             else task_description
         )
     )
+    st.session_state.status_container.update(label=f"Executed task: {computed_name}...")
     add_to_chat(
         "assistant",
         f"**Completed task:** {computed_name}",
@@ -135,10 +137,11 @@ def render_crew():
         crew.planning = True
         # create an active agent in state
         if "active_crew" not in st.session_state:
-            st.session_state.active_crew = crew.name
+            st.session_state.active_crew = crew_class.name
         with st.session_state.status_container:
             result = crew.kickoff()
         add_to_chat("assistant", result)
+        st.session_state.status_container.update(label="Crew execution complete.")
         add_to_chat("assistant", "Is there anything else I can help you with?")
 
 
@@ -161,6 +164,7 @@ class AgentTools:
             crew = crew_class.create_crew()
             crew.step_callback = chat_tool_callback
             crew.task_callback = chat_task_callback
+            st.session_state.active_crew = crew_class.name
             st.session_state.status_container.update(
                 label=f"Executing {crew_class.name}..."
             )
@@ -183,6 +187,7 @@ class AgentTools:
             crew = crew_class.create_crew()
             crew.step_callback = chat_tool_callback
             crew.task_callback = chat_task_callback
+            st.session_state.active_crew = crew_class.name
             st.session_state.status_container.update(
                 label=f"Executing {crew_class.name}..."
             )
@@ -204,6 +209,7 @@ class AgentTools:
             crew = crew_class.create_crew()
             crew.step_callback = chat_tool_callback
             crew.task_callback = chat_task_callback
+            st.session_state.active_crew = crew_class.name
             st.session_state.status_container.update(
                 label=f"Executing {crew_class.name}..."
             )
@@ -225,6 +231,7 @@ class AgentTools:
             crew = crew_class.create_crew()
             crew.step_callback = chat_tool_callback
             crew.task_callback = chat_task_callback
+            st.session_state.active_crew = crew_class.name
             st.session_state.status_container.update(
                 label=f"Executing {crew_class.name}..."
             )
