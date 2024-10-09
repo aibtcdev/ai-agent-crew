@@ -77,8 +77,10 @@ h1, h2, h3, h4, h5, h6, p, a, span, div, button, input, select, textarea {
     background-color: black;
 }
 
+/* a little hacky but, chat input is hardcoded
+   based on this width - 160px */
 .stBottom {
-    max-width: 800px;
+    max-width: 960px;
 }
 
 /* hide navigation menu */
@@ -126,6 +128,17 @@ button[data-baseweb="tab"] > div[data-testid="stMarkdownContainer"] > p {
 /* select box dropdown options container */
 .stSelectbox [role="listbox"] {
     background-color: #000000 !important;
+}
+
+/* custom chat input styling */
+.stChatInput {
+    background-color: #000000;    
+}
+.stChatInput > div > div > div > textarea {
+    background-color: #000000;
+}
+.stChatInput > div > div > div > textarea::placeholder {
+    color: #B3B3B3;
 }
 
 /* icon link styles */
