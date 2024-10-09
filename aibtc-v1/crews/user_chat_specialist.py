@@ -27,7 +27,11 @@ def chat_tool_callback(action: AgentAction):
     """Callback function to display any tool output from the crew."""
     add_to_chat(
         "assistant",
-        f"**Used {action.tool} with input:**\n\n{action.tool_input}",
+        f"**Used tool:** {action.tool} with input: {action.tool_input}",
+    )
+    add_to_chat(
+        "assistant",
+        f"**Result:** {action.result}",
     )
 
 
@@ -52,17 +56,6 @@ def chat_task_callback(task: TaskOutput):
     )
 
 
-# create a new instance of the crew
-def create_chat_crew_instance(user_input):
-    user_chat_specialist_crew_class = UserChatSpecialistCrew()
-    user_chat_specialist_crew_class.setup_agents(st.session_state.llm)
-    user_chat_specialist_crew_class.setup_tasks(user_input)
-    user_chat_specialist_crew = user_chat_specialist_crew_class.create_crew()
-    user_chat_specialist_crew.step_callback = chat_tool_callback
-    user_chat_specialist_crew.task_callback = chat_task_callback
-    return user_chat_specialist_crew
-
-
 class UserChatSpecialistCrew(AIBTC_Crew):
     def __init__(self):
         super().__init__("User Chat Specialist")
@@ -71,14 +64,9 @@ class UserChatSpecialistCrew(AIBTC_Crew):
     def setup_agents(self, llm):
         chat_specialist = Agent(
             role="Chat Specialist",
-            goal="You are responsible for interacting with the user and translating their query into which crew to run. If they ask a question, delegate to the Information Retriever.",
-            backstory="You are trained to translate the user's query into a crew execution, analyzing the connection between the user's input and the result.",
-            tools=[
-                AgentTools.execute_clarity_code_generator_crew,
-                AgentTools.execute_smart_contract_analyzer_crew,
-                AgentTools.execute_wallet_analyzer_crew,
-                AgentTools.execute_trading_analyzer_crew,
-            ],
+            goal="You are responsible for interacting with the user and translating their query into an action.",
+            backstory="You are trained to understand the user's query and provide the information they need with your tools, then analyzing the connection between the user's input and the result.",
+            tools=AgentTools.get_all_tools(),
             verbose=True,
             memory=False,
             allow_delegation=True,
@@ -86,31 +74,19 @@ class UserChatSpecialistCrew(AIBTC_Crew):
         )
         self.add_agent(chat_specialist)
 
-        info_retriever = Agent(
-            role="Information Retriever",
-            goal="You are responsible for retrieving information about the preivous chat and available tools.",
-            backstory="You are trained to retrieve information from various sources and provide it to anyone who requests it in an informative, clear format. From your knowledge, instruct the user to succeed.",
-            tools=[
-                AgentTools.get_all_past_messages,
-                AgentTools.get_all_available_tools,
-            ],
-        )
-        self.add_agent(info_retriever)
-
     def setup_tasks(self, user_input):
         review_user_input = Task(
             name="Review User Input",
             description=dedent(
                 f"""
-                The user is talking to you in chat format.
-                You are tasked with reviewing the user's input and taking 1 of 2 actions:
-                1. If the user's input is a question, delegate to the Information Retriever to get the answer.
-                2. If the user's input is a task, use the appropriate tool to execute the task and share the result.
+                The user is talking to you in chat format. You are tasked with reviewing the user's input and taking 1 of 2 actions:
+                1. If the user's input is a question without a task, do not execute a crew and clearly answer the question.
+                2. If the user's input is a task, use the appropriate tool to execute the task and summarize the result.
                 ### User Input
                 {user_input}
                 """
             ),
-            expected_output="The user's input has been reviewed and the appropriate action has been taken.",
+            expected_output="The appropriate action has been taken.",
             agent=self.agents[0],  # chat_specialist
         )
         self.add_task(review_user_input)
@@ -143,10 +119,9 @@ class UserChatSpecialistCrew(AIBTC_Crew):
             crew_instance = self.create_crew()
             crew_instance.step_callback = chat_tool_callback
             crew_instance.task_callback = chat_task_callback
-            with st.status("Generating response..."):
+            with st.status("Thinking..."):
                 result = crew_instance.kickoff()
             add_to_chat("assistant", result)
-            # st.chat_message("assistant").markdown(result)
             add_to_chat("assistant", "Is there anything else I can help you with?")
 
 
@@ -234,16 +209,20 @@ class AgentTools:
             return f"Error executing Clarity Code Generator Crew: {e}"
 
     @staticmethod
-    @tool("Get all past chat messages")
+    @tool("List all past chat messages")
     def get_all_past_messages():
         """Get all past chat messages between you and the user for context."""
         return st.session_state.messages
 
     @staticmethod
-    @tool("Get all available tools for helping the user.")
+    @tool("List all available agent tools")
     def get_all_available_tools():
         """Get all available tools you have access to in order to assist the user."""
-        return [tool.name for tool in AgentTools.get_all_tools()]
+        # make an array of {name: tool_name, description: tool_description}
+        tools = []
+        for tool in AgentTools.get_all_tools():
+            tools.append({"name": tool.name, "description": tool.description})
+        return tools
 
     @classmethod
     def get_all_tools(cls):
