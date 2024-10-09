@@ -24,27 +24,21 @@ def add_to_chat(speaker: str, message: str):
         if speaker == "assistant"
         else None
     )
-    (st.chat_message(name=speaker, avatar=avatar).markdown(message))
-
-
-def add_expander_to_chat(speaker: str, label: str, content: str):
-    st.session_state.messages.append({"role": speaker, "content": label + content})
-    avatar = (
-        "https://aibtc.dev/logos/aibtcdev-avatar-250px.png"
-        if speaker == "assistant"
-        else None
-    )
-    st.chat_message(name=speaker, avatar=avatar).expander(label).markdown(content)
+    with st.chat_message(name=speaker, avatar=avatar):
+        for line in message.split("\n"):
+            st.markdown(line)
 
 
 def chat_tool_callback(action: AgentAction):
     """Callback function to display any tool output from the crew."""
     st.session_state.status_container.update(label=f"Executed {action.tool}...")
+    add_to_chat("assistant", f"**Used tool:** {action.tool}")
+    add_to_chat("assistant", f"**Tool input:** {action.tool_input}")
+    add_to_chat("assistant", f"**Tool output:** {truncate_text(action.result)}")
     add_to_chat(
         "assistant",
-        f"**Used tool:** {action.tool} with input: {action.tool_input}",
+        f"**Used tool:** {action.tool}\n**Tool input:** {action.tool_input}\n**Tool output:** {truncate_text(action.result)}",
     )
-    add_expander_to_chat("assistant", "Tool Output:", action.result)
 
 
 def chat_task_callback(task: TaskOutput):
