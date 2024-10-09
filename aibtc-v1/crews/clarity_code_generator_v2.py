@@ -11,8 +11,12 @@ from utils.scripts import get_timestamp
 
 
 class ClarityCodeGeneratorCrewV2(AIBTC_Crew):
-    def __init__(self):
-        super().__init__("Clarity Code Generator V2")
+    def __init__(self, embedder):
+        super().__init__(
+            "Clarity Code Generator V2",
+            "Generate Clarity code for a smart contract on the Stacks blockchain.",
+            embedder,
+        )
 
     def setup_agents(self, llm):
         clarity_environment_maintainer = Agent(
