@@ -98,7 +98,6 @@ def generate_crew_mapping():
                     # Create an instance to get the name
                     try:
                         instance = obj(st.session_state.embedder)
-                        print(instance)
                         crew_name = instance.name
                         crew_description = instance.description
                     except Exception as e:
