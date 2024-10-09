@@ -2,26 +2,20 @@ import streamlit as st
 import logging
 from typing import Dict, Any
 from utils.session import init_session_state
+from app import custom_styles
 
 # Initialize session state
 init_session_state()
 
 # Set up Streamlit page
-st.set_page_config(page_title="CrewAI Chatbot", layout="centered")
+st.set_page_config(page_title="AIBTC Chatbot", layout="centered")
 
 # Constants
 AVAILABLE_CREWS: Dict[str, Dict[str, Any]] = st.session_state.crew_mapping
 
 
 def load_custom_styles():
-    st.markdown(
-        """
-    <style>
-    /* Custom styles here */
-    </style>
-    """,
-        unsafe_allow_html=True,
-    )
+    st.write(custom_styles, unsafe_allow_html=True)
 
 
 def generate_initial_welcome_message() -> str:
