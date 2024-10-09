@@ -6,6 +6,10 @@ def get_timestamp():
     return datetime.now().strftime("%Y%m%d%H%M%S")
 
 
+def get_pretty_timestamp():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
 # generic runner for Bun.js scripts
 class BunScriptRunner:
     working_dir = "./agent-tools-ts/"

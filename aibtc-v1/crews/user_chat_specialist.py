@@ -8,35 +8,55 @@ from textwrap import dedent
 from crews.smart_contract_analyzer_v2 import SmartContractAnalyzerV2
 from crews.wallet_summarizer import WalletSummaryCrew
 from crews.trading_analyzer import TradingAnalyzerCrew
-from crews.clarity_code_generator import ClarityCodeGeneratorCrew
+from crews.clarity_code_generator_v2 import ClarityCodeGeneratorCrewV2
 from utils.crews import AIBTC_Crew
-from utils.scripts import get_timestamp
+from utils.scripts import get_pretty_timestamp
 
 
 def truncate_text(text: str, max_length: int = 80):
     return text if len(text) <= max_length else f"{text[:max_length]}..."
 
 
-def add_to_chat(speaker: str, message: str):
+def add_to_chat(speaker: str, message: str, subtask=False):
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
     st.session_state.messages.append({"role": speaker, "content": message})
     avatar = (
         "https://aibtc.dev/logos/aibtcdev-avatar-250px.png"
         if speaker == "assistant"
         else None
     )
-    with st.chat_message(name=speaker, avatar=avatar):
-        for line in message.split("\n"):
-            st.markdown(line)
+
+    if subtask:
+        with st.session_state.status_container:
+            with st.chat_message(name=speaker, avatar=avatar):
+                for line in message.split("\n"):
+                    st.markdown(line)
+    else:
+        with st.session_state.chat_container:
+            with st.chat_message(name=speaker, avatar=avatar):
+                for line in message.split("\n"):
+                    st.markdown(line)
+
+
+def update_status(label: str, state: str = "running"):
+    # state can be "running", "complete", "error"
+    st.session_state.status_container.update(label=label)
+
+
+def set_active_crew(crew_name: str):
+    st.session_state.active_crew = crew_name
 
 
 def chat_tool_callback(action: AgentAction):
     """Callback function to display any tool output from the crew."""
-    st.session_state.status_container.update(
-        label=f"[{st.session_state.active_crew}] Used tool: {action.tool}..."
+    update_status(
+        f"[{st.session_state.active_crew}] Used tool: {action.tool}...", "running"
     )
     add_to_chat(
         "assistant",
         f"[{st.session_state.active_crew}]\n**Used tool:** {action.tool}\n**Tool input:**\n{action.tool_input}\n**Tool output:** *(truncated)*\n{truncate_text(action.result, 300)}",
+        True,
     )
 
 
@@ -47,12 +67,14 @@ def chat_task_callback(task: TaskOutput):
         task, "name", None
     )  # default to None if name attribute is not present
     computed_name = task_name if task_name else (truncate_text(task_description))
-    st.session_state.status_container.update(
-        label=f"Completed task: {computed_name}..."
+    update_status(
+        f"[{st.session_state.active_crew}] Completed task: {computed_name}...",
+        "running",
     )
     add_to_chat(
         "assistant",
         f"[{st.session_state.active_crew}]\n**Completed task:** {computed_name}",
+        True,
     )
 
 
@@ -104,6 +126,7 @@ class UserChatSpecialistCrew(AIBTC_Crew):
 
 
 def render_crew():
+    # setup and display initial instructions
     initial_instructions = st.empty()
     initial_instructions.markdown(
         dedent(
@@ -115,16 +138,31 @@ def render_crew():
             """
         )
     )
+
+    # initialize chat history
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
+
+    # intialize main chat container to hold chat messages and status messages
+    st.session_state.full_chat_container = st.container()
+
+    # create text input field for user at the bottom
     if user_input := st.chat_input("What would you like to do?"):
+
         # clear initial instructions
         initial_instructions.empty()
+        # initialize chat and status container for updates
+        with st.session_state.full_chat_container:
+            st.session_state.chat_container = st.empty()
+            st.session_state.chat_container = st.container()
+            st.session_state.status_container = st.empty()
+            st.session_state.status_container = st.status(label="Ready to assist!")
+
         # add user input to chat
         add_to_chat("user", user_input)
-        # create a status container in state
-        if "status_container" not in st.session_state:
-            st.session_state.status_container = st.status(
-                label="Creating a plan and finding the right crew..."
-            )
+        # update status container
+        update_status("Creating a plan and finding the right crew...", "running")
+
         # initialize the crew
         crew_class = UserChatSpecialistCrew(st.session_state.embedder)
         crew_class.setup_agents(st.session_state.llm)
@@ -133,12 +171,54 @@ def render_crew():
         crew.step_callback = chat_tool_callback
         crew.task_callback = chat_task_callback
         crew.planning = True
+
         # set active agent in state
-        st.session_state.active_crew = crew_class.name
+        set_active_crew(crew_class.name)
+
+        # kick off the crew (long-running)
         with st.session_state.status_container:
             result = crew.kickoff()
+
+        # add crew's result to chat
         add_to_chat("assistant", result.raw)
         add_to_chat("assistant", "Is there anything else I can help you with?")
+
+        # store chat history from messages in state
+        st.session_state.chat_history.append(
+            {"timestamp": get_pretty_timestamp(), "messages": st.session_state.messages}
+        )
+        # clear messages in state
+        st.session_state.messages = []
+
+    # show chat history in popover
+    if st.session_state.chat_history:
+        st.markdown("### Chat History")
+        for chat in st.session_state.chat_history:
+            with st.popover(f"Chat from {chat['timestamp']}"):
+                # download chat as text file
+                st.download_button(
+                    label="Download Chat",
+                    data="\n".join(
+                        [
+                            f"{message['role']}: {message['content']}"
+                            for message in chat["messages"]
+                        ]
+                    ),
+                    file_name=f"chat_{chat['timestamp']}-AIBTC.txt",
+                    mime="text/plain",
+                )
+                # display chat messages
+                for message in chat["messages"]:
+                    role = message["role"]
+                    content = message["content"]
+                    avatar = (
+                        "https://aibtc.dev/logos/aibtcdev-avatar-250px.png"
+                        if role == "assistant"
+                        else None
+                    )
+                    with st.chat_message(name=role, avatar=avatar):
+                        for line in content.split("\n"):
+                            st.markdown(line)
 
 
 #########################
@@ -160,10 +240,9 @@ class AgentTools:
             crew = crew_class.create_crew()
             crew.step_callback = chat_tool_callback
             crew.task_callback = chat_task_callback
-            st.session_state.active_crew = crew_class.name
-            st.session_state.status_container.update(
-                label=f"Executing {crew_class.name}..."
-            )
+            crew.planning = True
+            set_active_crew(crew_class.name)
+            update_status(f"Executing {crew_class.name}...", "running")
             result = crew.kickoff()
             return result
         except Exception as e:
@@ -183,10 +262,9 @@ class AgentTools:
             crew = crew_class.create_crew()
             crew.step_callback = chat_tool_callback
             crew.task_callback = chat_task_callback
-            st.session_state.active_crew = crew_class.name
-            st.session_state.status_container.update(
-                label=f"Executing {crew_class.name}..."
-            )
+            crew.planning = True
+            set_active_crew(crew_class.name)
+            update_status(f"Executing {crew_class.name}...", "running")
             result = crew.kickoff()
             return result
         except Exception as e:
@@ -205,10 +283,9 @@ class AgentTools:
             crew = crew_class.create_crew()
             crew.step_callback = chat_tool_callback
             crew.task_callback = chat_task_callback
-            st.session_state.active_crew = crew_class.name
-            st.session_state.status_container.update(
-                label=f"Executing {crew_class.name}..."
-            )
+            crew.planning = True
+            set_active_crew(crew_class.name)
+            update_status(f"Executing {crew_class.name}...", "running")
             result = crew.kickoff()
             return result
         except Exception as e:
@@ -221,16 +298,15 @@ class AgentTools:
         try:
             if isinstance(user_input, dict):
                 user_input = user_input.get("user_input", "")
-            crew_class = ClarityCodeGeneratorCrew(st.session_state.embedder)
+            crew_class = ClarityCodeGeneratorCrewV2(st.session_state.embedder)
             crew_class.setup_agents(st.session_state.llm)
             crew_class.setup_tasks(user_input)
             crew = crew_class.create_crew()
             crew.step_callback = chat_tool_callback
             crew.task_callback = chat_task_callback
-            st.session_state.active_crew = crew_class.name
-            st.session_state.status_container.update(
-                label=f"Executing {crew_class.name}..."
-            )
+            crew.planning = True
+            set_active_crew(crew_class.name)
+            update_status(f"Executing {crew_class.name}...", "running")
             result = crew.kickoff()
             return result
         except Exception as e:
