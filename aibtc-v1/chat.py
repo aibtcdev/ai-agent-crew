@@ -29,7 +29,7 @@ def generate_initial_welcome_message() -> str:
     message += "\n".join(
         f"- **{name}**: {info['description']}" for name, info in AVAILABLE_CREWS.items()
     )
-    message += "\n\nYou can ask me more about any of these or tell me what you want to do, and I'll recommend a CrewAI to run."
+    message += "\n\nYou can ask me more about any of these or tell me what you want to do, and I'll recommend a crew to run."
     return message
 
 
