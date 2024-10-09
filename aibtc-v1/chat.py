@@ -25,7 +25,7 @@ def load_custom_styles():
 
 
 def generate_initial_welcome_message() -> str:
-    message = "Welcome to CrewAI Chatbot! I can help you run different CrewAIs. Here are the available options:\n\n"
+    message = "Welcome to AIBTC! I can help you run different crews of agents. Here are the available options:\n\n"
     message += "\n".join(
         f"- **{name}**: {info['description']}" for name, info in AVAILABLE_CREWS.items()
     )
