@@ -57,9 +57,12 @@ def chat_task_callback(task: TaskOutput):
 
 
 class UserChatSpecialistCrew(AIBTC_Crew):
-    def __init__(self):
-        super().__init__("User Chat Specialist")
-        self.description = "This crew is responsible for chat interactions with the user and providing support."
+    def __init__(self, embedder):
+        super().__init__(
+            "User Chat Specialist",
+            "This crew is responsible for chat interactions with the user and providing support.",
+            embedder,
+        )
 
     def setup_agents(self, llm):
         chat_specialist = Agent(
@@ -99,30 +102,35 @@ class UserChatSpecialistCrew(AIBTC_Crew):
     def get_all_tools(cls):
         return AgentTools.get_all_tools()
 
-    def render_crew(self):
-        initial_instructions = st.empty()
-        initial_instructions.markdown(
-            dedent(
-                """
-                Welcome to AIBTC! Some ways to test my abilities:
-                - Please analyze SP97M6Z0T8MHKJ6NZE0GS6TRERCG3GW1WVJ4NVGT.aibtcdev-airdrop-1
-                - Tell me about the wallet SP97M6Z0T8MHKJ6NZE0GS6TRERCG3GW1WVJ4NVGT
-                - Would you kindly analyze the trading strategy for WELSH?
-                """
-            )
+
+def render_crew():
+    initial_instructions = st.empty()
+    initial_instructions.markdown(
+        dedent(
+            """
+            Welcome to AIBTC! Some ways to test my abilities:
+            - Please analyze SP97M6Z0T8MHKJ6NZE0GS6TRERCG3GW1WVJ4NVGT.aibtcdev-airdrop-1
+            - Tell me about the wallet SP97M6Z0T8MHKJ6NZE0GS6TRERCG3GW1WVJ4NVGT
+            - Would you kindly analyze the trading strategy for WELSH?
+            """
         )
-        if user_input := st.chat_input("What would you like to do?"):
-            initial_instructions.empty()
-            add_to_chat("user", user_input)
-            self.setup_agents(st.session_state.llm)
-            self.setup_tasks(user_input)
-            crew_instance = self.create_crew()
-            crew_instance.step_callback = chat_tool_callback
-            crew_instance.task_callback = chat_task_callback
-            with st.status("Thinking..."):
-                result = crew_instance.kickoff()
-            add_to_chat("assistant", result)
-            add_to_chat("assistant", "Is there anything else I can help you with?")
+    )
+    if user_input := st.chat_input("What would you like to do?"):
+        initial_instructions.empty()
+        add_to_chat("user", user_input)
+        embedder = st.session_state.get("embedder", None)
+        if not embedder:
+            st.error("Embedder not initialized")
+        user_chat_specialist_crew_class = UserChatSpecialistCrew(embedder)
+        user_chat_specialist_crew_class.setup_agents(st.session_state.llm)
+        user_chat_specialist_crew_class.setup_tasks(user_input)
+        user_chat_specialist_crew = user_chat_specialist_crew_class.create_crew()
+        user_chat_specialist_crew.step_callback = chat_tool_callback
+        user_chat_specialist_crew.task_callback = chat_task_callback
+        with st.status("Thinking..."):
+            result = user_chat_specialist_crew.kickoff()
+        add_to_chat("assistant", result)
+        add_to_chat("assistant", "Is there anything else I can help you with?")
 
 
 #########################
@@ -138,7 +146,9 @@ class AgentTools:
         try:
             if isinstance(contract_identifier, dict):
                 contract_identifier = contract_identifier.get("contract_identifier", "")
-            smart_contract_analyzer_crew_class = SmartContractAnalyzerV2()
+            smart_contract_analyzer_crew_class = SmartContractAnalyzerV2(
+                st.session_state.embedder
+            )
             smart_contract_analyzer_crew_class.setup_agents(st.session_state.llm)
             smart_contract_analyzer_crew_class.setup_tasks(contract_identifier)
             smart_contract_analyzer_crew = (
@@ -159,7 +169,7 @@ class AgentTools:
             # check if address is json param and extract value
             if isinstance(address, dict):
                 address = address.get("address", "")
-            wallet_summarizer_crew_class = WalletSummaryCrew()
+            wallet_summarizer_crew_class = WalletSummaryCrew(st.session_state.embedder)
             wallet_summarizer_crew_class.setup_agents(st.session_state.llm)
             wallet_summarizer_crew_class.setup_tasks(address)
             wallet_summarizer_crew = wallet_summarizer_crew_class.create_crew()
@@ -177,7 +187,7 @@ class AgentTools:
         try:
             if isinstance(crypto_symbol, dict):
                 crypto_symbol = crypto_symbol.get("crypto_symbol", "")
-            trading_analyzer_crew_class = TradingAnalyzerCrew()
+            trading_analyzer_crew_class = TradingAnalyzerCrew(st.session_state.embedder)
             trading_analyzer_crew_class.setup_agents(st.session_state.llm)
             trading_analyzer_crew_class.setup_tasks(crypto_symbol)
             trading_analyzer_crew = trading_analyzer_crew_class.create_crew()
@@ -195,7 +205,9 @@ class AgentTools:
         try:
             if isinstance(user_input, dict):
                 user_input = user_input.get("user_input", "")
-            clarity_code_generator_crew_class = ClarityCodeGeneratorCrew()
+            clarity_code_generator_crew_class = ClarityCodeGeneratorCrew(
+                st.session_state.embedder
+            )
             clarity_code_generator_crew_class.setup_agents(st.session_state.llm)
             clarity_code_generator_crew_class.setup_tasks(user_input)
             clarity_code_generator_crew = (

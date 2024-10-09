@@ -3,6 +3,7 @@ from components.agents_tab import render_agents_tab
 from components.execution_tab import render_execution_tab
 from components.tasks_tab import render_tasks_tab
 from components.tools_tab import render_tools_tab
+from crews.user_chat_specialist import render_crew
 from utils.session import init_session_state
 
 
@@ -234,4 +235,7 @@ st.divider()
 #    render_tasks_tab(crew_selection)
 
 # render just execution page with one crew
-render_execution_tab("User Chat Specialist")
+# render_execution_tab("User Chat Specialist")
+
+# render the crew directly outside class def
+render_crew()
