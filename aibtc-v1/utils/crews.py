@@ -5,9 +5,10 @@ from utils.callbacks import crew_step_callback, crew_task_callback
 
 
 class AIBTC_Crew:
-    def __init__(self, name: str):
+    def __init__(self, name: str, description: str, embedder: any):
         self.name = name
-        self.description = ""
+        self.description = description
+        self.embedder = embedder
         self.agents: List[Agent] = []
         self.tasks: List[Task] = []
 
@@ -24,7 +25,7 @@ class AIBTC_Crew:
             process=Process.sequential,
             verbose=True,
             memory=True,
-            embedder=st.session_state.embedder,
+            embedder=self.embedder,
             step_callback=crew_step_callback,
             task_callback=crew_task_callback,
         )

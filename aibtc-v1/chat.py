@@ -2,7 +2,6 @@ import streamlit as st
 import logging
 from typing import Dict, Any
 from utils.session import init_session_state
-from app import custom_styles
 
 # Initialize session state
 init_session_state()
@@ -15,6 +14,145 @@ AVAILABLE_CREWS: Dict[str, Dict[str, Any]] = st.session_state.crew_mapping
 
 
 def load_custom_styles():
+    custom_styles = """
+        <style>
+        /* load regular custom font */
+        @font-face {
+        font-family: 'DM Sans 9pt';
+        src: url('https://aibtc.dev/fonts/DMSans-9ptRegular.woff2') format('woff2'),
+            url('https://aibtc.dev/fonts/DMSans-9ptRegular.woff') format('woff');
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap;
+        }
+
+        /* load italic custom font */
+        @font-face {
+        font-family: 'DM Sans 9pt';
+        src: url('https://aibtc.dev/fonts/DMSans-9ptItalic.woff2') format('woff2'),
+            url('https://aibtc.dev/fonts/DMSans-9ptItalic.woff') format('woff');
+        font-weight: normal;
+        font-style: italic;
+        font-display: swap;
+        }
+
+        /* set font for the entire document */
+        html, body {
+        font-family: 'DM Sans 9pt', 'DM Sans', sans-serif !important;
+        }
+
+        /* set font for common elements */
+        h1, h2, h3, h4, h5, h6, p, a, span, div, button, input, select, textarea {
+        font-family: 'DM Sans 9pt', 'DM Sans', 'Source Sans Pro', sans-serif !important;
+        }
+
+        /* set page bg pattern same as main site */
+        /* DISABLED FOR NOW
+        .stAppViewMain {
+            background-image: url('https://aibtc.dev/logos/aibtcdev-pattern-1-640px.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        @media (min-width: 640px) {
+            .stAppViewMain {
+                background-image: url('https://aibtc.dev/logos/aibtcdev-pattern-1-1280px.png');
+            }
+        }
+        @media (min-width: 1280px) {
+            .stAppViewMain {
+                background-image: url('https://aibtc.dev/logos/aibtcdev-pattern-1-1920px.png');
+            }
+        }
+        */
+
+        /* set max page width */
+        .stMainBlockContainer {
+            max-width: 800px;
+            padding-top: 2rem;
+            padding-right: 1rem;
+            padding-left: 1rem;
+            padding-bottom: 3rem;
+            margin: 0 auto;
+            background-color: black;
+        }
+
+        /* hide navigation menu */
+        header[data-testid="stHeader"] {
+            display: none;
+            visibility: hidden;
+        }
+
+        /* custom tab styling */
+        button[data-baseweb="tab"] {
+            margin: 0;
+            width: 100%;
+        }
+        button[data-baseweb="tab"] > div[data-testid="stMarkdownContainer"] > p {
+        font-size: 24px !important;
+        font-weight: bold !important;
+        }
+
+        /* custom text input styling */
+        .stTextInput > div > div > input {
+            background-color: #000000;
+        }
+
+        /* custom select box styling */
+
+        /* select box label */
+        .stSelectbox label > div > p {
+            font-size: 1.5rem !important;
+            font-weight: bold !important;
+            color: white !important;
+        }
+
+        /* select box container */
+        .stSelectbox [data-baseweb="select"] {
+            background-color: #000000 !important;
+        }
+
+        /* select box selected item when closed */
+        .stSelectbox [data-baseweb="select"] > div {
+            background-color: #000000 !important;
+            color: white !important;
+            font-size: 1rem !important;
+        }
+
+        /* select box dropdown options container */
+        .stSelectbox [role="listbox"] {
+            background-color: #000000 !important;
+        }
+
+        /* icon link styles */
+        .icon-links {
+            display: flex;
+            justify-content: space-evenly;
+            gap: 10px;
+            margin: 0 auto;
+        }
+        .icon-link {
+            background-color: #58595B;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s;
+            color: white;
+            text-decoration: none;
+        }
+        .icon-link:hover {
+            background-color: #F2F2F2;
+        }
+        .icon-link svg {
+            width: 20px;
+            height: 20px;
+        }
+        </style>
+        """
     st.write(custom_styles, unsafe_allow_html=True)
 
 
@@ -101,7 +239,7 @@ def run_crew_ai(crew_name: str, parameters: str) -> str:
     if not crew_class:
         return f"CrewAI {crew_name} is not implemented yet."
 
-    crew_instance = crew_class()
+    crew_instance = crew_class(st.session_state.embedder)
     crew_instance.setup_agents(st.session_state.llm)
     crew_instance.setup_tasks(parameters)
     crew = crew_instance.create_crew()

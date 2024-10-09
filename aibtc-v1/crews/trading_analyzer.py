@@ -9,9 +9,12 @@ import requests
 
 # Custom Crew Class for Cryptocurrency Trading
 class TradingAnalyzerCrew(AIBTC_Crew):
-    def __init__(self):
-        super().__init__("Trading Analyzer")
-        self.description = "This crew analyzes Stacks cryptocurrency price history and provides trading signals."
+    def __init__(self, embedder):
+        super().__init__(
+            "Trading Analyzer",
+            "This crew analyzes Stacks cryptocurrency price history and provides trading signals.",
+            embedder,
+        )
 
     def setup_agents(self, llm):
         # Agent for pulling market data

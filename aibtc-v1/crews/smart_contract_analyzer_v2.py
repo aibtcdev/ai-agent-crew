@@ -133,9 +133,12 @@ reviewFormat = """
 
 
 class SmartContractAnalyzerV2(AIBTC_Crew):
-    def __init__(self):
-        super().__init__("Smart Contract Analyzer V2")
-        self.description = "This crew analyzes smart contracts on the Stacks blockchain and provides insights and recommendations."
+    def __init__(self, embedder):
+        super().__init__(
+            "Smart Contract Analyzer V2",
+            "This crew analyzes smart contracts on the Stacks blockchain and provides insights and recommendations.",
+            embedder,
+        )
 
     def setup_agents(self, llm):
         # contract retrieval agent

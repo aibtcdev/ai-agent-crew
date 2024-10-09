@@ -8,9 +8,12 @@ from utils.scripts import BunScriptRunner, get_timestamp
 
 
 class WalletSummaryCrew(AIBTC_Crew):
-    def __init__(self):
-        super().__init__("Wallet Summarizer")
-        self.description = "This crew analyzes a wallet's activity and holdings on the Stacks blockchain."
+    def __init__(self, embedder):
+        super().__init__(
+            "Wallet Summarizer",
+            "This crew analyzes a wallet's activity and holdings on the Stacks blockchain.",
+            embedder,
+        )
 
     def setup_agents(self, llm):
         wallet_agent = Agent(

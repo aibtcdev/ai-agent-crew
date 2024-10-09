@@ -35,9 +35,6 @@ def init_session_state():
     if "tasks_search_term" not in st.session_state:
         st.session_state.tasks_search_term = ""
 
-    if "crew_mapping" not in st.session_state:
-        st.session_state.crew_mapping = generate_crew_mapping()
-
     # Initialize other session state variables
     defaults = {
         "api_key": env_vars.get("OPENAI_API_KEY", ""),
@@ -64,6 +61,9 @@ def init_session_state():
             "provider": st.session_state.embedder_provider,
             "config": {"model": st.session_state.embedder_model},
         }
+
+    if "crew_mapping" not in st.session_state:
+        st.session_state.crew_mapping = generate_crew_mapping()
 
 
 def update_session_state(key, value):
@@ -97,7 +97,8 @@ def generate_crew_mapping():
                 ):
                     # Create an instance to get the name
                     try:
-                        instance = obj()
+                        instance = obj(st.session_state.embedder)
+                        print(instance)
                         crew_name = instance.name
                         crew_description = instance.description
                     except Exception as e:
