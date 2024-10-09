@@ -71,26 +71,46 @@ class UserChatSpecialistCrew(AIBTC_Crew):
     def setup_agents(self, llm):
         chat_specialist = Agent(
             role="Chat Specialist",
-            goal="This agent is responsible for chat interactions with the user and providing support.",
-            backstory="This agent is trained to provide support to users through chat interactions and available tools.",
-            tools=AgentTools.get_all_tools(),
+            goal="You are responsible for interacting with the user and translating their query into which crew to run. If they ask a question, delegate to the Information Retriever.",
+            backstory="You are trained to translate the user's query into a crew execution, analyzing the connection between the user's input and the result.",
+            tools=[
+                AgentTools.execute_clarity_code_generator_crew,
+                AgentTools.execute_smart_contract_analyzer_crew,
+                AgentTools.execute_wallet_analyzer_crew,
+                AgentTools.execute_trading_analyzer_crew,
+            ],
             verbose=True,
             memory=False,
-            allow_delegation=False,
+            allow_delegation=True,
             llm=llm,
         )
         self.add_agent(chat_specialist)
+
+        info_retriever = Agent(
+            role="Information Retriever",
+            goal="You are responsible for retrieving information about the preivous chat and available tools.",
+            backstory="You are trained to retrieve information from various sources and provide it to anyone who requests it in an informative, clear format. From your knowledge, instruct the user to succeed.",
+            tools=[
+                AgentTools.get_all_past_messages,
+                AgentTools.get_all_available_tools,
+            ],
+        )
+        self.add_agent(info_retriever)
 
     def setup_tasks(self, user_input):
         review_user_input = Task(
             name="Review User Input",
             description=dedent(
                 f"""
-                Review the user's input and determine the appropriate response.",
-                If you are going to run a crew for the user then use one of your tools with the required input(s).",
-                User Input:\n{user_input}""",
+                The user is talking to you in chat format.
+                You are tasked with reviewing the user's input and taking 1 of 2 actions:
+                1. If the user's input is a question, delegate to the Information Retriever to get the answer.
+                2. If the user's input is a task, use the appropriate tool to execute the task and share the result.
+                ### User Input
+                {user_input}
+                """
             ),
-            expected_output="The appropriate response to the user's input.",
+            expected_output="The user's input has been reviewed and the appropriate action has been taken.",
             agent=self.agents[0],  # chat_specialist
         )
         self.add_task(review_user_input)
@@ -104,7 +124,19 @@ class UserChatSpecialistCrew(AIBTC_Crew):
         return AgentTools.get_all_tools()
 
     def render_crew(self):
+        initial_instructions = st.empty()
+        initial_instructions.markdown(
+            dedent(
+                """
+                Welcome to AIBTC! Some ways to test my abilities:
+                - Please analyze SP97M6Z0T8MHKJ6NZE0GS6TRERCG3GW1WVJ4NVGT.aibtcdev-airdrop-1
+                - Tell me about the wallet SP97M6Z0T8MHKJ6NZE0GS6TRERCG3GW1WVJ4NVGT
+                - Would you kindly analyze the trading strategy for WELSH?
+                """
+            )
+        )
         if user_input := st.chat_input("What would you like to do?"):
+            initial_instructions.empty()
             add_to_chat("user", user_input)
             self.setup_agents(st.session_state.llm)
             self.setup_tasks(user_input)
@@ -206,6 +238,12 @@ class AgentTools:
     def get_all_past_messages():
         """Get all past chat messages between you and the user for context."""
         return st.session_state.messages
+
+    @staticmethod
+    @tool("Get all available tools for helping the user.")
+    def get_all_available_tools():
+        """Get all available tools you have access to in order to assist the user."""
+        return [tool.name for tool in AgentTools.get_all_tools()]
 
     @classmethod
     def get_all_tools(cls):
