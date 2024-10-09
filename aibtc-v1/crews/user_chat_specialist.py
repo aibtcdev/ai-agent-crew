@@ -13,6 +13,10 @@ from utils.crews import AIBTC_Crew
 from utils.scripts import get_timestamp
 
 
+def truncate_text(text: str, max_length: int = 80):
+    return text if len(text) <= max_length else f"{text[:max_length]}..."
+
+
 def add_to_chat(speaker: str, message: str):
     st.session_state.messages.append({"role": speaker, "content": message})
     avatar = (
@@ -20,7 +24,17 @@ def add_to_chat(speaker: str, message: str):
         if speaker == "assistant"
         else None
     )
-    st.chat_message(name=speaker, avatar=avatar).markdown(message)
+    (st.chat_message(name=speaker, avatar=avatar).markdown(message))
+
+
+def add_expander_to_chat(speaker: str, label: str, content: str):
+    st.session_state.messages.append({"role": speaker, "content": label + content})
+    avatar = (
+        "https://aibtc.dev/logos/aibtcdev-avatar-250px.png"
+        if speaker == "assistant"
+        else None
+    )
+    st.chat_message(name=speaker, avatar=avatar).expander(label).markdown(content)
 
 
 def chat_tool_callback(action: AgentAction):
@@ -30,10 +44,7 @@ def chat_tool_callback(action: AgentAction):
         "assistant",
         f"**Used tool:** {action.tool} with input: {action.tool_input}",
     )
-    add_to_chat(
-        "assistant",
-        f"**Result:** {action.result}",
-    )
+    add_expander_to_chat("assistant", "Tool Output:", action.result)
 
 
 def chat_task_callback(task: TaskOutput):
@@ -42,15 +53,7 @@ def chat_task_callback(task: TaskOutput):
     task_name = getattr(
         task, "name", None
     )  # default to None if name attribute is not present
-    computed_name = (
-        task_name
-        if task_name
-        else (
-            f"{task_description[:100]}..."
-            if len(task_description) > 100
-            else task_description
-        )
-    )
+    computed_name = task_name if task_name else (truncate_text(task_description))
     st.session_state.status_container.update(label=f"Executed task: {computed_name}...")
     add_to_chat(
         "assistant",
