@@ -31,13 +31,12 @@ def add_to_chat(speaker: str, message: str):
 
 def chat_tool_callback(action: AgentAction):
     """Callback function to display any tool output from the crew."""
-    st.session_state.status_container.update(label=f"Executed {action.tool}...")
-    add_to_chat("assistant", f"**Used tool:** {action.tool}")
-    add_to_chat("assistant", f"**Tool input:** {action.tool_input}")
-    add_to_chat("assistant", f"**Tool output:** {truncate_text(action.result)}")
+    st.session_state.status_container.update(
+        label=f"[{st.session_state.active_crew}] Used tool: {action.tool}..."
+    )
     add_to_chat(
         "assistant",
-        f"**Used tool:** {action.tool}\n**Tool input:** {action.tool_input}\n**Tool output:** {truncate_text(action.result)}",
+        f"[{st.session_state.active_crew}]\n**Used tool:** {action.tool}\n**Tool input:**\n{action.tool_input}\n**Tool output:** *(truncated)*\n{truncate_text(action.result, 300)}",
     )
 
 
@@ -48,10 +47,12 @@ def chat_task_callback(task: TaskOutput):
         task, "name", None
     )  # default to None if name attribute is not present
     computed_name = task_name if task_name else (truncate_text(task_description))
-    st.session_state.status_container.update(label=f"Executed task: {computed_name}...")
+    st.session_state.status_container.update(
+        label=f"Completed task: {computed_name}..."
+    )
     add_to_chat(
         "assistant",
-        f"**Completed task:** {computed_name}",
+        f"[{st.session_state.active_crew}]\n**Completed task:** {computed_name}",
     )
 
 
@@ -122,7 +123,7 @@ def render_crew():
         # create a status container in state
         if "status_container" not in st.session_state:
             st.session_state.status_container = st.status(
-                label="Finding the right crew..."
+                label="Creating a plan and finding the right crew..."
             )
         # initialize the crew
         crew_class = UserChatSpecialistCrew(st.session_state.embedder)
@@ -132,13 +133,11 @@ def render_crew():
         crew.step_callback = chat_tool_callback
         crew.task_callback = chat_task_callback
         crew.planning = True
-        # create an active agent in state
-        if "active_crew" not in st.session_state:
-            st.session_state.active_crew = crew_class.name
+        # set active agent in state
+        st.session_state.active_crew = crew_class.name
         with st.session_state.status_container:
             result = crew.kickoff()
-        add_to_chat("assistant", result)
-        st.session_state.status_container.update(label="Crew execution complete.")
+        add_to_chat("assistant", result.raw)
         add_to_chat("assistant", "Is there anything else I can help you with?")
 
 
