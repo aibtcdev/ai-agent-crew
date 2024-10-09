@@ -14,12 +14,12 @@ def format_task_output(task_output: TaskOutput) -> str:
 
     # output += f"**Output Format**: {task_output.output_format.value}\n\n"
 
-    if task_output.output_format.value == "JSON":
-        output += f"**JSON Output**:\n```json\n{task_output.json}\n```\n\n"
-    elif task_output.pydantic:
-        output += f"**Structured Output**:\n```\n{task_output.pydantic}\n```\n\n"
-    else:
-        output += f"**Raw Output**:\n{task_output.raw}\n\n"
+    # if task_output.output_format.value == "JSON":
+    #    output += f"**JSON Output**:\n```json\n{task_output.json}\n```\n\n"
+    # elif task_output.pydantic:
+    #    output += f"**Structured Output**:\n```\n{task_output.pydantic}\n```\n\n"
+    # else:
+    #    output += f"**Raw Output**:\n{task_output.raw}\n\n"
 
     return output
 
@@ -29,8 +29,8 @@ def format_agent_action(agent_action: AgentAction) -> str:
     output = f"**Thought**: {agent_action.thought}\n\n"
     output += f"**Action**: {agent_action.tool}\n\n"
     output += f"**Input**: {agent_action.tool_input}\n\n"
-    if hasattr(agent_action, "result"):
-        output += f"**Result**: {agent_action.result}\n\n"
+    # if hasattr(agent_action, "result"):
+    #    output += f"**Result**: {agent_action.result}\n\n"
     return output
 
 
