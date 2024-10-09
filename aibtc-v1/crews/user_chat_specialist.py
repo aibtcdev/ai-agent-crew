@@ -22,6 +22,15 @@ def handle_user_input(user_input):
     add_to_chat("bot", f"Let me check that for you, you said:\n\n{user_input}")
 
 
+# create a new instance of the crew
+def create_chat_crew_instance(user_input):
+    user_chat_specialist_crew_class = UserChatSpecialistCrew()
+    user_chat_specialist_crew_class.setup_agents(st.session_state.llm)
+    user_chat_specialist_crew_class.setup_tasks(user_input)
+    user_chat_specialist_crew = user_chat_specialist_crew_class.create_crew()
+    return user_chat_specialist_crew
+
+
 class UserChatSpecialistCrew(AIBTC_Crew):
     def __init__(self):
         super().__init__("User Chat Specialist")
@@ -32,6 +41,7 @@ class UserChatSpecialistCrew(AIBTC_Crew):
             role="Chat Specialist",
             goal="This agent is responsible for chat interactions with the user and providing support.",
             backstory="This agent is trained to provide support to users through chat interactions and available tools.",
+            tools=AgentTools.get_all_tools(),
             verbose=True,
             memory=False,
             allow_delegation=True,
@@ -62,6 +72,16 @@ class UserChatSpecialistCrew(AIBTC_Crew):
         return AgentTools.get_all_tools()
 
     def render_crew(self):
+        # create containers for real-time updates
+        st.write("Tool Outputs:")
+        st.session_state.crew_step_container = st.empty()
+        st.write("Task Progress:")
+        st.session_state.crew_task_container = st.empty()
+
+        # reset callback lists
+        st.session_state.crew_step_callback = []
+        st.session_state.crew_task_callback = []
+
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
@@ -69,11 +89,12 @@ class UserChatSpecialistCrew(AIBTC_Crew):
         if user_input := st.chat_input("What would you like to do?"):
             st.chat_message("user").markdown(user_input)
             st.session_state.messages.append({"role": "user", "content": user_input})
-            response = (
-                f"Echoing back your input:\n\n{user_input}\n\n{self.get_all_tools()}"
-            )
-            st.chat_message("assistant").markdown(response)
-            st.session_state.messages.append({"role": "assistant", "content": response})
+            self.setup_agents(st.session_state.llm)
+            self.setup_tasks(user_input)
+            crew_instance = self.create_crew()
+            result = crew_instance.kickoff()
+            st.chat_message("bot").markdown(result)
+            st.session_state.messages.append({"role": "bot", "content": result})
 
 
 #########################
