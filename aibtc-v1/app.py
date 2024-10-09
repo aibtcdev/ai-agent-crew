@@ -77,6 +77,10 @@ h1, h2, h3, h4, h5, h6, p, a, span, div, button, input, select, textarea {
     background-color: black;
 }
 
+.stBottom {
+    max-width: 800px;
+}
+
 /* hide navigation menu */
 header[data-testid="stHeader"] {
     display: none;
@@ -189,6 +193,11 @@ icon_links_html = """
 </div>
 """
 
+# moved below the image for chat input
+st.divider()
+st.markdown(icon_links_html, unsafe_allow_html=True)
+st.divider()
+
 
 # initialize crew selections
 # available_crews = list(st.session_state.crew_mapping.keys())
@@ -213,7 +222,3 @@ icon_links_html = """
 
 # render just execution page with one crew
 render_execution_tab("User Chat Specialist")
-
-st.divider()
-
-st.markdown(icon_links_html, unsafe_allow_html=True)

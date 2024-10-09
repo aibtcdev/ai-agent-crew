@@ -10,6 +10,14 @@ from utils.crews import AIBTC_Crew, display_token_usage
 from utils.scripts import get_timestamp
 
 
+def add_to_chat(speaker: str, message: str):
+    st.session_state.messages.append({"role": speaker, "content": message})
+
+
+def handle_user_input(user_input):
+    add_to_chat("bot", f"Let me check that for you, you said:\n\n{user_input}")
+
+
 class UserChatSpecialistCrew(AIBTC_Crew):
     def __init__(self):
         super().__init__("User Chat Specialist")
@@ -52,4 +60,13 @@ class UserChatSpecialistCrew(AIBTC_Crew):
         # return AgentTools.get_all_tools()
 
     def render_crew(self):
-        st.text(st.session_state.crew_mapping)
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+
+        if user_input := st.chat_input("Your turn:"):
+            st.chat_message("user").markdown(user_input)
+            st.session_state.messages.append({"role": "user", "content": user_input})
+            response = f"Echoing back your input:\n\n{user_input}"
+            st.chat_message("assistant").markdown(response)
+            st.session_state.messages.append({"role": "assistant", "content": response})
