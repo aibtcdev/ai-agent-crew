@@ -3,6 +3,7 @@ from components.agents_tab import render_agents_tab
 from components.execution_tab import render_execution_tab
 from components.tasks_tab import render_tasks_tab
 from components.tools_tab import render_tools_tab
+from crews.user_chat_specialist import render_crew
 from utils.session import init_session_state
 
 
@@ -77,6 +78,12 @@ h1, h2, h3, h4, h5, h6, p, a, span, div, button, input, select, textarea {
     background-color: black;
 }
 
+/* a little hacky but, chat input is hardcoded
+   based on this width - 160px */
+.stBottom {
+    max-width: 960px;
+}
+
 /* hide navigation menu */
 header[data-testid="stHeader"] {
     display: none;
@@ -122,6 +129,17 @@ button[data-baseweb="tab"] > div[data-testid="stMarkdownContainer"] > p {
 /* select box dropdown options container */
 .stSelectbox [role="listbox"] {
     background-color: #000000 !important;
+}
+
+/* custom chat input styling */
+.stChatInput {
+    background-color: #000000;    
+}
+.stChatInput > div > div > div > textarea {
+    background-color: #000000;
+}
+.stChatInput > div > div > div > textarea::placeholder {
+    color: #B3B3B3;
 }
 
 /* icon link styles */
@@ -189,28 +207,35 @@ icon_links_html = """
 </div>
 """
 
-
-# initialize crew selections
-available_crews = list(st.session_state.crew_mapping.keys())
-
-# Display crew selection
-crew_selection = st.selectbox("Select your crew:", available_crews)
-
-# Main layout with tabs
-tab1, tab2, tab3, tab4 = st.tabs(["Run 🏃", "Agents", "Tools", "Tasks"])
-
-with tab1:
-    render_execution_tab(crew_selection)
-
-with tab2:
-    render_agents_tab(crew_selection)
-
-with tab3:
-    render_tools_tab(crew_selection)
-
-with tab4:
-    render_tasks_tab(crew_selection)
-
+# moved below the image for chat input
+st.divider()
+st.markdown(icon_links_html, unsafe_allow_html=True)
 st.divider()
 
-st.markdown(icon_links_html, unsafe_allow_html=True)
+
+# initialize crew selections
+# available_crews = list(st.session_state.crew_mapping.keys())
+
+# Display crew selection
+# crew_selection = st.selectbox("Select your crew:", available_crews)
+
+# Main layout with tabs
+# tab1, tab2, tab3, tab4 = st.tabs(["Run 🏃", "Agents", "Tools", "Tasks"])
+
+# with tab1:
+#    render_execution_tab(crew_selection)
+
+# with tab2:
+#    render_agents_tab(crew_selection)
+
+# with tab3:
+#    render_tools_tab(crew_selection)
+
+# with tab4:
+#    render_tasks_tab(crew_selection)
+
+# render just execution page with one crew
+# render_execution_tab("User Chat Specialist")
+
+# render the crew directly outside class def
+render_crew()

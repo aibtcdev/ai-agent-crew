@@ -9,8 +9,12 @@ import requests
 
 # Custom Crew Class for Cryptocurrency Trading
 class TradingAnalyzerCrew(AIBTC_Crew):
-    def __init__(self):
-        super().__init__("Trading Analyzer")
+    def __init__(self, embedder):
+        super().__init__(
+            "Trading Analyzer",
+            "This crew analyzes Stacks cryptocurrency price history and provides trading signals.",
+            embedder,
+        )
 
     def setup_agents(self, llm):
         # Agent for pulling market data
@@ -34,40 +38,48 @@ class TradingAnalyzerCrew(AIBTC_Crew):
 
         # Agent for analyzing trading strategies
         strategy_analyzer_agent = Agent(
-            role="Trading Strategy Analyzer",
-            goal="Examine recent price trends and perform statistical analysis on historical data to identify optimal trading opportunities. "
-            "Determine whether to hold, buy, or sell the given token based on moving averages, momentum indicators, and other predefined strategies.",
-            tools=[],
+            role="Quantitative Trading Strategy Analyzer",
+            goal="Analyze recent price trends and perform statistical analysis on historical data to identify trading signals. "
+            "Provide actionable recommendations (Hold, Buy, or Sell) based on moving averages, volatility patterns, and volume changes.",
+            tools=[],  # Add any specific tools if applicable.
             backstory=(
-                "You are an expert in quantitative trading strategies, leveraging various models and indicators to interpret price movements. "
-                "Your expertise lies in identifying patterns, calculating risk-reward ratios, and issuing trading recommendations based on a thorough analysis "
-                "of the last 100 or more price points for the target cryptocurrency."
+                "You are a seasoned quantitative trading expert with deep expertise in financial market analysis and strategy development. "
+                "You specialize in leveraging various technical indicators, such as moving averages, RSI, and MACD, to identify potential trading signals "
+                "and execute profitable strategies. Your analysis is rooted in a thorough examination of price movements and market dynamics over the last 100 or more blocks."
             ),
-            verbose=True,
+            verbose=True,  # Set verbose to False to streamline responses.
             llm=llm,
         )
         self.add_agent(strategy_analyzer_agent)
 
     def setup_tasks(self, crypto_symbol):
-        # Task to retrieve historical price data
-        retrieve_price_history_task = Task(
-            description=f"Collect historical price data for {crypto_symbol} at a per-block level on the Stacks blockchain. "
-            f"Data should include prices from at least one primary DEX (e.g., ALEX) and should cover the last 100 blocks.",
+        # Task to retrieve historical volume data
+        merge_data_task = Task(
+            description="Merges data from the into a single dataset."
+            f"Collect the information for token {crypto_symbol} using the tool `Get All Avaliable Token Info`."
+            f"Data should include the token pool volume using the tool `Get Token Pool Volume` using the pool_id"
+            f"Data should include prices using the tool `Get Token Price History` using the address",
             expected_output=(
-                "A structured dataset containing price history, including fields like block height, price and volume. The dataset should be free of gaps and anomalies, ensuring completeness for accurate analysis."
+                "A structured dataset containing volume history, including fields block height, volume, and price. The dataset should be free of gaps and anomalies, ensuring completeness for accurate analysis."
             ),
             agent=self.agents[0],  # market_data_agent
         )
-        self.add_task(retrieve_price_history_task)
+        self.add_task(merge_data_task)
 
         # Task to analyze the price data with a trading strategy
         analyze_strategy_task = Task(
-            description=f"Analyze the price history of {crypto_symbol} over the last 100 blocks to identify trading signals using predefined strategies. "
-            f"Consider factors like price volatility, moving averages (e.g., 50-period and 100-period), and any unusual spikes or dips.",
-            expected_output=(
-                "A simple response saying buy, sell or hold. you can give a reason why."
+            description=(
+                f"Analyze the historical price and volume data of {crypto_symbol} over the last 100 blocks to identify trading signals. "
+                "Use the following predefined strategies:\n"
+                "1. **Trend Analysis**: Evaluate using 50-period and 100-period moving averages to detect short-term and long-term trends.\n"
+                "2. **Volatility Analysis**: Calculate standard deviation and identify any sudden price spikes or drops.\n"
+                "3. **Volume Analysis**: Check for unusual volume shifts to identify potential breakouts or breakdowns.\n"
+                "4. **Support and Resistance Levels**: Identify key support and resistance levels based on price patterns.\n"
+                "5. **Momentum Indicators**: Apply RSI and MACD to detect overbought or oversold conditions.\n\n"
+                "Based on your analysis, provide a single recommendation: **Buy**, **Sell**, or **Hold**. Include a concise reason for your decision."
             ),
-            agent=self.agents[1],  # strategy_analyzer_agent
+            expected_output="A recommendation of either 'Buy', 'Sell', or 'Hold', along with a brief explanation justifying your decision based on the analysis.",
+            agent=self.agents[1],  # market_data_agent
         )
         self.add_task(analyze_strategy_task)
 
@@ -143,7 +155,7 @@ The information and recommendations provided on this website are for demonstrati
 # Agent Tools
 class AgentTools:
     @staticmethod
-    @tool("Get Crypto Price History")
+    @tool("Get Token Price History")
     def get_crypto_price_history(token_address: str):
         """Retrieve historical price data for a specified cryptocurrency symbol."""
         url = f"https://api.alexgo.io/v1/price_history/{token_address}?limit=100"
@@ -169,7 +181,7 @@ class AgentTools:
         return f"Token: {data['token']}\n{formatted_history}"
 
     @staticmethod
-    @tool("Get All Token Swaps and Token Info")
+    @tool("Get All Avaliable Token Info")
     def get_all_swaps():
         """Retrieve all swap data from the Alex API and return a formatted string."""
         url = "https://api.alexgo.io/v1/allswaps"
@@ -184,14 +196,9 @@ class AgentTools:
 
         data = response.json()
 
-        formatted_swaps = "\n---\n".join(
+        formatted_swaps = "\n".join(
             dedent(
-                f"""
-            pool_id: {swap['id']}
-            quote: {swap['quote']}
-            symbol: {swap['quoteSymbol']}
-            token_address: {swap['quoteId']}
-            """
+                f"""Pool ID: {swap['id']}, Quote: {swap['quote']}, Symbol: {swap['quoteSymbol']}, Address: {swap['quoteId']}"""
             ).strip()
             for swap in data
         )
@@ -199,7 +206,7 @@ class AgentTools:
         return formatted_swaps
 
     @staticmethod
-    @tool("Get Token Pool Volume")
+    @tool("Get Token Pool Volume History")
     def get_pool_volume(pool_token_id: str):
         """Retrieve pool volume data for a specified pool token ID."""
         url = f"https://api.alexgo.io/v1/pool_volume/{pool_token_id}?limit=100"
