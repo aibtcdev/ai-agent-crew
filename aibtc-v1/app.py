@@ -191,25 +191,28 @@ icon_links_html = """
 
 
 # initialize crew selections
-available_crews = list(st.session_state.crew_mapping.keys())
+# available_crews = list(st.session_state.crew_mapping.keys())
 
 # Display crew selection
-crew_selection = st.selectbox("Select your crew:", available_crews)
+# crew_selection = st.selectbox("Select your crew:", available_crews)
 
 # Main layout with tabs
-tab1, tab2, tab3, tab4 = st.tabs(["Run 🏃", "Agents", "Tools", "Tasks"])
+# tab1, tab2, tab3, tab4 = st.tabs(["Run 🏃", "Agents", "Tools", "Tasks"])
 
-with tab1:
-    render_execution_tab(crew_selection)
+# with tab1:
+#    render_execution_tab(crew_selection)
 
-with tab2:
-    render_agents_tab(crew_selection)
+# with tab2:
+#    render_agents_tab(crew_selection)
 
-with tab3:
-    render_tools_tab(crew_selection)
+# with tab3:
+#    render_tools_tab(crew_selection)
 
-with tab4:
-    render_tasks_tab(crew_selection)
+# with tab4:
+#    render_tasks_tab(crew_selection)
+
+# render just execution page with one crew
+render_execution_tab("User Chat Specialist")
 
 st.divider()
 
