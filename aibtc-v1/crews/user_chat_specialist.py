@@ -8,30 +8,55 @@ from textwrap import dedent
 from crews.smart_contract_analyzer_v2 import SmartContractAnalyzerV2
 from crews.wallet_summarizer import WalletSummaryCrew
 from crews.trading_analyzer import TradingAnalyzerCrew
-from crews.clarity_code_generator import ClarityCodeGeneratorCrew
+from crews.clarity_code_generator_v2 import ClarityCodeGeneratorCrewV2
 from utils.crews import AIBTC_Crew
-from utils.scripts import get_timestamp
+from utils.scripts import get_pretty_timestamp
 
 
-def add_to_chat(speaker: str, message: str):
+def truncate_text(text: str, max_length: int = 80):
+    return text if len(text) <= max_length else f"{text[:max_length]}..."
+
+
+def add_to_chat(speaker: str, message: str, subtask=False):
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
     st.session_state.messages.append({"role": speaker, "content": message})
     avatar = (
         "https://aibtc.dev/logos/aibtcdev-avatar-250px.png"
         if speaker == "assistant"
         else None
     )
-    st.chat_message(name=speaker, avatar=avatar).markdown(message)
+
+    if subtask:
+        with st.session_state.status_container:
+            with st.chat_message(name=speaker, avatar=avatar):
+                for line in message.split("\n"):
+                    st.markdown(line)
+    else:
+        with st.session_state.chat_container:
+            with st.chat_message(name=speaker, avatar=avatar):
+                for line in message.split("\n"):
+                    st.markdown(line)
+
+
+def update_status(label: str, state: str = "running"):
+    # state can be "running", "complete", "error"
+    st.session_state.status_container.update(label=label)
+
+
+def set_active_crew(crew_name: str):
+    st.session_state.active_crew = crew_name
 
 
 def chat_tool_callback(action: AgentAction):
     """Callback function to display any tool output from the crew."""
-    add_to_chat(
-        "assistant",
-        f"**Used tool:** {action.tool} with input: {action.tool_input}",
+    update_status(
+        f"[{st.session_state.active_crew}] Used tool: {action.tool}...", "running"
     )
     add_to_chat(
         "assistant",
-        f"**Result:** {action.result}",
+        f"[{st.session_state.active_crew}]\n**Used tool:** {action.tool}\n**Tool input:**\n{action.tool_input}\n**Tool output:** *(truncated)*\n{truncate_text(action.result, 300)}",
+        True,
     )
 
 
@@ -41,18 +66,15 @@ def chat_task_callback(task: TaskOutput):
     task_name = getattr(
         task, "name", None
     )  # default to None if name attribute is not present
-    computed_name = (
-        task_name
-        if task_name
-        else (
-            f"{task_description[:100]}..."
-            if len(task_description) > 100
-            else task_description
-        )
+    computed_name = task_name if task_name else (truncate_text(task_description))
+    update_status(
+        f"[{st.session_state.active_crew}] Completed task: {computed_name}...",
+        "running",
     )
     add_to_chat(
         "assistant",
-        f"**Completed task:** {computed_name}",
+        f"[{st.session_state.active_crew}]\n**Completed task:** {computed_name}",
+        True,
     )
 
 
@@ -104,6 +126,7 @@ class UserChatSpecialistCrew(AIBTC_Crew):
 
 
 def render_crew():
+    # setup and display initial instructions
     initial_instructions = st.empty()
     initial_instructions.markdown(
         dedent(
@@ -112,25 +135,92 @@ def render_crew():
             - Please analyze SP97M6Z0T8MHKJ6NZE0GS6TRERCG3GW1WVJ4NVGT.aibtcdev-airdrop-1
             - Tell me about the wallet SP97M6Z0T8MHKJ6NZE0GS6TRERCG3GW1WVJ4NVGT
             - Would you kindly analyze the trading strategy for WELSH?
+            - Create a Clarity function that sums a list of three uints
             """
         )
     )
+
+    # initialize chat history
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
+
+    # intialize main chat container to hold chat messages and status messages
+    st.session_state.full_chat_container = st.container()
+
+    # create text input field for user at the bottom
     if user_input := st.chat_input("What would you like to do?"):
+
+        # clear initial instructions
         initial_instructions.empty()
+        # initialize chat and status container for updates
+        with st.session_state.full_chat_container:
+            st.session_state.chat_container = st.empty()
+            st.session_state.chat_container = st.container()
+            st.session_state.status_container = st.empty()
+            st.session_state.status_container = st.status(label="Ready to assist!")
+
+        # add user input to chat
         add_to_chat("user", user_input)
-        embedder = st.session_state.get("embedder", None)
-        if not embedder:
-            st.error("Embedder not initialized")
-        user_chat_specialist_crew_class = UserChatSpecialistCrew(embedder)
-        user_chat_specialist_crew_class.setup_agents(st.session_state.llm)
-        user_chat_specialist_crew_class.setup_tasks(user_input)
-        user_chat_specialist_crew = user_chat_specialist_crew_class.create_crew()
-        user_chat_specialist_crew.step_callback = chat_tool_callback
-        user_chat_specialist_crew.task_callback = chat_task_callback
-        with st.status("Thinking..."):
-            result = user_chat_specialist_crew.kickoff()
-        add_to_chat("assistant", result)
+        # update status container
+        update_status("Creating a plan and finding the right crew...", "running")
+
+        # initialize the crew
+        crew_class = UserChatSpecialistCrew(st.session_state.embedder)
+        crew_class.setup_agents(st.session_state.llm)
+        crew_class.setup_tasks(user_input)
+        crew = crew_class.create_crew()
+        crew.step_callback = chat_tool_callback
+        crew.task_callback = chat_task_callback
+        crew.planning = True
+
+        # set active agent in state
+        set_active_crew(crew_class.name)
+
+        # kick off the crew (long-running)
+        with st.session_state.status_container:
+            result = crew.kickoff()
+
+        # add crew's result to chat
+        set_active_crew(crew_class.name)
+        add_to_chat("assistant", result.raw)
         add_to_chat("assistant", "Is there anything else I can help you with?")
+
+        # store chat history from messages in state
+        st.session_state.chat_history.append(
+            {"timestamp": get_pretty_timestamp(), "messages": st.session_state.messages}
+        )
+        # clear messages in state
+        st.session_state.messages = []
+
+    # show chat history in popover
+    if st.session_state.chat_history:
+        st.markdown("### Chat History")
+        for chat in st.session_state.chat_history:
+            with st.popover(f"Chat from {chat['timestamp']}"):
+                # download chat as text file
+                st.download_button(
+                    label="Download Chat",
+                    data="\n".join(
+                        [
+                            f"{message['role']}: {message['content']}"
+                            for message in chat["messages"]
+                        ]
+                    ),
+                    file_name=f"chat_{chat['timestamp']}-AIBTC.txt",
+                    mime="text/plain",
+                )
+                # display chat messages
+                for message in chat["messages"]:
+                    role = message["role"]
+                    content = message["content"]
+                    avatar = (
+                        "https://aibtc.dev/logos/aibtcdev-avatar-250px.png"
+                        if role == "assistant"
+                        else None
+                    )
+                    with st.chat_message(name=role, avatar=avatar):
+                        for line in content.split("\n"):
+                            st.markdown(line)
 
 
 #########################
@@ -146,17 +236,16 @@ class AgentTools:
         try:
             if isinstance(contract_identifier, dict):
                 contract_identifier = contract_identifier.get("contract_identifier", "")
-            smart_contract_analyzer_crew_class = SmartContractAnalyzerV2(
-                st.session_state.embedder
-            )
-            smart_contract_analyzer_crew_class.setup_agents(st.session_state.llm)
-            smart_contract_analyzer_crew_class.setup_tasks(contract_identifier)
-            smart_contract_analyzer_crew = (
-                smart_contract_analyzer_crew_class.create_crew()
-            )
-            smart_contract_analyzer_crew.step_callback = chat_tool_callback
-            smart_contract_analyzer_crew.task_callback = chat_task_callback
-            result = smart_contract_analyzer_crew.kickoff()
+            crew_class = SmartContractAnalyzerV2(st.session_state.embedder)
+            crew_class.setup_agents(st.session_state.llm)
+            crew_class.setup_tasks(contract_identifier)
+            crew = crew_class.create_crew()
+            crew.step_callback = chat_tool_callback
+            crew.task_callback = chat_task_callback
+            crew.planning = True
+            set_active_crew(crew_class.name)
+            update_status(f"Executing {crew_class.name}...", "running")
+            result = crew.kickoff()
             return result
         except Exception as e:
             return f"Error executing Smart Contract Analyzer Crew: {e}"
@@ -169,13 +258,16 @@ class AgentTools:
             # check if address is json param and extract value
             if isinstance(address, dict):
                 address = address.get("address", "")
-            wallet_summarizer_crew_class = WalletSummaryCrew(st.session_state.embedder)
-            wallet_summarizer_crew_class.setup_agents(st.session_state.llm)
-            wallet_summarizer_crew_class.setup_tasks(address)
-            wallet_summarizer_crew = wallet_summarizer_crew_class.create_crew()
-            wallet_summarizer_crew.step_callback = chat_tool_callback
-            wallet_summarizer_crew.task_callback = chat_task_callback
-            result = wallet_summarizer_crew.kickoff()
+            crew_class = WalletSummaryCrew(st.session_state.embedder)
+            crew_class.setup_agents(st.session_state.llm)
+            crew_class.setup_tasks(address)
+            crew = crew_class.create_crew()
+            crew.step_callback = chat_tool_callback
+            crew.task_callback = chat_task_callback
+            crew.planning = True
+            set_active_crew(crew_class.name)
+            update_status(f"Executing {crew_class.name}...", "running")
+            result = crew.kickoff()
             return result
         except Exception as e:
             return f"Error executing Wallet Analyzer Crew: {e}"
@@ -187,13 +279,16 @@ class AgentTools:
         try:
             if isinstance(crypto_symbol, dict):
                 crypto_symbol = crypto_symbol.get("crypto_symbol", "")
-            trading_analyzer_crew_class = TradingAnalyzerCrew(st.session_state.embedder)
-            trading_analyzer_crew_class.setup_agents(st.session_state.llm)
-            trading_analyzer_crew_class.setup_tasks(crypto_symbol)
-            trading_analyzer_crew = trading_analyzer_crew_class.create_crew()
-            trading_analyzer_crew.step_callback = chat_tool_callback
-            trading_analyzer_crew.task_callback = chat_task_callback
-            result = trading_analyzer_crew.kickoff()
+            crew_class = TradingAnalyzerCrew(st.session_state.embedder)
+            crew_class.setup_agents(st.session_state.llm)
+            crew_class.setup_tasks(crypto_symbol)
+            crew = crew_class.create_crew()
+            crew.step_callback = chat_tool_callback
+            crew.task_callback = chat_task_callback
+            crew.planning = True
+            set_active_crew(crew_class.name)
+            update_status(f"Executing {crew_class.name}...", "running")
+            result = crew.kickoff()
             return result
         except Exception as e:
             return f"Error executing Trading Analyzer Crew: {e}"
@@ -205,17 +300,16 @@ class AgentTools:
         try:
             if isinstance(user_input, dict):
                 user_input = user_input.get("user_input", "")
-            clarity_code_generator_crew_class = ClarityCodeGeneratorCrew(
-                st.session_state.embedder
-            )
-            clarity_code_generator_crew_class.setup_agents(st.session_state.llm)
-            clarity_code_generator_crew_class.setup_tasks(user_input)
-            clarity_code_generator_crew = (
-                clarity_code_generator_crew_class.create_crew()
-            )
-            clarity_code_generator_crew.step_callback = chat_tool_callback
-            clarity_code_generator_crew.task_callback = chat_task_callback
-            result = clarity_code_generator_crew.kickoff()
+            crew_class = ClarityCodeGeneratorCrewV2(st.session_state.embedder)
+            crew_class.setup_agents(st.session_state.llm)
+            crew_class.setup_tasks(user_input)
+            crew = crew_class.create_crew()
+            crew.step_callback = chat_tool_callback
+            crew.task_callback = chat_task_callback
+            crew.planning = True
+            set_active_crew(crew_class.name)
+            update_status(f"Executing {crew_class.name}...", "running")
+            result = crew.kickoff()
             return result
         except Exception as e:
             return f"Error executing Clarity Code Generator Crew: {e}"
