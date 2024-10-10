@@ -135,6 +135,7 @@ def render_crew():
             - Please analyze SP97M6Z0T8MHKJ6NZE0GS6TRERCG3GW1WVJ4NVGT.aibtcdev-airdrop-1
             - Tell me about the wallet SP97M6Z0T8MHKJ6NZE0GS6TRERCG3GW1WVJ4NVGT
             - Would you kindly analyze the trading strategy for WELSH?
+            - Create a Clarity function that sums a list of three uints
             """
         )
     )
