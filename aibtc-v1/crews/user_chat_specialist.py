@@ -181,6 +181,7 @@ def render_crew():
             result = crew.kickoff()
 
         # add crew's result to chat
+        set_active_crew(crew_class.name)
         add_to_chat("assistant", result.raw)
         add_to_chat("assistant", "Is there anything else I can help you with?")
 
